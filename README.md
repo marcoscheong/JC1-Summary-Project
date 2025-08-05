@@ -3,7 +3,7 @@
 ## Members
 
 - Marcos
-- Jacoob
+- Jacob
 - Savio
 - Yufan
 - Vince

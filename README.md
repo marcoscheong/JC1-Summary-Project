@@ -2,7 +2,7 @@
 
 ## Members
 
-- Marcos
+- Marco Polo
 - Jacob
 - Savio
 - Yufan

@@ -10,7 +10,6 @@ class Game:
     def _init_(self, intro, outro, maze):
         pass
 
-<<<<<<< HEAD
     def get_data(file: str)-> None:
         with open('data.json', 'r', encoding='utf-8') as f:
             # data from data.json is deserialised into data_dict
@@ -20,8 +19,6 @@ class Game:
             json.dump(obj, f)
 
 
-=======
->>>>>>> origin/main
 #List of things we need to do
 #Create maze
 class Maze:

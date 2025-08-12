@@ -74,8 +74,7 @@ class Maze:
                 if not has_connection:
                     print('  No connections')
 
-#Create Room 
-
+# ROOM CLASSES
 class Room:
     """
     Class construtor for Room
@@ -118,8 +117,38 @@ class MonsterRoom(Room):
         i = random.randint(len(self.availableMonsters) - 1)
         return self.availableMonsters[i]
 
+
+# CHARACTER CLASSES
 class Character:
-    pass
+    def __init__(self, stats):
+        self.stats = stats
+        # self.inventory = Inventory() (to be updated)
+
+class Player(Character):
+    def __init__(self, inventory):
+        self.inventory = inventory #to be updated
+
+class Monster(Character):
+    def __init__(self, stats):
+        pass
+
+class Stats():
+    def __init__(self, maxHealth: int, attack: int):
+        self.maxHealth = maxHealth
+        self.attack = attack
+        self.currentHealth = maxHealth
+    
+    def takeDamage(self, damage):
+        if (self.currentHealth - damage) <= 0:
+            return 'died'
+        else:
+            self.currentHealth -= damage
+    
+    def heal(self, healAmount):
+        if (self.currentHealth + healAmount) > self.maxHealth:
+            self.currentHealth = self.maxHealth
+        else:
+            self.currentHealth += healAmount
 
 class CombatSequence():
     def __init__(self, character, monster, points: int):

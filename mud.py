@@ -7,9 +7,14 @@ class Game:
     """
     Class constructor for Game
     """
-    def _init_(self, intro, outro, maze):
+    def __init__(self, intro, outro, maze):
         pass
 
+
+class Storage:
+    def __init(self):
+        pass
+        
     def get_data(file: str)-> None:
         with open('data.json', 'r', encoding='utf-8') as f:
             # data from data.json is deserialised into data_dict
@@ -17,7 +22,6 @@ class Game:
     def save_data(file: str)-> None:
         with open('data.json', 'w', encoding='utf-8') as f:
             json.dump(obj, f)
-
 
 #List of things we need to do
 #Create maze

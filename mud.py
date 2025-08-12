@@ -7,7 +7,7 @@ class Game:
     """
     Class constructor for Game
     """
-    def __init__(self):
+    def _init_(self, intro, outro, maze):
         pass
 
     def get_data(file: str)-> None:

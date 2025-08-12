@@ -4,7 +4,7 @@
 
 - Marcos
 - Jacob
-- Savio Star
+- Savio
 - Yufan
 - Vince
 

@@ -1,7 +1,7 @@
 import random
 
 #Global Variables
-room_types = ['treasure', 'battle']
+room_types = ['treasure', 'monster']
 
 class Game:
     """

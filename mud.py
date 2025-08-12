@@ -1,7 +1,9 @@
+import random
+
 import json
 
 #Global Variables
-room_types = ['treasure', 'battle']
+room_types = ['treasure', 'monster']
 
 class Game:
     """
@@ -28,11 +30,9 @@ class Maze:
     def __init__(self, rooms: dict['Room'], starting_room):
         """
         Takes in a dict of Room objects and a starting room.
-        Initializes str_chain, which will hold a chain of selected rooms for the maze.
         """
         self.rooms = rooms
         self.starting_room = starting_room
-        self.str_chain = []
 
     def generate_maze(self):
         """
@@ -85,7 +85,7 @@ class Room:
 
     Then prints out the IDs of connected rooms, assuming each room has an id attribute.
     """
-    def __init__(self, id: int):
+    def __init__(self, id: int, type: str):
         self.id = id
         self.connects = {'top': None, 'left': None, 'right': None, 'down': None}
 
@@ -93,10 +93,33 @@ class Room:
         if direction in self.connects:
             self.connects[direction] = room
 
+class TreasureRoom(Room):
+    def __init__(self, currency):
+        self.currency = currency
+
+    def generateItems(self):
+        """
+        Returns the items that are contained in the treasure room.
+        Temporary function until better system is found.
+        """
+
+class MonsterRoom(Room):
+    def __init__(self, availableMonsters: list):
+        self.monster = ''
+        self.availableMonsters = availableMonsters
+
+    def generateMonster(self):
+        """
+        Returns the randomly generated monster in the room.
+        Temporary function until better system is found.
+        """
+        if len(self.availableMonsters) == 0:
+            return 'list of monsters is empty'
+        i = random.randint(len(self.availableMonsters) - 1)
+        return self.availableMonsters[i]
 
 class Character:
     pass
-
 
 list_of_rooms = []
 for i in range(10):

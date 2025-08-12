@@ -7,7 +7,8 @@ class Game:
     """
     Class constructor for Game
     """
-    pass
+    def __init__(self):
+        pass
 
     def get_data(file: str)-> None:
         with open('data.json', 'r', encoding='utf-8') as f:

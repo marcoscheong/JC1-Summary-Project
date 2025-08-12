@@ -121,6 +121,16 @@ class MonsterRoom(Room):
 class Character:
     pass
 
+class CombatSequence():
+    def __init__(self, character, monster, points: int):
+        self.points = points
+
+    def startSequence(self):
+        #input logic for combat sequence
+    
+    def endSequence(self):
+        #return victory/defeat result
+
 list_of_rooms = []
 for i in range(10):
     room =  Room(i)

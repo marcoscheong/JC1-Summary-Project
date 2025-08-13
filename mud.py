@@ -23,16 +23,16 @@ class Game:
 
 
     def get_options(self):
-        if game_state = 'travelling':
+        if game_state == 'travelling':
             return maze.room_options()
-        elif game_state = 'fighting':
+        elif game_state == 'fighting':
             #todo
             pass
         
     def get_actions(self, choices, choice):
         chosen = choices[choice - 1]
         if chosen.topic == 'travel':
-            maze.travel_to()
+            maze.travel_to(chosen)
 
     def execute(self, action):
         pass
@@ -96,7 +96,7 @@ class Maze:
         for direction in ['top', 'down', 'left', 'right']:
             connected_room = current_room.connects.get(direction)
             if connected_room:
-                options.append(connected_room)
+                options.append(direction)
         return options
 
     def travel_to(self, direction):
@@ -112,7 +112,7 @@ class Room:
 
     Then prints out the IDs of connected rooms, assuming each room has an id attribute.
     """
-    def __init__(self, id: int, type: str):
+    def __init__(self, id: int):
         self.id = id
         self.connects = {'top': None, 'left': None, 'right': None, 'down': None}
 
@@ -185,9 +185,11 @@ class CombatSequence():
 
     def startSequence(self):
         #input logic for combat sequence
+        pass
     
     def endSequence(self):
         #return victory/defeat result
+        pass
 
 class Choice():
     def __init__(self, topic, details):

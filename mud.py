@@ -10,16 +10,32 @@ class Game:
     Class constructor for Game
     """
     def _init_(self, intro, outro, maze):
-        pass
+        self.game_state = ''
+        self.maze = maze
 
-    def get_data(file: str)-> None:
+    def get_data(self, file: str)-> None:
         with open('data.json', 'r', encoding='utf-8') as f:
             # data from data.json is deserialised into data_dict
             data_dict = json.load(f)
-    def save_data(file: str)-> None:
+    def save_data(self, file: str)-> None:
         with open('data.json', 'w', encoding='utf-8') as f:
             json.dump(obj, f)
 
+
+    def get_options(self):
+        if game_state = 'travelling':
+            return maze.room_options()
+        elif game_state = 'fighting':
+            #todo
+            pass
+        
+    def get_actions(self, choices, choice):
+        chosen = choices[choice - 1]
+        if chosen.topic == 'travel':
+            maze.travel_to()
+
+    def execute(self, action):
+        pass
 
 #List of things we need to do
 #Create maze
@@ -33,6 +49,7 @@ class Maze:
         """
         self.rooms = rooms
         self.starting_room = starting_room
+        self.current_room = starting_room
 
     def generate_maze(self):
         """
@@ -57,7 +74,7 @@ class Maze:
                 room.connection(down_room, 'down')
                 down_room.connection(room, 'top')
                     
-            
+    
     def draw_rooms(self):
         """
         Method to print out each room and its connections in a clear format.
@@ -74,6 +91,17 @@ class Maze:
                 if not has_connection:
                     print('  No connections')
 
+    def room_options(self):
+        options = []
+        for direction in ['top', 'down', 'left', 'right']:
+            connected_room = current_room.connects.get(direction)
+            if connected_room:
+                options.append(connected_room)
+        return options
+
+    def travel_to(self, direction):
+        if current_room[direction]:
+            current_room = current_room[direction]
 # ROOM CLASSES
 class Room:
     """
@@ -91,6 +119,7 @@ class Room:
     def connection(self, room, direction):
         if direction in self.connects:
             self.connects[direction] = room
+
 
 class TreasureRoom(Room):
     def __init__(self, currency):
@@ -159,6 +188,11 @@ class CombatSequence():
     
     def endSequence(self):
         #return victory/defeat result
+
+class Choice():
+    def __init__(self, topic, details):
+        self.topic = topic
+        self.details = details
 
 list_of_rooms = []
 for i in range(10):

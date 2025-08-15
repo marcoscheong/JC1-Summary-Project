@@ -10,16 +10,32 @@ class Game:
     Class constructor for Game
     """
     def _init_(self, intro, outro, maze):
-        pass
+        self.game_state = ''
+        self.maze = maze
 
-    def get_data(file: str)-> None:
+    def get_data(self, file: str)-> None:
         with open('data.json', 'r', encoding='utf-8') as f:
             # data from data.json is deserialised into data_dict
             data_dict = json.load(f)
-    def save_data(file: str)-> None:
+    def save_data(self, file: str)-> None:
         with open('data.json', 'w', encoding='utf-8') as f:
             json.dump(obj, f)
 
+
+    def get_options(self):
+        if game_state == 'travelling':
+            return maze.room_options()
+        elif game_state == 'fighting':
+            #todo
+            pass
+        
+    def get_actions(self, choices, choice):
+        chosen = choices[choice - 1]
+        if chosen.topic == 'travel':
+            maze.travel_to(chosen)
+
+    def execute(self, action):
+        pass
 
 #List of things we need to do
 #Create maze
@@ -33,6 +49,7 @@ class Maze:
         """
         self.rooms = rooms
         self.starting_room = starting_room
+        self.current_room = starting_room
 
     def generate_maze(self):
         """
@@ -57,7 +74,7 @@ class Maze:
                 room.connection(down_room, 'down')
                 down_room.connection(room, 'top')
                     
-            
+    
     def draw_rooms(self):
         """
         Method to print out each room and its connections in a clear format.
@@ -74,8 +91,18 @@ class Maze:
                 if not has_connection:
                     print('  No connections')
 
-#Create Room 
+    def room_options(self):
+        options = []
+        for direction in ['top', 'down', 'left', 'right']:
+            connected_room = current_room.connects.get(direction)
+            if connected_room:
+                options.append(direction)
+        return options
 
+    def travel_to(self, direction):
+        if current_room[direction]:
+            current_room = current_room[direction]
+# ROOM CLASSES
 class Room:
     """
     Class construtor for Room
@@ -85,13 +112,14 @@ class Room:
 
     Then prints out the IDs of connected rooms, assuming each room has an id attribute.
     """
-    def __init__(self, id: int, type: str):
+    def __init__(self, id: int):
         self.id = id
         self.connects = {'top': None, 'left': None, 'right': None, 'down': None}
 
     def connection(self, room, direction):
         if direction in self.connects:
             self.connects[direction] = room
+
 
 class TreasureRoom(Room):
     def __init__(self, currency):
@@ -118,8 +146,38 @@ class MonsterRoom(Room):
         i = random.randint(len(self.availableMonsters) - 1)
         return self.availableMonsters[i]
 
+
+# CHARACTER CLASSES
 class Character:
-    pass
+    def __init__(self, stats):
+        self.stats = stats
+        # self.inventory = Inventory() (to be updated)
+
+class Player(Character):
+    def __init__(self, inventory):
+        self.inventory = inventory #to be updated
+
+class Monster(Character):
+    def __init__(self, stats):
+        pass
+
+class Stats():
+    def __init__(self, maxHealth: int, attack: int):
+        self.maxHealth = maxHealth
+        self.attack = attack
+        self.currentHealth = maxHealth
+    
+    def takeDamage(self, damage):
+        if (self.currentHealth - damage) <= 0:
+            return 'died'
+        else:
+            self.currentHealth -= damage
+    
+    def heal(self, healAmount):
+        if (self.currentHealth + healAmount) > self.maxHealth:
+            self.currentHealth = self.maxHealth
+        else:
+            self.currentHealth += healAmount
 
 class CombatSequence():
     def __init__(self, character, monster, points: int):
@@ -127,9 +185,16 @@ class CombatSequence():
 
     def startSequence(self):
         #input logic for combat sequence
+        pass
     
     def endSequence(self):
         #return victory/defeat result
+        pass
+
+class Choice():
+    def __init__(self, topic, details):
+        self.topic = topic
+        self.details = details
 
 list_of_rooms = []
 for i in range(10):

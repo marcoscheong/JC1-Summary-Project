@@ -156,9 +156,25 @@ class Character:
         self.stats = stats
         # self.inventory = Inventory() (to be updated)
 
-class Player(Character):
-    def __init__(self, inventory):
-        self.inventory = inventory #to be updated
+class Player:
+    def __init__(self, health: int = 0, attack: int = 0):
+        self.health = health
+        self.attack = attack
+
+    def load_from_storage(self, storage: Storage, file: str):
+        data = storage.get_data(file)
+        self.health = data["Player_health"]
+        self.attack = data["Player_attack"]
+
+    def save_to_storage(self, storage: Storage, file: str):
+        storage.save_data(file, {
+            "Player_health": self.health,
+            "Player_attack": self.attack
+        })
+    def inventory(self):
+        pass
+
+
 
 class Monster(Character):
     def __init__(self, stats):

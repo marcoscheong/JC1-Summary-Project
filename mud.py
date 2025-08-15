@@ -31,14 +31,17 @@ class Storage:
     def __init(self):
         pass
         
-    def get_data(file: str)-> None:
+    def get_data(self)-> None:
         with open('data.json', 'r', encoding='utf-8') as f:
             # data from data.json is deserialised into data_dict
             data_dict = json.load(f)
+            return data_dict
+            #f.close()
             
-    def save_data(self, file: str)-> None:
+    def save_data(self, obj)-> None:
         with open('data.json', 'w', encoding='utf-8') as f:
             json.dump(obj, f)
+            #f.close()
 
 #List of things we need to do
 #Create maze

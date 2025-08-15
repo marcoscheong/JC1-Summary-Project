@@ -1,31 +1,8 @@
 import random
 import json
+import text
 
-#Global Variables
-room_types = ['treasure', 'monster']
 
-class Game:
-    """
-    Class constructor for Game
-    """
-    def _init_(self, intro, outro, maze):
-        self.game_state = ''
-        self.maze = maze
- 
-    def get_options(self):
-        if game_state == 'travelling':
-            return maze.room_options()
-        elif game_state == 'fighting':
-            #todo
-            pass
-        
-    def get_actions(self, choices, choice):
-        chosen = choices[choice - 1]
-        if chosen.topic == 'travel':
-            maze.travel_to(chosen)
-
-    def execute(self, action):
-        pass
 
 class Storage:
     def __init(self):
@@ -46,7 +23,7 @@ class Maze:
     """
     Class constructor for Maze
     """
-    def __init__(self, rooms: dict['Room'], starting_room):
+    def __init__(self, rooms: list['Room'], starting_room):
         """
         Takes in a dict of Room objects and a starting room.
         """
@@ -75,7 +52,7 @@ class Maze:
             if row < num_rows - 1 and (i + num_cols) < len(self.rooms):
                 down_room = self.rooms[i + num_cols]
                 room.connection(down_room, 'down')
-                down_room.connection(room, 'top')
+                down_room.connection(room, 'up')
                     
     
     def draw_rooms(self):
@@ -86,7 +63,7 @@ class Maze:
             if room.id % 3 == 1:  # middle column rooms
                 print(f'Room {room.id} connections:')
                 has_connection = False
-                for direction in ['left', 'right', 'top', 'down']:
+                for direction in text.directions:
                     connected_room = room.connects.get(direction)
                     if connected_room:
                         print(f'{direction} = Room {connected_room.id}')
@@ -96,15 +73,15 @@ class Maze:
 
     def room_options(self):
         options = []
-        for direction in ['top', 'down', 'left', 'right']:
-            connected_room = current_room.connects.get(direction)
+        for direction in text.directions:
+            connected_room = self.current_room.connects.get(direction)
             if connected_room:
-                options.append(direction)
+                options.append('go ' + direction)
         return options
 
     def travel_to(self, direction):
-        if current_room[direction]:
-            current_room = current_room[direction]
+        if self.current_room[direction]:
+            self.current_room = self.current_room[direction]
 # ROOM CLASSES
 class Room:
     """
@@ -117,7 +94,7 @@ class Room:
     """
     def __init__(self, id: int):
         self.id = id
-        self.connects = {'top': None, 'left': None, 'right': None, 'down': None}
+        self.connects = {'up': None, 'left': None, 'right': None, 'down': None}
 
     def connection(self, room, direction):
         if direction in self.connects:
@@ -194,11 +171,6 @@ class CombatSequence():
         #return victory/defeat result
         pass
 
-class Choice():
-    def __init__(self, topic, details):
-        self.topic = topic
-        self.details = details
-
 list_of_rooms = []
 for i in range(10):
     room =  Room(i)
@@ -206,4 +178,34 @@ for i in range(10):
 maze = Maze(list_of_rooms, list_of_rooms[0])
 maze.generate_maze()
 maze.draw_rooms()
+class Game:
+    """
+    Class constructor for Game
+    """
+    def _init_(self, intro, outro, maze):
+        self.game_state = ''
+        self.maze = maze
+ 
+    def get_options(self):
+        choices = maze.room_options()
+        print(choices)
+        if maze.current_room == MonsterRoom:
+            choices.append('fight monster')
+            return choices
+        elif maze.current_room == TreasureRoom:
+            choices.append('open chest')
+            return choices
+        elif maze.current_room == Room:
+            return choices
+        
+    def prompt_player_choice(self, choices):
+        for i, opt in enumerate(choices):
+            print(f'{(i + 1)}. {opt}')
+        _input = input(text.input_prompt)
+        return _input
+print(maze.starting_room)
+
+
+
+
 #Objects

@@ -1,12 +1,44 @@
+import random
+import json
+
 #Global Variables
-room_types = ['treasure', 'battle']
+room_types = ['treasure', 'monster']
 
 class Game:
     """
     Class constructor for Game
     """
     def _init_(self, intro, outro, maze):
+        self.game_state = ''
+        self.maze = maze
+ 
+    def get_options(self):
+        if game_state == 'travelling':
+            return maze.room_options()
+        elif game_state == 'fighting':
+            #todo
+            pass
+        
+    def get_actions(self, choices, choice):
+        chosen = choices[choice - 1]
+        if chosen.topic == 'travel':
+            maze.travel_to(chosen)
+
+    def execute(self, action):
         pass
+
+class Storage:
+    def __init(self):
+        pass
+        
+    def get_data(file: str)-> None:
+        with open('data.json', 'r', encoding='utf-8') as f:
+            # data from data.json is deserialised into data_dict
+            data_dict = json.load(f)
+            
+    def save_data(self, file: str)-> None:
+        with open('data.json', 'w', encoding='utf-8') as f:
+            json.dump(obj, f)
 
 #List of things we need to do
 #Create maze
@@ -17,11 +49,10 @@ class Maze:
     def __init__(self, rooms: dict['Room'], starting_room):
         """
         Takes in a dict of Room objects and a starting room.
-        Initializes str_chain, which will hold a chain of selected rooms for the maze.
         """
         self.rooms = rooms
         self.starting_room = starting_room
-        self.str_chain = []
+        self.current_room = starting_room
 
     def generate_maze(self):
         """
@@ -46,7 +77,7 @@ class Maze:
                 room.connection(down_room, 'down')
                 down_room.connection(room, 'top')
                     
-            
+    
     def draw_rooms(self):
         """
         Method to print out each room and its connections in a clear format.
@@ -63,8 +94,18 @@ class Maze:
                 if not has_connection:
                     print('  No connections')
 
-#Create Room 
+    def room_options(self):
+        options = []
+        for direction in ['top', 'down', 'left', 'right']:
+            connected_room = current_room.connects.get(direction)
+            if connected_room:
+                options.append(direction)
+        return options
 
+    def travel_to(self, direction):
+        if current_room[direction]:
+            current_room = current_room[direction]
+# ROOM CLASSES
 class Room:
     """
     Class construtor for Room
@@ -83,9 +124,80 @@ class Room:
             self.connects[direction] = room
 
 
-class Character:
-    pass
+class TreasureRoom(Room):
+    def __init__(self, currency):
+        self.currency = currency
 
+    def generateItems(self):
+        """
+        Returns the items that are contained in the treasure room.
+        Temporary function until better system is found.
+        """
+
+class MonsterRoom(Room):
+    def __init__(self, availableMonsters: list):
+        self.monster = ''
+        self.availableMonsters = availableMonsters
+
+    def generateMonster(self):
+        """
+        Returns the randomly generated monster in the room.
+        Temporary function until better system is found.
+        """
+        if len(self.availableMonsters) == 0:
+            return 'list of monsters is empty'
+        i = random.randint(len(self.availableMonsters) - 1)
+        return self.availableMonsters[i]
+
+
+# CHARACTER CLASSES
+class Character:
+    def __init__(self, stats):
+        self.stats = stats
+        # self.inventory = Inventory() (to be updated)
+
+class Player(Character):
+    def __init__(self, inventory):
+        self.inventory = inventory #to be updated
+
+class Monster(Character):
+    def __init__(self, stats):
+        pass
+
+class Stats():
+    def __init__(self, maxHealth: int, attack: int):
+        self.maxHealth = maxHealth
+        self.attack = attack
+        self.currentHealth = maxHealth
+    
+    def takeDamage(self, damage):
+        if (self.currentHealth - damage) <= 0:
+            return 'died'
+        else:
+            self.currentHealth -= damage
+    
+    def heal(self, healAmount):
+        if (self.currentHealth + healAmount) > self.maxHealth:
+            self.currentHealth = self.maxHealth
+        else:
+            self.currentHealth += healAmount
+
+class CombatSequence():
+    def __init__(self, character, monster, points: int):
+        self.points = points
+
+    def startSequence(self):
+        #input logic for combat sequence
+        pass
+    
+    def endSequence(self):
+        #return victory/defeat result
+        pass
+
+class Choice():
+    def __init__(self, topic, details):
+        self.topic = topic
+        self.details = details
 
 list_of_rooms = []
 for i in range(10):

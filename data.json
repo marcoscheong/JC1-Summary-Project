@@ -1,5 +1,7 @@
 {
   "Gametitle": "Labyrinth Ascension",
   "Game_info": "Explore Maze Rooms\nEach maze run is procedurally generated (different layouts each time).\nRooms contain enemies, puzzles, traps, or treasure.\nFight Enemies\nDefeat enemies to gain EXP and Rank Points.\nEnemies drop loot (weapons, health, buffs).\nLevel Up & Rank Up\nEXP increases your Level (boosts stats like health, speed, attack).\nRank Points increase your Rank Tier (unlocks new abilities).\nProgressive Difficulty\nHigher ranks unlock deeper maze layers with harder enemies and better rewards.\nDeath & Respawn\nIf you die, you respawn at your base camp with your rank intact but lose temporary loot.",
-  "Game_flavour": "In a world where warriors prove themselves in an endless shifting labyrinth, your journey starts at rock bottom.\nClimb the ranks, earn your place among legends, and uncover the secret of the maze — a truth that might change everything."
+  "Game_flavour": "In a world where warriors prove themselves in an endless shifting labyrinth, your journey starts at rock bottom.\nClimb the ranks, earn your place among legends, and uncover the secret of the maze — a truth that might change everything.",
+  "Player_health": 10,
+  "Player_attack": 15
 }

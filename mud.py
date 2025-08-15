@@ -19,6 +19,7 @@ class Storage:
         with open('data.json', 'r', encoding='utf-8') as f:
             # data from data.json is deserialised into data_dict
             data_dict = json.load(f)
+        
     def save_data(file: str)-> None:
         with open('data.json', 'w', encoding='utf-8') as f:
             json.dump(obj, f)
@@ -77,6 +78,26 @@ class Maze:
                         has_connection = True
                 if not has_connection:
                     print('  No connections')
+
+#Create Player
+
+class Player:
+    """
+    Class constructor for Player instance
+    """
+    def __init__(self, health: int, attack: int):
+        self.health = health
+        self.attack = attack
+
+    def from_storage(cls, storage: Storage, file: str):
+        data = storage.get_data(file)
+        return cls(health=data["Player_health"], attack=data["Player_attack"])
+
+    def save_to_storage(self, storage: Storage, file: str):
+        storage.save_data(file, {
+            "Player_health": self.health,
+            "Player_attack": self.attack
+        })
 
 #Create Room 
 

@@ -1,5 +1,4 @@
 import random
-
 import json
 
 #Global Variables
@@ -12,16 +11,7 @@ class Game:
     def _init_(self, intro, outro, maze):
         self.game_state = ''
         self.maze = maze
-
-    def get_data(self, file: str)-> None:
-        with open('data.json', 'r', encoding='utf-8') as f:
-            # data from data.json is deserialised into data_dict
-            data_dict = json.load(f)
-    def save_data(self, file: str)-> None:
-        with open('data.json', 'w', encoding='utf-8') as f:
-            json.dump(obj, f)
-
-
+ 
     def get_options(self):
         if game_state == 'travelling':
             return maze.room_options()
@@ -36,6 +26,19 @@ class Game:
 
     def execute(self, action):
         pass
+
+class Storage:
+    def __init(self):
+        pass
+        
+    def get_data(file: str)-> None:
+        with open('data.json', 'r', encoding='utf-8') as f:
+            # data from data.json is deserialised into data_dict
+            data_dict = json.load(f)
+            
+    def save_data(self, file: str)-> None:
+        with open('data.json', 'w', encoding='utf-8') as f:
+            json.dump(obj, f)
 
 #List of things we need to do
 #Create maze

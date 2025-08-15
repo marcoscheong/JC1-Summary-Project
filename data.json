@@ -1,39 +1,5 @@
 {
-  "gameTitle": "Labyrinth Ascension",
-  "gameFlavour": "In a world where warriors prove themselves in an endless shifting labyrinth, your journey starts at rock bottom. Climb the ranks, earn your place among legends, and uncover the secret of the maze — a truth that might change everything.",
-  "gameInfo": {
-    "exploreMazeRooms": {
-      "title": "Explore Maze Rooms",
-      "details": [
-        "Each maze run is procedurally generated (different layouts each time).",
-        "Rooms contain enemies, puzzles, traps, or treasure."
-      ]
-    },
-    "fightEnemies": {
-      "title": "Fight Enemies",
-      "details": [
-        "Defeat enemies to gain EXP and Rank Points.",
-        "Enemies drop loot (weapons, health, buffs)."
-      ]
-    },
-    "levelAndRankUp": {
-      "title": "Level Up & Rank Up",
-      "details": [
-        "EXP increases your Level (boosts stats like health, speed, attack).",
-        "Rank Points increase your Rank Tier (unlocks new abilities)."
-      ]
-    },
-    "progressiveDifficulty": {
-      "title": "Progressive Difficulty",
-      "details": [
-        "Higher ranks unlock deeper maze layers with harder enemies and better rewards."
-      ]
-    },
-    "deathAndRespawn": {
-      "title": "Death & Respawn",
-      "details": [
-        "If you die, you respawn at your base camp with your rank intact but lose temporary loot."
-      ]
-    }
-  }
+  "Gametitle": "Labyrinth Ascension",
+  "Game_info": "Explore Maze Rooms\nEach maze run is procedurally generated (different layouts each time).\nRooms contain enemies, puzzles, traps, or treasure.\nFight Enemies\nDefeat enemies to gain EXP and Rank Points.\nEnemies drop loot (weapons, health, buffs).\nLevel Up & Rank Up\nEXP increases your Level (boosts stats like health, speed, attack).\nRank Points increase your Rank Tier (unlocks new abilities).\nProgressive Difficulty\nHigher ranks unlock deeper maze layers with harder enemies and better rewards.\nDeath & Respawn\nIf you die, you respawn at your base camp with your rank intact but lose temporary loot.",
+  "Game_flavour": "In a world where warriors prove themselves in an endless shifting labyrinth, your journey starts at rock bottom.\nClimb the ranks, earn your place among legends, and uncover the secret of the maze — a truth that might change everything."
 }

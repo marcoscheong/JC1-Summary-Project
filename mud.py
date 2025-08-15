@@ -2,7 +2,30 @@ import random
 import json
 import text
 
-
+class Game:
+    """
+    Class constructor for Game
+    """
+    def _init_(self, intro, outro, maze):
+        self.game_state = ''
+        self.maze = maze
+ 
+    def get_options(self):
+        choices = maze.room_options()
+        if type(maze.current_room) == MonsterRoom:
+            choices.append('fight monster')
+            return choices
+        elif type(maze.current_room) == TreasureRoom:
+            choices.append('open chest')
+            return choices
+        elif type(maze.current_room) == Room:
+            return choices
+        
+    def prompt_player_choice(self, choices):
+        for i, opt in enumerate(choices):
+            print(f'{(i + 1)}. {opt}')
+        _input = input(text.input_prompt)
+        return _input
 
 class Storage:
     def __init(self):
@@ -69,7 +92,7 @@ class Maze:
                         print(f'{direction} = Room {connected_room.id}')
                         has_connection = True
                 if not has_connection:
-                    print('  No connections')
+                    print('No connections')
 
     def room_options(self):
         options = []
@@ -80,8 +103,10 @@ class Maze:
         return options
 
     def travel_to(self, direction):
-        if self.current_room[direction]:
-            self.current_room = self.current_room[direction]
+        connected_room = self.current_room.connects.get(direction)
+        if connected_room:
+            self.current_room = connected_room
+            print(text.successful_room_travel + str(connected_room.id))
 # ROOM CLASSES
 class Room:
     """
@@ -178,34 +203,4 @@ for i in range(10):
 maze = Maze(list_of_rooms, list_of_rooms[0])
 maze.generate_maze()
 maze.draw_rooms()
-class Game:
-    """
-    Class constructor for Game
-    """
-    def _init_(self, intro, outro, maze):
-        self.game_state = ''
-        self.maze = maze
- 
-    def get_options(self):
-        choices = maze.room_options()
-        print(choices)
-        if maze.current_room == MonsterRoom:
-            choices.append('fight monster')
-            return choices
-        elif maze.current_room == TreasureRoom:
-            choices.append('open chest')
-            return choices
-        elif maze.current_room == Room:
-            return choices
-        
-    def prompt_player_choice(self, choices):
-        for i, opt in enumerate(choices):
-            print(f'{(i + 1)}. {opt}')
-        _input = input(text.input_prompt)
-        return _input
-print(maze.starting_room)
-
-
-
-
 #Objects

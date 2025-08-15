@@ -1,5 +1,6 @@
 # Import statements
 import mud
+import text
 if __name__ == "__main__":
     game = mud.Game()
     #mud.welcome()
@@ -9,8 +10,9 @@ if __name__ == "__main__":
         choices = game.get_options()
         command = game.prompt_player_choice(choices).strip().lower()
         if command in ['quit', 'exit']:
+            print(text.thanks_message)
+            
             #initiate exit
-            pass
         elif command.startswith('go'):
             direction = command.split()[1]
             mud.maze.travel_to(direction)
@@ -22,7 +24,7 @@ if __name__ == "__main__":
             pass
         else:
             #print ABSTRACTED error message
-            pass
+            print(text.input_error_prompt)
 
 
 

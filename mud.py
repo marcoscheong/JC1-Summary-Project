@@ -27,6 +27,10 @@ class Game:
         _input = input(text.input_prompt)
         return _input
 
+
+
+    ascii_dict = load_ascii_art("ascii_art.txt")
+print(ascii_dict["TITLE"])
 class Storage:
     def __init(self):
         pass

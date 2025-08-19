@@ -1,7 +1,10 @@
 room_types = ['treasure', 'monster']
-action_states = {
-    'travel': 'travelling', 
-    'fight': 'fighting'}
+
+maze_size = 15
+
+welcome_prompt = "Welcome to Labyrinth Ascension, a Single Player MUD game. Do you want to start?"
+start_choices = ['start', 'quit']
+started_text = ''
 
 input_prompt = "Please select a choice: "
 input_error_prompt = "Please input again."

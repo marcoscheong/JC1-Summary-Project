@@ -3,7 +3,8 @@ import mud
 import text
 if __name__ == "__main__":
     game = mud.Game()
-    #mud.welcome()
+    game.set_state('start')
+    game.welcome()
     #player = data.create_player()
     #game.add_player(player)
     while True:
@@ -15,7 +16,10 @@ if __name__ == "__main__":
             #initiate exit
         elif command.startswith('go'):
             direction = command.split()[1]
-            mud.maze.travel_to(direction)
+            if direction in text.directions:
+                mud.maze.travel_to(direction)
+            else:
+                print(text.input_error_prompt)
         elif command.startswith('open'):
             #open chest
             pass

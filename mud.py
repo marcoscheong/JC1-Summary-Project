@@ -20,17 +20,7 @@ class Game:
             return choices
         elif type(maze.current_room) == Room:
             return choices
-        
-    def prompt_player_choice(self, choices):
-        for i, opt in enumerate(choices):
-            print(f'{(i + 1)}. {opt}')
-        _input = input(text.input_prompt)
-        return _input
 
-
-
-    ascii_dict = load_ascii_art("ascii_art.txt")
-print(ascii_dict["TITLE"])
 class Storage:
     def __init(self):
         pass

@@ -19,14 +19,14 @@ class Game:
             choices = text.start_choices
             return choices
         elif self.game_state == 'travel':
-            choices = maze.room_options()
-            if type(maze.current_room) == MonsterRoom:
+            choices = self.maze.room_options()
+            if type(self.maze.current_room) == MonsterRoom:
                 choices.append('fight monster')
                 return choices
-            elif type(maze.current_room) == TreasureRoom:
+            elif type(self.maze.current_room) == TreasureRoom:
                 choices.append('open chest')
                 return choices
-            elif type(maze.current_room) == Room:
+            elif type(self.maze.current_room) == Room:
                 return choices
         
     def prompt_player_choice(self, choices):
@@ -42,6 +42,9 @@ class Game:
             rooms.append(Room(i + 1))
         self.maze = Maze(rooms, rooms[0])
         
+        print(text.started_text)
+
+        self.set_state('travel')
 
 
     def quit_game(self):
@@ -52,15 +55,12 @@ class Game:
         choices = self.get_options()
         chosen = False
         while chosen == False:
-            print('iterated')
             choice = self.prompt_player_choice(choices)
             if choice not in choices:
                 print('Please type out a valid option')
             elif choice == 'start':
                 chosen = True
                 print(self.start_game())
-
-                self.set_state('travel')
             elif choice == 'quit':
                 chosen = True
                 self.quit_game()

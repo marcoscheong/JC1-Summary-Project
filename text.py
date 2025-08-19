@@ -4,7 +4,7 @@ maze_size = 15
 
 welcome_prompt = "Welcome to Labyrinth Ascension, a Single Player MUD game. Do you want to start?"
 start_choices = ['start', 'quit']
-started_text = ''
+started_text = 'insert started message'
 
 input_prompt = "Please select a choice: "
 input_error_prompt = "Please input again."

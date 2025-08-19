@@ -87,15 +87,51 @@ class Maze:
         """
         for room in self.rooms:
             if room.id % 3 == 1:  # middle column rooms
-                print(f'Room {room.id} connections:')
+                # print(f'Room {room.id} connections:')
                 has_connection = False
                 for direction in text.directions:
                     connected_room = room.connects.get(direction)
+                    temp = ''
                     if connected_room:
                         print(f'{direction} = Room {connected_room.id}')
                         has_connection = True
                 if not has_connection:
                     print('No connections')
+            if room.connects['up'] and room.connects['down'] and room.connects['left'] and room.connects['right']:
+                pass
+                #insert four connection here
+            if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
+                pass
+                #insert two room connection vertically here
+            if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
+                pass
+                #insert two room connection horizontally here
+            if room.connects['up'] and room.connects['down'] and room.connects['left'] and not(room.connects['right']):
+                pass
+                #insert three left connection here
+            if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and room.connects['right']:
+                pass
+                #insert three right connection here
+            if room.connects['up'] and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
+                pass
+                #insert three up connection here
+            if not(room.connects['up']) and room.connects['down'] and room.connects['left'] and room.connects['right']:
+                pass
+                #insert three down connection here
+            if not(room.connects['up']) and not(room.connects['down']) and not(room.connects['left']) and room.connects['right']:
+                pass
+                #insert single right connection here
+            if room.connects['up'] and not(room.connects['down']) and not(room.connects['left']) and not(room.connects['right']):
+                pass
+                #insert single up connection here
+        
+            if not(room.connects['up']) and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
+                pass
+                #insert single down connection here
+            if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and not(room.connects['right']):
+                pass
+                #insert single left connection here
+
 
     def room_options(self):
         options = []
@@ -110,6 +146,7 @@ class Maze:
         if connected_room:
             self.current_room = connected_room
             print(text.successful_room_travel + str(connected_room.id))
+    
 # ROOM CLASSES
 class Room:
     """

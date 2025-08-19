@@ -13,6 +13,12 @@ class Game:
 
     def set_state(self, state):
         self.game_state = state
+    
+    def get_state(self):
+        return self.game_state
+    
+    def get_maze(self):
+        return self.maze
  
     def get_options(self):
         if self.game_state == 'start':
@@ -41,9 +47,8 @@ class Game:
         for i in range(text.maze_size):
             rooms.append(Room(i + 1))
         self.maze = Maze(rooms, rooms[0])
-        
+        self.maze.generate_maze()
         print(text.started_text)
-
         self.set_state('travel')
 
 
@@ -60,7 +65,7 @@ class Game:
                 print('Please type out a valid option')
             elif choice == 'start':
                 chosen = True
-                print(self.start_game())
+                self.start_game()
             elif choice == 'quit':
                 chosen = True
                 self.quit_game()

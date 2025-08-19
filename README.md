@@ -84,7 +84,7 @@ classDiagram
     class Storage{
         + get_data()
         + save_data()
-
+}
     class Room{
         + connections()
     }

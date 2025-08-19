@@ -14,8 +14,7 @@
 
 ```mermaid
 classDiagram
-    Maze <|-- Room
-    
+   
     Maze : - rooms
     Maze : - starting_room
     Maze : - str_chain

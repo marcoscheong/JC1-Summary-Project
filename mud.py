@@ -332,6 +332,7 @@ class Player:
         storage.save_data(file, {
             "Player_health": self.health,
             "Player_attack": self.attack
+        })
 
 class Monster(Character):
     def __init__(self, stats):

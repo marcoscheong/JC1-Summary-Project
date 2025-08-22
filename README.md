@@ -11,17 +11,15 @@
 # This is a J1 Summary Project
 - It is a simple MUD game about ...
 
-
 ```mermaid
 classDiagram
-    Maze <|-- Room
-    
+
     Maze : - rooms
     Maze : - starting_room
-    Maze : - str_chain
+    Maze : - current_room
 
     Room : - id
-    Room : - connect
+    Room : - connects
     Room <|-- TreasureRoom
     Room <|-- MonsterRoom
 
@@ -30,9 +28,11 @@ classDiagram
     MonsterRoom : - availableMonsters
 
     Character : - stats
+    Character : - inventory
     Character <|-- Player
     Character <|-- Monster
     Player : - inventory
+    Monster : - stats
 
     Stats : - maxHealth
     Stats : - attack
@@ -45,36 +45,38 @@ classDiagram
     Choice : - details
 
     CombatSequence : - points
-    class Room{
+
+    class Room {
         + Connection()
+        + connections()
     }
-    class Maze{
+    class Maze {
         + generate_maze()
         + draw_rooms()
         + room_options()
         + travel_to()
     }
-    class Game{
+    class Game {
         + get_data()
         + get_options()
         + get_actions()
         + execute()
     }
-    class TreasureRoom{
+    class TreasureRoom {
         + generateItems()
     }
-
-    class MonsterRoom{
+    class MonsterRoom {
         + generateMonster()
     }
-    
-    class Stats{
+    class Stats {
         + takeDamage()
         + heal()
     }
-    
-    class CombatSequence{
+    class CombatSequence {
         + startSequence()
         + endSequence()
     }
-```
+    class Storage {
+        + get_data()
+        + save_data()
+    }

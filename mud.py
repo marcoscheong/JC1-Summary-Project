@@ -73,6 +73,13 @@ class Game:
     def load_data(self):
         pass
 
+    def store_currentdata(self, file):
+        
+        storage.save_data(file, {
+            "Room_id": maze.id
+        })
+        pass
+
 class Storage:
     def __init(self):
         pass

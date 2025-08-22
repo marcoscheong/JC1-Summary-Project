@@ -24,6 +24,7 @@ class Game:
         if self.game_state == 'start':
             choices = text.start_choices
             return choices
+=======
         elif self.game_state == 'travel':
             choices = self.maze.room_options()
             if type(self.maze.current_room) == MonsterRoom:

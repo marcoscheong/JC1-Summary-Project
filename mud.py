@@ -133,15 +133,51 @@ class Maze:
         """
         for room in self.rooms:
             if room.id % 3 == 1:  # middle column rooms
-                print(f'Room {room.id} connections:')
+                # print(f'Room {room.id} connections:')
                 has_connection = False
                 for direction in text.directions:
                     connected_room = room.connects.get(direction)
+                    temp = ''
                     if connected_room:
                         print(f'{direction} = Room {connected_room.id}')
                         has_connection = True
                 if not has_connection:
                     print('No connections')
+            if room.connects['up'] and room.connects['down'] and room.connects['left'] and room.connects['right']:
+                pass
+                #insert four connection here
+            if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
+                pass
+                #insert two room connection vertically here
+            if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
+                pass
+                #insert two room connection horizontally here
+            if room.connects['up'] and room.connects['down'] and room.connects['left'] and not(room.connects['right']):
+                pass
+                #insert three left connection here
+            if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and room.connects['right']:
+                pass
+                #insert three right connection here
+            if room.connects['up'] and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
+                pass
+                #insert three up connection here
+            if not(room.connects['up']) and room.connects['down'] and room.connects['left'] and room.connects['right']:
+                pass
+                #insert three down connection here
+            if not(room.connects['up']) and not(room.connects['down']) and not(room.connects['left']) and room.connects['right']:
+                pass
+                #insert single right connection here
+            if room.connects['up'] and not(room.connects['down']) and not(room.connects['left']) and not(room.connects['right']):
+                pass
+                #insert single up connection here
+        
+            if not(room.connects['up']) and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
+                pass
+                #insert single down connection here
+            if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and not(room.connects['right']):
+                pass
+                #insert single left connection here
+
 
     def room_options(self):
         options = []
@@ -156,6 +192,7 @@ class Maze:
         if connected_room:
             self.current_room = connected_room
             print(text.successful_room_travel + str(connected_room.id))
+    
 # ROOM CLASSES
 class Room:
     """
@@ -206,7 +243,7 @@ class Character:
     def __init__(self, stats):
         self.stats = stats
         # self.inventory = Inventory() (to be updated)
-
+ 
 class Player(Character):
     def __init__(self):
         pass
@@ -223,10 +260,77 @@ class Player(Character):
             "Player_current_health": self.stats.currentHealth,
             "Player_attack": self.stats.attack
         })
-    def inventory(self):
-        pass
 
+class Inventory:
+    def __init__(self, storage: Storage, file: str):
+        self.storage = storage
+        self.file = file
+        try:
+            data = self.storage.get_data(file)
+            self.items = data.get("items", {})
+        except FileNotFoundError:
+            self.items = {}
+            self.save_inventory()  # create file if not exists
 
+    def add_item(self, item_name: str, quantity: int = 1):
+        """Add an item and save to JSON."""
+        if item_name in self.items:
+            self.items[item_name] += quantity
+        else:
+            self.items[item_name] = quantity
+        self.save_inventory()
+
+    def use_item(self, item_name: str, quantity: int = 1):
+        """Use an item and save to JSON."""
+        if item_name not in self.items:
+            print(f"{item_name} not found in inventory.")
+            return False
+        if self.items[item_name] < quantity:
+            print(f"Not enough {item_name} to use.")
+            return False
+        
+        self.items[item_name] -= quantity
+        if self.items[item_name] <= 0:
+            del self.items[item_name]
+        self.save_inventory()
+        return True
+
+    def remove_item(self, item_name: str):
+        """Remove an item completely."""
+        if item_name in self.items:
+            del self.items[item_name]
+            self.save_inventory()
+        else:
+            print(f"{item_name} not found in inventory.")
+
+    def save_inventory(self):
+        """Save current inventory to the JSON file."""
+        self.storage.save_data(self.file, {"items": self.items})
+
+    def show_inventory(self):
+        """Print the current inventory."""
+        if not self.items:
+            print("Inventory is empty.")
+        else:
+            print("Current Inventory:")
+            for item, qty in self.items.items():
+                print(f"{item}: {qty}")
+    
+
+class Player:
+    def __init__(self, health: int = 0, attack: int = 0):
+        self.health = health
+        self.attack = attack
+
+    def load_from_storage(self, storage: Storage, file: str):
+        data = storage.get_data(file)
+        self.health = data["Player_health"]
+        self.attack = data["Player_attack"]
+
+    def save_to_storage(self, storage: Storage, file: str):
+        storage.save_data(file, {
+            "Player_health": self.health,
+            "Player_attack": self.attack
 
 class Monster(Character):
     def __init__(self, stats):

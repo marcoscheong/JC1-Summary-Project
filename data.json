@@ -1,0 +1,49 @@
+{
+
+  "Player_health": 10,
+  "Player_attack": 15,
+
+  "Items": {
+    "Weapon": "Fist",
+    "Armour": "",
+    "Consumables": {
+      "Attack_potion": 3,
+      "Health_potion": 3,
+      "Heal potion": 3
+    }
+  },
+
+  "Weapon": {
+    "Fist": 1,
+    "Beginner Wand": 3,
+    "Wooden Sword": 5,
+    "Beginner Daggers": 2,
+    "Knucklebust": 10,
+    "Intermediate Wand": 8,
+    "Stone Sword": 20,
+    "Intermediate Daggers": 7
+  },
+
+  "Armour": {
+    "Leather Leggings": 1,
+    "Leather Boots": 1,
+    "Leather Helmet": 1,
+    "Leather Chestplate": 1,
+    "Chainmail Leggings": 5,
+    "Chainmail Boots": 5,
+    "Chainmail Helmet": 5,
+    "Chainmail Chestplate": 5,
+    "Iron Leggings": 25,
+    "Iron Boots": 25,
+    "Iron Helmet": 25,
+    "Iron Chestplate": 25,
+    "Diamond Leggings": 50,
+    "Diamond Boots": 50,
+    "Diamond Helmet": 50,
+    "Diamond Chestplate": 50,
+    "Draconic Leggings": 300,
+    "Draconic Boots": 300,
+    "Draconic Helmet": 300,
+    "Draconic Chestplate": 300
+  }
+}

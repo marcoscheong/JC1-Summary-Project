@@ -14,7 +14,6 @@
 ```mermaid
 classDiagram
 
-    
     Maze : - rooms
     Maze : - starting_room
     Maze : - current_room
@@ -33,8 +32,7 @@ classDiagram
     Character <|-- Player
     Character <|-- Monster
     Player : - inventory
-    Monster: - stats
-
+    Monster : - stats
 
     Stats : - maxHealth
     Stats : - attack
@@ -46,47 +44,39 @@ classDiagram
     Choice : - topic
     Choice : - details
 
-
     CombatSequence : - points
-    class Room{
+
+    class Room {
         + Connection()
+        + connections()
     }
-    class Maze{
+    class Maze {
         + generate_maze()
         + draw_rooms()
         + room_options()
         + travel_to()
     }
-    class Game{
+    class Game {
         + get_data()
         + get_options()
         + get_actions()
         + execute()
     }
-    class TreasureRoom{
+    class TreasureRoom {
         + generateItems()
     }
-
-    class MonsterRoom{
+    class MonsterRoom {
         + generateMonster()
     }
-    
-    class Stats{
+    class Stats {
         + takeDamage()
         + heal()
     }
-    
-    class CombatSequence{
+    class CombatSequence {
         + startSequence()
         + endSequence()
     }
-
-    class Storage{
+    class Storage {
         + get_data()
         + save_data()
-
-    class Room{
-        + connections()
     }
-    }
-```

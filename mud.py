@@ -1,31 +1,77 @@
 import random
 import json
 import text
+import sys
 
 class Game:
     """
     Class constructor for Game
     """
-    def _init_(self, intro, outro, maze):
+    def _init_(self):
         self.game_state = ''
-        self.maze = maze
+        self.maze = None
+
+    def set_state(self, state):
+        self.game_state = state
+    
+    def get_state(self):
+        return self.game_state
+    
+    def get_maze(self):
+        return self.maze
  
     def get_options(self):
-        choices = maze.room_options()
-        if type(maze.current_room) == MonsterRoom:
-            choices.append('fight monster')
+        if self.game_state == 'start':
+            choices = text.start_choices
             return choices
-        elif type(maze.current_room) == TreasureRoom:
-            choices.append('open chest')
-            return choices
-        elif type(maze.current_room) == Room:
-            return choices
+        elif self.game_state == 'travel':
+            choices = self.maze.room_options()
+            if type(self.maze.current_room) == MonsterRoom:
+                choices.append('fight monster')
+                return choices
+            elif type(self.maze.current_room) == TreasureRoom:
+                choices.append('open chest')
+                return choices
+            elif type(self.maze.current_room) == Room:
+                return choices
         
     def prompt_player_choice(self, choices):
         for i, opt in enumerate(choices):
             print(f'{(i + 1)}. {opt}')
         _input = input(text.input_prompt)
         return _input
+
+    def start_game(self):
+        #instantiate maze
+        rooms = []
+        for i in range(text.maze_size):
+            rooms.append(Room(i + 1))
+        self.maze = Maze(rooms, rooms[0])
+        self.maze.generate_maze()
+        print(text.started_text)
+        self.set_state('travel')
+
+
+    def quit_game(self):
+        sys.exit()
+
+    def welcome(self):
+        print(text.welcome_prompt)
+        choices = self.get_options()
+        chosen = False
+        while chosen == False:
+            choice = self.prompt_player_choice(choices)
+            if choice not in choices:
+                print('Please type out a valid option')
+            elif choice == 'start':
+                chosen = True
+                self.start_game()
+            elif choice == 'quit':
+                chosen = True
+                self.quit_game()
+
+    def load_data(self):
+        pass
 
 class Storage:
     def __init(self):
@@ -196,6 +242,77 @@ class Character:
     def __init__(self, stats):
         self.stats = stats
         # self.inventory = Inventory() (to be updated)
+ 
+class Player(Character):
+    def __init__(self):
+        pass
+
+    def load_from_storage(self, storage: Storage, file: str):
+        data = storage.get_data(file)
+        self.stats.maxHealth = data["Player_health"]
+        self.stats.attack = data["Player_attack"]
+
+    def save_to_storage(self, storage: Storage, file: str):
+        storage.save_data(file, {
+            "Player_health": self.stats.maxHealth,
+            "Player_attack": self.stats.attack
+        })
+
+class Inventory:
+    def __init__(self, storage: Storage, file: str):
+        self.storage = storage
+        self.file = file
+        try:
+            data = self.storage.get_data(file)
+            self.items = data.get("items", {})
+        except FileNotFoundError:
+            self.items = {}
+            self.save_inventory()  # create file if not exists
+
+    def add_item(self, item_name: str, quantity: int = 1):
+        """Add an item and save to JSON."""
+        if item_name in self.items:
+            self.items[item_name] += quantity
+        else:
+            self.items[item_name] = quantity
+        self.save_inventory()
+
+    def use_item(self, item_name: str, quantity: int = 1):
+        """Use an item and save to JSON."""
+        if item_name not in self.items:
+            print(f"{item_name} not found in inventory.")
+            return False
+        if self.items[item_name] < quantity:
+            print(f"Not enough {item_name} to use.")
+            return False
+        
+        self.items[item_name] -= quantity
+        if self.items[item_name] <= 0:
+            del self.items[item_name]
+        self.save_inventory()
+        return True
+
+    def remove_item(self, item_name: str):
+        """Remove an item completely."""
+        if item_name in self.items:
+            del self.items[item_name]
+            self.save_inventory()
+        else:
+            print(f"{item_name} not found in inventory.")
+
+    def save_inventory(self):
+        """Save current inventory to the JSON file."""
+        self.storage.save_data(self.file, {"items": self.items})
+
+    def show_inventory(self):
+        """Print the current inventory."""
+        if not self.items:
+            print("Inventory is empty.")
+        else:
+            print("Current Inventory:")
+            for item, qty in self.items.items():
+                print(f"{item}: {qty}")
+    
 
 class Player:
     def __init__(self, health: int = 0, attack: int = 0):
@@ -211,11 +328,6 @@ class Player:
         storage.save_data(file, {
             "Player_health": self.health,
             "Player_attack": self.attack
-        })
-    def inventory(self):
-        pass
-
-
 
 class Monster(Character):
     def __init__(self, stats):
@@ -372,12 +484,4 @@ class CombatSequence():
     def end_sequence(self):
         #return victory/defeat result
         pass
-
-list_of_rooms = []
-for i in range(10):
-    room =  Room(i)
-    list_of_rooms.append(room)
-maze = Maze(list_of_rooms, list_of_rooms[0])
-maze.generate_maze()
-maze.draw_rooms()
 #Objects

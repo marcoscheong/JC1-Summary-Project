@@ -8,9 +8,10 @@ class Game:
     """
     Class constructor for Game
     """
-    def _init_(self):
+    def _init_(self, storage):
         self.game_state = ''
         self.maze = None
+        self.storage = storage
 
     def set_state(self, state):
         self.game_state = state
@@ -74,12 +75,11 @@ class Game:
     def load_data(self):
         pass
 
-    def store_currentdata(self, file):
-        
-        storage.save_data(file, {
-            "Room_id": maze.id
+    def store_currentdata(self, file):    
+        self.storage.save_data(file, {
+            "Room_id": self.maze.current_room.id
         })
-        pass
+        
 
 class Storage:
     def __init(self):
@@ -134,116 +134,81 @@ class Maze:
                 room.connection(down_room, 'down')
                 down_room.connection(room, 'up')
         
-                    
+    def get_room_key(self, room):
+        up, down, left, right = (
+            room.connects['up'], 
+            room.connects['down'], 
+            room.connects['left'], 
+            room.connects['right']
+        )
+
+        if up and down and left and right: return "NSEW"
+
+        if up and down and left and not right: return "NSW"
+        if up and down and not left and right: return "NSE"
+        if up and not down and left and right: return "NEW"
+        if not up and down and left and right: return "SEW"
+
+        if up and down and not left and not right: return "NS"
+        if not up and not down and left and right: return "EW"
+        if up and not down and left and not right: return "NW"
+        if up and not down and not left and right: return "NE"
+        if not up and down and left and not right: return "SW"
+        if not up and down and not left and right: return "SE"
+
+        if up and not down and not left and not right: return "N"
+        if not up and down and not left and not right: return "S"
+        if not up and not down and left and not right: return "W"
+        if not up and not down and not left and right: return "E"
+        return "NONE"
     
     def draw_rooms(self):
         """
-        Method to print out each room and its connections in a clear format.
+        Method to print out each room and its connections in a clear format as a proper grid.
         """
-        map_str = ''
-        for room in self.rooms:
-            #if room.id % 3 == 1:  # middle column rooms
-                # print(f'Room {room.id} connections:')
-                #has_connection = False
-                #for direction in text.directions:
-                    # connected_room = room.connects.get(direction)
-                    # temp = ''
-                #     if connected_room:
-                #         print(f'{direction} = Room {connected_room.id}')
-                #         has_connection = True
-                # if not has_connection:
-                #     print('No connections')
-            if room.id != self.current_room.id:
-                if room.connects['up'] and room.connects['down'] and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NSEW']
-                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NS']
-                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['EW']
-                if room.connects['up'] and room.connects['down'] and room.connects['left'] and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NSW']
-                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NSE']
-                if room.connects['up'] and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NEW']
-                if not(room.connects['up']) and room.connects['down'] and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NSW']
-                if not(room.connects['up']) and not(room.connects['down']) and not(room.connects['left']) and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['E']
-                if room.connects['up'] and not(room.connects['down']) and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['N']
-                if not(room.connects['up']) and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['S']
-                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['W']
-            else:
-                if room.connects['up'] and room.connects['down'] and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NSEW']
-                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NS']
-                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['EW']
-                if room.connects['up'] and room.connects['down'] and room.connects['left'] and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NSW']
-                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NSE']
-                if room.connects['up'] and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NEW']
-                if not(room.connects['up']) and room.connects['down'] and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NSW']
-                if not(room.connects['up']) and not(room.connects['down']) and not(room.connects['left']) and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['E']
-                if room.connects['up'] and not(room.connects['down']) and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['N']
-                if not(room.connects['up']) and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['S']
-                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['W']
-            print(map_str)
+        row_chunks = []
+        rooms_per_row = 3
+
+        # Build the grid row by row
+        for row_start in range(0, len(self.rooms), rooms_per_row):
+            row_rooms = self.rooms[row_start:row_start + rooms_per_row]
+
+            # Collect arts for this row
+            row_arts = []
+            for room in row_rooms:
+                if room.id == self.current_room.id:
+                    row_arts.append(text.player_rooms[self.get_room_key(room)])
+                else:
+                    row_arts.append(text.rooms[self.get_room_key(room)])
+
+            # Determine max height for this row
+            max_height = max(len(r.strip("\n").splitlines()) for r in row_arts)
+            max_width = max(max(len(line) for line in r.strip("\n").splitlines()) for r in row_arts)
+
+            # Initialize row chunk
+            row_chunk = [[] for _ in range(max_height)]
+
+            # Pad rooms and add to row_chunk
+            for art in row_arts:
+                lines = art.strip("\n").splitlines()
+                lines = [line.ljust(max_width) for line in lines]
+
+                # Pad bottom if shorter than row's max_height
+                while len(lines) < max_height:
+                    lines.append(" " * max_width)
+
+                for i, line in enumerate(lines):
+                    row_chunk[i].append(line)
+
+            row_chunks.append(row_chunk)
+
+        # Build final string
+        map_str = ""
+        for row in row_chunks:
+            for line in row:
+                map_str += "".join(line) + "\n"
+
+        print(map_str)
 
 
     def room_options(self):
@@ -409,7 +374,7 @@ class Stats():
         self.attack = attack
         self.currentHealth = maxHealth
     
-    def takeDamage(self, damage):
+    def take_damage(self, damage):
         if (self.currentHealth - damage) <= 0:
             return 'died'
         else:
@@ -450,8 +415,8 @@ class CombatSequence():
             self.saved_p = 0
             self.saved_m = 0
 
-            player_seq = player_ability_sequence(p_elixir)
-            monster_seq = monster_abilty_sequence(m_elixir)
+            player_seq = self.player_ability_sequence(p_elixir)
+            monster_seq = self.monster_abilty_sequence(m_elixir)
 
             if len(player_seq) > len(monster_seq):
                 for i in range(len(monster_seq)):
@@ -461,6 +426,11 @@ class CombatSequence():
                     p_healed = player_seq[i].heal
                     m_healed = monster_seq[i].heal
 
+                    self.player.stats.take_damage(p_dmg_taken)
+                    self.monster.stats.take_damage(m_dmg_taken)
+                    self.player.stats.heal(p_healed)
+                    self.monster.stats.heal(m_healed)
+
                     self.saved_p = player_seq[i].saved_elixir
                     self.saved_m = monster_seq[i].saved_elixir
                 
@@ -468,6 +438,9 @@ class CombatSequence():
                     m_dmg_taken = player_seq[i].attack
 
                     p_healed = player_seq[i].heal
+
+                    self.monster.stats.take_damage(m_dmg_taken)
+                    self.player.stats.heal(p_healed)
 
                     self.saved_p = player_seq[i].saved_elixir
             elif len(player_seq) < len(monster_seq):
@@ -477,6 +450,11 @@ class CombatSequence():
 
                     p_healed = player_seq[i].heal
                     m_healed = monster_seq[i].heal
+                    
+                    self.player.stats.take_damage(p_dmg_taken)
+                    self.monster.stats.take_damage(m_dmg_taken)
+                    self.player.stats.heal(p_healed)
+                    self.monster.stats.heal(m_healed)
 
                     self.saved_p = player_seq[i].saved_elixir
                     self.saved_m = monster_seq[i].saved_elixir
@@ -485,6 +463,9 @@ class CombatSequence():
                     p_dmg_taken = monster_seq[i].attack
 
                     m_healed = monster_seq[i].heal
+
+                    self.player.stats.take_damage(p_dmg_taken)
+                    self.monster.stats.heal(m_healed)
 
                     self.saved_m = monster_seq[i].saved_elixir
             else: 
@@ -495,6 +476,11 @@ class CombatSequence():
                     p_healed = player_seq[i].heal
                     m_healed = monster_seq[i].heal
 
+                    self.player.stats.take_damage(p_dmg_taken)
+                    self.monster.stats.take_damage(m_dmg_taken)
+                    self.player.stats.heal(p_healed)
+                    self.monster.stats.heal(m_healed)
+
                     self.saved_p = player_seq[i].saved_elixir
                     self.saved_m = monster_seq[i].saved_elixir
             current_turn += 1
@@ -502,14 +488,14 @@ class CombatSequence():
     def player_ability_sequence(self, elixir):
         ability_sequence = []
         available_elixir = elixir
-        ability_dict = {a.name: a for a in abilities}
+        ability_dict = {a.name: a for a in self.player.abilities}
         
         cheapest_cost = text.cheapest_ability_cost #to be updated if needed
 
         while elixir > cheapest_cost:
             available_abilities = []
 
-            for ability in self.player.abilities():
+            for ability in self.player.abilities:
                 if ability.elixir > available_elixir:
                     available_abilities.append(ability)
 
@@ -519,7 +505,7 @@ class CombatSequence():
 
             choice = input(text.input_prompt).strip().lower()
 
-            if choice in [a.name for a in available_abilites]:
+            if choice in [a.name for a in available_abilities]:
                 ability = ability_dict[choice]
                 magnitude = 100 # placeholder
                 while magnitude > available_elixir:
@@ -548,7 +534,7 @@ class CombatSequence():
         while available_elixir > cheapest_cost:
             for ability in self.monster.abilities():
                 if ability.elixir < available_elixir:
-                    ability_sequence.append(move)
+                    ability_sequence.append(ability)
         return ability_sequence
 
     def end_sequence(self):

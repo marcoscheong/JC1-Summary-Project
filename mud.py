@@ -134,116 +134,81 @@ class Maze:
                 room.connection(down_room, 'down')
                 down_room.connection(room, 'up')
         
-                    
+    def get_room_key(self, room):
+        up, down, left, right = (
+            room.connects['up'], 
+            room.connects['down'], 
+            room.connects['left'], 
+            room.connects['right']
+        )
+
+        if up and down and left and right: return "NSEW"
+
+        if up and down and left and not right: return "NSW"
+        if up and down and not left and right: return "NSE"
+        if up and not down and left and right: return "NEW"
+        if not up and down and left and right: return "SEW"
+
+        if up and down and not left and not right: return "NS"
+        if not up and not down and left and right: return "EW"
+        if up and not down and left and not right: return "NW"
+        if up and not down and not left and right: return "NE"
+        if not up and down and left and not right: return "SW"
+        if not up and down and not left and right: return "SE"
+
+        if up and not down and not left and not right: return "N"
+        if not up and down and not left and not right: return "S"
+        if not up and not down and left and not right: return "W"
+        if not up and not down and not left and right: return "E"
+        return "NONE"
     
     def draw_rooms(self):
         """
-        Method to print out each room and its connections in a clear format.
+        Method to print out each room and its connections in a clear format as a proper grid.
         """
-        map_str = ''
-        for room in self.rooms:
-            #if room.id % 3 == 1:  # middle column rooms
-                # print(f'Room {room.id} connections:')
-                #has_connection = False
-                #for direction in text.directions:
-                    # connected_room = room.connects.get(direction)
-                    # temp = ''
-                #     if connected_room:
-                #         print(f'{direction} = Room {connected_room.id}')
-                #         has_connection = True
-                # if not has_connection:
-                #     print('No connections')
-            if room.id != self.current_room.id:
-                if room.connects['up'] and room.connects['down'] and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NSEW']
-                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NS']
-                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['EW']
-                if room.connects['up'] and room.connects['down'] and room.connects['left'] and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NSW']
-                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NSE']
-                if room.connects['up'] and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NEW']
-                if not(room.connects['up']) and room.connects['down'] and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['NSW']
-                if not(room.connects['up']) and not(room.connects['down']) and not(room.connects['left']) and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['E']
-                if room.connects['up'] and not(room.connects['down']) and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['N']
-                if not(room.connects['up']) and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['S']
-                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.rooms['W']
-            else:
-                if room.connects['up'] and room.connects['down'] and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NSEW']
-                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NS']
-                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['EW']
-                if room.connects['up'] and room.connects['down'] and room.connects['left'] and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NSW']
-                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NSE']
-                if room.connects['up'] and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NEW']
-                if not(room.connects['up']) and room.connects['down'] and room.connects['left'] and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['NSW']
-                if not(room.connects['up']) and not(room.connects['down']) and not(room.connects['left']) and room.connects['right']:
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['E']
-                if room.connects['up'] and not(room.connects['down']) and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['N']
-                if not(room.connects['up']) and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['S']
-                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and not(room.connects['right']):
-                    if room.id % 3 == 1:
-                        map_str += '\n'
-                    map_str += text.player_rooms['W']
-            print(map_str)
+        row_chunks = []
+        rooms_per_row = 3
+
+        # Build the grid row by row
+        for row_start in range(0, len(self.rooms), rooms_per_row):
+            row_rooms = self.rooms[row_start:row_start + rooms_per_row]
+
+            # Collect arts for this row
+            row_arts = []
+            for room in row_rooms:
+                if room.id == self.current_room.id:
+                    row_arts.append(text.player_rooms[self.get_room_key(room)])
+                else:
+                    row_arts.append(text.rooms[self.get_room_key(room)])
+
+            # Determine max height for this row
+            max_height = max(len(r.strip("\n").splitlines()) for r in row_arts)
+            max_width = max(max(len(line) for line in r.strip("\n").splitlines()) for r in row_arts)
+
+            # Initialize row chunk
+            row_chunk = [[] for _ in range(max_height)]
+
+            # Pad rooms and add to row_chunk
+            for art in row_arts:
+                lines = art.strip("\n").splitlines()
+                lines = [line.ljust(max_width) for line in lines]
+
+                # Pad bottom if shorter than row's max_height
+                while len(lines) < max_height:
+                    lines.append(" " * max_width)
+
+                for i, line in enumerate(lines):
+                    row_chunk[i].append(line)
+
+            row_chunks.append(row_chunk)
+
+        # Build final string
+        map_str = ""
+        for row in row_chunks:
+            for line in row:
+                map_str += "".join(line) + "\n"
+
+        print(map_str)
 
 
     def room_options(self):

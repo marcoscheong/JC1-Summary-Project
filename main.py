@@ -15,7 +15,8 @@ if __name__ == "__main__":
         choices = game.get_options()
         command = game.prompt_player_choice(choices).strip().lower()
         if command.isdigit():
-            if int(command) >= 10:
+            if int(command) >= len(choices):
+                print('length of choices: ' + str(len(choices)))
                 print(text.input_error_prompt)
             else:
                 command = choices[int(command) - 1]
@@ -29,7 +30,7 @@ if __name__ == "__main__":
             else:
                 print(text.input_error_prompt)
         elif command.startswith('open'):
-            if type(game.get_maze.current_room) == TreasureRoom:
+            if type(game.get_maze.current_room) == mud.TreasureRoom:
                 #open chest
                 pass
             pass
@@ -40,7 +41,8 @@ if __name__ == "__main__":
             #print ABSTRACTED error message
             print(text.input_error_prompt)
 
-        game.maze.draw_rooms()
+        if game.game_state == 'travel':
+            game.maze.draw_rooms()
         #choices = game.get_options()
         #choice = mud.prompt_player_choice(choices)
         #actions = game.get_actions(choices, choice)

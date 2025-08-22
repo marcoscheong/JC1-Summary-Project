@@ -39,7 +39,7 @@ if __name__ == "__main__":
             #print ABSTRACTED error message
             print(text.input_error_prompt)
 
-
+        game.maze.draw_rooms()
         #choices = game.get_options()
         #choice = mud.prompt_player_choice(choices)
         #actions = game.get_actions(choices, choice)

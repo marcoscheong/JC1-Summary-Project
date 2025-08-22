@@ -1,3 +1,4 @@
+
 import random
 import json
 import text
@@ -132,51 +133,110 @@ class Maze:
         """
         Method to print out each room and its connections in a clear format.
         """
+        map_str = ''
         for room in self.rooms:
-            if room.id % 3 == 1:  # middle column rooms
+            #if room.id % 3 == 1:  # middle column rooms
                 # print(f'Room {room.id} connections:')
-                has_connection = False
-                for direction in text.directions:
-                    connected_room = room.connects.get(direction)
-                    temp = ''
-                    if connected_room:
-                        print(f'{direction} = Room {connected_room.id}')
-                        has_connection = True
-                if not has_connection:
-                    print('No connections')
-            if room.connects['up'] and room.connects['down'] and room.connects['left'] and room.connects['right']:
-                pass
-                #insert four connection here
-            if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
-                pass
-                #insert two room connection vertically here
-            if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
-                pass
-                #insert two room connection horizontally here
-            if room.connects['up'] and room.connects['down'] and room.connects['left'] and not(room.connects['right']):
-                pass
-                #insert three left connection here
-            if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and room.connects['right']:
-                pass
-                #insert three right connection here
-            if room.connects['up'] and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
-                pass
-                #insert three up connection here
-            if not(room.connects['up']) and room.connects['down'] and room.connects['left'] and room.connects['right']:
-                pass
-                #insert three down connection here
-            if not(room.connects['up']) and not(room.connects['down']) and not(room.connects['left']) and room.connects['right']:
-                pass
-                #insert single right connection here
-            if room.connects['up'] and not(room.connects['down']) and not(room.connects['left']) and not(room.connects['right']):
-                pass
-                #insert single up connection here
-            if not(room.connects['up']) and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
-                pass
-                #insert single down connection here
-            if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and not(room.connects['right']):
-                pass
-                #insert single left connection here
+                #has_connection = False
+                #for direction in text.directions:
+                    # connected_room = room.connects.get(direction)
+                    # temp = ''
+                #     if connected_room:
+                #         print(f'{direction} = Room {connected_room.id}')
+                #         has_connection = True
+                # if not has_connection:
+                #     print('No connections')
+            if room.id != self.current_room.id:
+                if room.connects['up'] and room.connects['down'] and room.connects['left'] and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.rooms['NSEW']
+                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.rooms['NS']
+                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.rooms['EW']
+                if room.connects['up'] and room.connects['down'] and room.connects['left'] and not(room.connects['right']):
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.rooms['NSW']
+                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.rooms['NSE']
+                if room.connects['up'] and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.rooms['NEW']
+                if not(room.connects['up']) and room.connects['down'] and room.connects['left'] and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.rooms['NSW']
+                if not(room.connects['up']) and not(room.connects['down']) and not(room.connects['left']) and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.rooms['E']
+                if room.connects['up'] and not(room.connects['down']) and not(room.connects['left']) and not(room.connects['right']):
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.rooms['N']
+                if not(room.connects['up']) and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.rooms['S']
+                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and not(room.connects['right']):
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.rooms['W']
+            else:
+                if room.connects['up'] and room.connects['down'] and room.connects['left'] and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.player_rooms['NSEW']
+                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.player_rooms['NS']
+                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.player_rooms['EW']
+                if room.connects['up'] and room.connects['down'] and room.connects['left'] and not(room.connects['right']):
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.player_rooms['NSW']
+                if room.connects['up'] and room.connects['down'] and not(room.connects['left']) and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.player_rooms['NSE']
+                if room.connects['up'] and not(room.connects['down']) and room.connects['left'] and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.player_rooms['NEW']
+                if not(room.connects['up']) and room.connects['down'] and room.connects['left'] and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.player_rooms['NSW']
+                if not(room.connects['up']) and not(room.connects['down']) and not(room.connects['left']) and room.connects['right']:
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.player_rooms['E']
+                if room.connects['up'] and not(room.connects['down']) and not(room.connects['left']) and not(room.connects['right']):
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.player_rooms['N']
+                if not(room.connects['up']) and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.player_rooms['S']
+                if not(room.connects['up']) and not(room.connects['down']) and room.connects['left'] and not(room.connects['right']):
+                    if room.id % 3 == 1:
+                        map_str += '\n'
+                    map_str += text.player_rooms['W']
+            print(map_str)
 
 
     def room_options(self):

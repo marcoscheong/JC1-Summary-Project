@@ -61,16 +61,23 @@ class Game:
         chosen = False
         while chosen == False:
             choice = self.prompt_player_choice(choices)
-            if choice not in choices:
+            if choice not in choices and choice not in ['1', '2', '3']:
                 print('Please type out a valid option')
-            elif choice == 'start':
+            elif choice == 'start' or choice == '1':
                 chosen = True
                 self.start_game()
-            elif choice == 'quit':
+            elif choice == 'quit' or choice == '2':
                 chosen = True
                 self.quit_game()
 
     def load_data(self):
+        pass
+
+    def store_currentdata(self, file):
+        
+        storage.save_data(file, {
+            "Room_id": maze.id
+        })
         pass
 
 class Storage:
@@ -125,6 +132,7 @@ class Maze:
                 down_room = self.rooms[i + num_cols]
                 room.connection(down_room, 'down')
                 down_room.connection(room, 'up')
+        
                     
     
     def draw_rooms(self):
@@ -170,7 +178,6 @@ class Maze:
             if room.connects['up'] and not(room.connects['down']) and not(room.connects['left']) and not(room.connects['right']):
                 pass
                 #insert single up connection here
-        
             if not(room.connects['up']) and room.connects['down'] and not(room.connects['left']) and not(room.connects['right']):
                 pass
                 #insert single down connection here
@@ -210,7 +217,6 @@ class Room:
     def connection(self, room, direction):
         if direction in self.connects:
             self.connects[direction] = room
-
 
 class TreasureRoom(Room):
     def __init__(self, currency):
@@ -335,7 +341,7 @@ class Player:
 
 class Monster(Character):
     def __init__(self, stats):
-        pass
+        self.stats = stats
 
 class Stats():
     def __init__(self, maxHealth: int, attack: int):

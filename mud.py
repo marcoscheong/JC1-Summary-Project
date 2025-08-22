@@ -61,12 +61,12 @@ class Game:
         chosen = False
         while chosen == False:
             choice = self.prompt_player_choice(choices)
-            if choice not in choices:
+            if choice not in choices and choice not in ['1', '2', '3']:
                 print('Please type out a valid option')
-            elif choice == 'start':
+            elif choice == 'start' or choice == '1':
                 chosen = True
                 self.start_game()
-            elif choice == 'quit':
+            elif choice == 'quit' or choice == '2':
                 chosen = True
                 self.quit_game()
 
@@ -328,6 +328,7 @@ class Player:
         storage.save_data(file, {
             "Player_health": self.health,
             "Player_attack": self.attack
+        })
 
 class Monster(Character):
     def __init__(self, stats):

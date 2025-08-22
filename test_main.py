@@ -2,13 +2,8 @@ import main
 
 def test_main():
     main
-    
 
 test_main()
-    
-    
-
-
 
 # For reference
 # def test_main():

@@ -14,6 +14,11 @@ if __name__ == "__main__":
         print(text.printing_text_spacing)
         choices = game.get_options()
         command = game.prompt_player_choice(choices).strip().lower()
+        if command.isdigit():
+            if int(command) >= 10:
+                print(text.input_error_prompt)
+            else:
+                command = choices[int(command) - 1]
         if command in ['quit', 'exit']:
             print(text.thanks_message)
             sys.exit()

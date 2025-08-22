@@ -24,7 +24,7 @@ class Game:
         if self.game_state == 'start':
             choices = text.start_choices
             return choices
-=======
+
         elif self.game_state == 'travel':
             choices = self.maze.room_options()
             if type(self.maze.current_room) == MonsterRoom:
@@ -72,6 +72,13 @@ class Game:
                 self.quit_game()
 
     def load_data(self):
+        pass
+
+    def store_currentdata(self, file):
+        
+        storage.save_data(file, {
+            "Room_id": maze.id, 
+        })
         pass
 
 class Storage:

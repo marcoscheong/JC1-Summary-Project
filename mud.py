@@ -77,7 +77,7 @@ class Game:
     def store_currentdata(self, file):
         
         storage.save_data(file, {
-            "Room_id": maze.id, 
+            "Room_id": maze.id
         })
         pass
 

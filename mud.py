@@ -74,6 +74,13 @@ class Game:
     def load_data(self):
         pass
 
+    def store_currentdata(self, file):
+        
+        storage.save_data(file, {
+            "Room_id": maze.id
+        })
+        pass
+
 class Storage:
     def __init(self):
         pass
@@ -309,12 +316,14 @@ class Player(Character):
 
     def load_from_storage(self, storage: Storage, file: str):
         data = storage.get_data(file)
-        self.stats.maxHealth = data["Player_health"]
+        self.stats.maxHealth = data["Player_max_health"]
+        self.stats.currentHealth = data["Player_current_health"]
         self.stats.attack = data["Player_attack"]
 
     def save_to_storage(self, storage: Storage, file: str):
         storage.save_data(file, {
             "Player_health": self.stats.maxHealth,
+            "Player_current_health": self.stats.currentHealth,
             "Player_attack": self.stats.attack
         })
 

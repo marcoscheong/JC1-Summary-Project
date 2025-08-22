@@ -1,6 +1,7 @@
 # Import statements
 import mud
 import text
+import sys
 
 if __name__ == "__main__":
     game = mud.Game()

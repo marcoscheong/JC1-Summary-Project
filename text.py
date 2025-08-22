@@ -1,5 +1,7 @@
 Game_name = "Gametitle": "Labyrinth Ascension"
 Game_info = "Game_info": [
+Game_name = "Labyrinth Ascension"
+Game_info = [
     "Explore Maze Rooms: Each maze run is procedurally generated (different layouts each time).",
     "Rooms contain enemies, puzzles, traps, or treasure.",
     "Fight Enemies: Defeat enemies to gain EXP and Rank Points.",
@@ -11,6 +13,7 @@ Game_info = "Game_info": [
   ]
 
 Game_lore = "Game_lore": [
+Game_lore = [
     "In a world where warriors prove themselves in an endless shifting labyrinth, your journey starts at rock bottom.",
     "Climb the ranks, earn your place among legends, and uncover the secret of the maze — a truth that might change everything."
   ]
@@ -61,3 +64,5 @@ Monsters = "Monsters": {
     "Demon Lord": [9000, 2500],
     "Elder Dragon": [10000, 3000]
   }
+=======
+printing_text_spacing = '\n=================== \n'

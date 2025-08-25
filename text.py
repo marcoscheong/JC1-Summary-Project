@@ -1,3 +1,5 @@
+import mud
+
 Game_name = "Labyrinth Ascension"
 Game_info = [
     "Explore Maze Rooms: Each maze run is procedurally generated (different layouts each time).",
@@ -19,9 +21,13 @@ room_types = ['treasure', 'monster']
 
 maze_size = 15
 
+player_save_file = "player_data.json"
+
 welcome_prompt = "Welcome to Labyrinth Ascension, a Single Player MUD game. Do you want to start or load your game?"
 start_choices = ['start', 'quit', 'load']
-started_text = 'To choose an option, type out the entire option.'
+started_text = 'In this world of labyrinths, you have arrived in the top-most level.\nBegin your descent to the lowest level to uncover the long lost secrets of this labyrinth. \n\nTo select an option, type out the number of your choice or the full command.\nE.g. "1", or "Go down".\n'
+treasure_room_text = 'You have entered a room containing treasure. Do you want to open the chest or travel to another room?'
+monster_room_text = 'You have encountered a monster. Do you want to fight this monster?'
 
 input_prompt = "Please select a choice: "
 input_error_prompt = "Please input again."
@@ -167,6 +173,10 @@ player_rooms = {
 """
 }
 
+move_pool = ['attack', 'shield', 'heal', 'save']
+
+default_health = 15
+default_attack = 10
 
 Monsters = {
     "Slime": [10, 10],

@@ -60,7 +60,7 @@ class Game:
         self.maze = Maze(rooms, rooms[0])
         self.maze.generate_maze()
         self.create_player()
-        print(text.printing_text_spacing)
+        print(text.printing_text_large_spacing)
         print(text.started_text)
         self.set_state('travel')
 
@@ -403,6 +403,7 @@ class Ability():
         self.heal = 0
         self.elixir = 1
         self.saved_elixir = 0
+        self.magnitude =  0
 
 class CombatSequence():
     def __init__(self, player, monster, base_elixir: int, max_turns: int):
@@ -425,14 +426,24 @@ class CombatSequence():
             self.saved_p = 0
             self.saved_m = 0
 
+            print(f'\nCurrent player health: {self.player.stats.currentHealth}')
+            print(f'Current monster health: {self.monster.stats.currentHealth}\n')
+
             player_seq = self.player_ability_sequence(p_elixir)
             monster_seq = self.monster_abilty_sequence(m_elixir)
-            print(player_seq[0].name)
-            print(monster_seq[0].name)
+
+            player_str = '\nP: '
+            for i in range(len(player_seq)):
+                player_str += f'{player_seq[i].name}{player_seq[i].magnitude}'
+            print(player_str)
+            monster_str = 'M: '
+            for i in range(len(player_seq)):
+                monster_str += f'{monster_seq[i].name}{monster_seq[i].magnitude}'
+            print( monster_str + '\n')
             if len(player_seq) > len(monster_seq):
                 for i in range(len(monster_seq)):
-                    p_dmg_taken = monster_seq[i].attack - player_seq[i].shield
-                    m_dmg_taken = player_seq[i].attack - monster_seq[i].shield
+                    p_dmg_taken = (monster_seq[i].attack - player_seq[i].shield) * (self.monster.stats.attack)
+                    m_dmg_taken = (player_seq[i].attack - monster_seq[i].shield) * (self.player.stats.attack)
 
                     p_healed = player_seq[i].heal
                     m_healed = monster_seq[i].heal
@@ -446,7 +457,7 @@ class CombatSequence():
                     self.saved_m = monster_seq[i].saved_elixir
                 
                 for i in range(len(monster_seq), len(player_seq)):
-                    m_dmg_taken = player_seq[i].attack
+                    m_dmg_taken = player_seq[i].attack * self.player.stats.attack / 10 
 
                     p_healed = player_seq[i].heal
 
@@ -456,8 +467,8 @@ class CombatSequence():
                     self.saved_p = player_seq[i].saved_elixir
             elif len(player_seq) < len(monster_seq):
                 for i in range(len(player_seq)):
-                    p_dmg_taken = monster_seq[i].attack - player_seq[i].shield
-                    m_dmg_taken = player_seq[i].attack - monster_seq[i].shield
+                    p_dmg_taken = (monster_seq[i].attack - player_seq[i].shield) * (self.monster.stats.attack / 10)
+                    m_dmg_taken = (player_seq[i].attack - monster_seq[i].shield) * (self.player.stats.attack / 10)
 
                     p_healed = player_seq[i].heal
                     m_healed = monster_seq[i].heal
@@ -471,7 +482,7 @@ class CombatSequence():
                     self.saved_m = monster_seq[i].saved_elixir
                 
                 for i in range(len(player_seq), len(monster_seq)):
-                    p_dmg_taken = monster_seq[i].attack
+                    p_dmg_taken = monster_seq[i].attack * self.monster.stats.attack / 10
 
                     m_healed = monster_seq[i].heal
 
@@ -481,23 +492,29 @@ class CombatSequence():
                     self.saved_m = monster_seq[i].saved_elixir
             else: 
                 for i in range(len(player_seq)):
-                    p_dmg_taken = monster_seq[i].attack - player_seq[i].shield
-                    m_dmg_taken = player_seq[i].attack - monster_seq[i].shield
+                    p_dmg_taken = (monster_seq[i].attack - player_seq[i].shield) * (self.monster.stats.attack / 10)
+                    m_dmg_taken = (player_seq[i].attack - monster_seq[i].shield) * (self.player.stats.attack  / 10)
 
                     p_healed = player_seq[i].heal
                     m_healed = monster_seq[i].heal
 
-                    self.player.stats.take_damage(p_dmg_taken)
-                    self.monster.stats.take_damage(m_dmg_taken)
+                    p_state = self.player.stats.take_damage(p_dmg_taken)
+                    m_state = self.monster.stats.take_damage(m_dmg_taken)
                     self.player.stats.heal(p_healed)
                     self.monster.stats.heal(m_healed)
+                    print(f'Player has taken {p_dmg_taken} and healed {p_healed}')
+                    print(f'Monster has taken {m_dmg_taken} and healed {m_healed}')
+                    if p_state == 'died':
+                        return self.end_sequence()
+                    if m_state == 'died':
+                        return self.end_sequence()
 
                     self.saved_p = player_seq[i].saved_elixir
                     self.saved_m = monster_seq[i].saved_elixir
 
                     
             self.current_turn += 1
-        self.end_sequence()
+        return self.end_sequence()
     def player_ability_sequence(self, elixir):
         ability_sequence = []
         available_elixir = elixir
@@ -534,12 +551,16 @@ class CombatSequence():
                         print(text.input_error_prompt)
                 if choice == "attack":
                     ability.attack = magnitude
+                    ability.magnitude = magnitude
                 elif choice == "shield":
                     ability.shield = magnitude
+                    ability.magnitude = magnitude
                 elif choice == "heal":
                     ability.heal = magnitude
+                    ability.magnitude = magnitude
                 elif choice == "save":
                     ability.saved_elixir = magnitude
+                    ability.magnitude = magnitude
                 ability_sequence.append(ability)
                 available_elixir -= magnitude
             else:
@@ -549,14 +570,27 @@ class CombatSequence():
         ability_sequence = []
         available_elixir = elixir
         random.shuffle(self.monster.abilities)
-        
+        print(self.monster.abilities)
         cheapest_cost = text.cheapest_ability_cost # to be updated if needed
         
         while available_elixir >= cheapest_cost:
             for ability in self.monster.abilities:
                 if ability.elixir <= available_elixir:
+                    magnitude = random.randint(1, available_elixir)
+                    if ability.name == "attack":
+                        ability.attack = magnitude
+                        ability.magnitude = magnitude
+                    elif ability.name == "shield":
+                        ability.shield = magnitude
+                        ability.magnitude = magnitude
+                    elif ability.name == "heal":
+                        ability.heal = magnitude
+                        ability.magnitude = magnitude
+                    elif ability.name == "save":
+                        ability.saved_elixir = magnitude
+                        ability.magnitude = magnitude
+                    available_elixir -= magnitude
                     ability_sequence.append(ability)
-                    available_elixir -= ability.elixir
         return ability_sequence
 
     def end_sequence(self):

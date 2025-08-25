@@ -427,7 +427,8 @@ class CombatSequence():
 
             player_seq = self.player_ability_sequence(p_elixir)
             monster_seq = self.monster_abilty_sequence(m_elixir)
-
+            print(player_seq[0].name)
+            print(monster_seq[0].name)
             if len(player_seq) > len(monster_seq):
                 for i in range(len(monster_seq)):
                     p_dmg_taken = monster_seq[i].attack - player_seq[i].shield
@@ -493,6 +494,8 @@ class CombatSequence():
 
                     self.saved_p = player_seq[i].saved_elixir
                     self.saved_m = monster_seq[i].saved_elixir
+
+                    
             self.current_turn += 1
         self.end_sequence()
     def player_ability_sequence(self, elixir):
@@ -502,7 +505,9 @@ class CombatSequence():
         
         cheapest_cost = text.cheapest_ability_cost #to be updated if needed
 
-        while elixir >= cheapest_cost:
+        while available_elixir >= cheapest_cost:
+            print('Current amount of elixir: ' + str(available_elixir))
+
             available_abilities = []
 
             for ability in self.player.abilities:
@@ -536,6 +541,7 @@ class CombatSequence():
                 elif choice == "save":
                     ability.saved_elixir = magnitude
                 ability_sequence.append(ability)
+                available_elixir -= magnitude
             else:
                 print(text.ability_addition_error)
         return ability_sequence
@@ -546,13 +552,14 @@ class CombatSequence():
         
         cheapest_cost = text.cheapest_ability_cost # to be updated if needed
         
-        while available_elixir > cheapest_cost:
+        while available_elixir >= cheapest_cost:
             for ability in self.monster.abilities:
-                if ability.elixir < available_elixir:
+                if ability.elixir <= available_elixir:
                     ability_sequence.append(ability)
+                    available_elixir -= ability.elixir
         return ability_sequence
 
     def end_sequence(self):
         #return victory/defeat result
-        pass
+        print('combat done') # placeholder
 #Objects

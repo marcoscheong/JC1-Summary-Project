@@ -204,5 +204,6 @@ Monsters = {
     "Elder Dragon": [10000, 3000]
   }
 
-printing_text_large_spacing = '\n=================== \n'
-printing_text_small_spacing = '-------------------'
+printing_text_large_spacing = '\n══════════════ • ══════════════ \n'
+combat_spacing_text = '────── ◈ ──────'
+ability_spacing_text = '··─··'

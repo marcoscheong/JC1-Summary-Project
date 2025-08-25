@@ -426,7 +426,9 @@ class CombatSequence():
             self.saved_p = 0
             self.saved_m = 0
 
-            print(f'\nCurrent player health: {self.player.stats.currentHealth}')
+            print(text.combat_spacing_text)
+
+            print(f'Current player health: {self.player.stats.currentHealth}')
             print(f'Current monster health: {self.monster.stats.currentHealth}\n')
 
             player_seq = self.player_ability_sequence(p_elixir)
@@ -437,21 +439,32 @@ class CombatSequence():
                 player_str += f'{player_seq[i].name}{player_seq[i].magnitude}'
             print(player_str)
             monster_str = 'M: '
-            for i in range(len(player_seq)):
+            for i in range(len(monster_seq)):
                 monster_str += f'{monster_seq[i].name}{monster_seq[i].magnitude}'
-            print( monster_str + '\n')
+            print(monster_str + '\n')
             if len(player_seq) > len(monster_seq):
                 for i in range(len(monster_seq)):
-                    p_dmg_taken = (monster_seq[i].attack - player_seq[i].shield) * (self.monster.stats.attack)
-                    m_dmg_taken = (player_seq[i].attack - monster_seq[i].shield) * (self.player.stats.attack)
+                    p_dmg_taken = (monster_seq[i].attack - player_seq[i].shield) * (self.monster.stats.attack / 10)
+                    m_dmg_taken = (player_seq[i].attack - monster_seq[i].shield) * (self.player.stats.attack  / 10)
 
                     p_healed = player_seq[i].heal
                     m_healed = monster_seq[i].heal
 
-                    self.player.stats.take_damage(p_dmg_taken)
-                    self.monster.stats.take_damage(m_dmg_taken)
+                    if p_dmg_taken < 0:
+                        p_dmg_taken = 0
+                    if m_dmg_taken < 0:
+                        m_dmg_taken = 0
+                    p_state = self.player.stats.take_damage(p_dmg_taken)
+                    m_state = self.monster.stats.take_damage(m_dmg_taken)
                     self.player.stats.heal(p_healed)
                     self.monster.stats.heal(m_healed)
+                    print(f'Player has taken {p_dmg_taken} and healed {p_healed}')
+                    print(text.ability_spacing_text)
+                    print(f'Monster has taken {m_dmg_taken} and healed {m_healed}')
+                    if p_state == 'died':
+                        return self.end_sequence()
+                    if m_state == 'died':
+                        return self.end_sequence()
 
                     self.saved_p = player_seq[i].saved_elixir
                     self.saved_m = monster_seq[i].saved_elixir
@@ -460,6 +473,13 @@ class CombatSequence():
                     m_dmg_taken = player_seq[i].attack * self.player.stats.attack / 10 
 
                     p_healed = player_seq[i].heal
+                    
+                    print(text.ability_spacing_text)
+                    
+                    if p_healed != 0:
+                        print(f'Played has healed {p_healed}')
+                    if m_dmg_taken != 0:
+                        print(f'Monster has taken {m_dmg_taken}')
 
                     self.monster.stats.take_damage(m_dmg_taken)
                     self.player.stats.heal(p_healed)
@@ -468,15 +488,26 @@ class CombatSequence():
             elif len(player_seq) < len(monster_seq):
                 for i in range(len(player_seq)):
                     p_dmg_taken = (monster_seq[i].attack - player_seq[i].shield) * (self.monster.stats.attack / 10)
-                    m_dmg_taken = (player_seq[i].attack - monster_seq[i].shield) * (self.player.stats.attack / 10)
+                    m_dmg_taken = (player_seq[i].attack - monster_seq[i].shield) * (self.player.stats.attack  / 10)
 
                     p_healed = player_seq[i].heal
                     m_healed = monster_seq[i].heal
-                    
-                    self.player.stats.take_damage(p_dmg_taken)
-                    self.monster.stats.take_damage(m_dmg_taken)
+
+                    if p_dmg_taken < 0:
+                        p_dmg_taken = 0
+                    if m_dmg_taken < 0:
+                        m_dmg_taken = 0
+                    p_state = self.player.stats.take_damage(p_dmg_taken)
+                    m_state = self.monster.stats.take_damage(m_dmg_taken)
                     self.player.stats.heal(p_healed)
                     self.monster.stats.heal(m_healed)
+                    print(f'Player has taken {p_dmg_taken} and healed {p_healed}')
+                    print(text.ability_spacing_text)
+                    print(f'Monster has taken {m_dmg_taken} and healed {m_healed}')
+                    if p_state == 'died':
+                        return self.end_sequence()
+                    if m_state == 'died':
+                        return self.end_sequence()
 
                     self.saved_p = player_seq[i].saved_elixir
                     self.saved_m = monster_seq[i].saved_elixir
@@ -485,6 +516,13 @@ class CombatSequence():
                     p_dmg_taken = monster_seq[i].attack * self.monster.stats.attack / 10
 
                     m_healed = monster_seq[i].heal
+
+                    print(text.ability_spacing_text)
+
+                    if p_dmg_taken != 0:
+                        print(f'Player has taken {p_dmg_taken}')
+                    if m_healed != 0:
+                        print(f'Monster has healed {m_healed}')
 
                     self.player.stats.take_damage(p_dmg_taken)
                     self.monster.stats.heal(m_healed)
@@ -498,11 +536,16 @@ class CombatSequence():
                     p_healed = player_seq[i].heal
                     m_healed = monster_seq[i].heal
 
+                    if p_dmg_taken < 0:
+                        p_dmg_taken = 0
+                    if m_dmg_taken < 0:
+                        m_dmg_taken = 0
                     p_state = self.player.stats.take_damage(p_dmg_taken)
                     m_state = self.monster.stats.take_damage(m_dmg_taken)
                     self.player.stats.heal(p_healed)
                     self.monster.stats.heal(m_healed)
                     print(f'Player has taken {p_dmg_taken} and healed {p_healed}')
+                    print(text.ability_spacing_text)
                     print(f'Monster has taken {m_dmg_taken} and healed {m_healed}')
                     if p_state == 'died':
                         return self.end_sequence()
@@ -528,7 +571,7 @@ class CombatSequence():
             available_abilities = []
 
             for ability in self.player.abilities:
-                if ability.elixir >= available_elixir:
+                if ability.elixir <= available_elixir:
                     available_abilities.append(ability)
 
             print(text.combat_sequence_prompt)
@@ -539,9 +582,8 @@ class CombatSequence():
 
             if choice.isdigit():
                 choice = int(choice)
-                if choice < len(available_abilities):
+                if choice <= len(available_abilities):
                     choice = available_abilities[choice - 1].name.strip().lower()
-
             if choice in [a.name for a in available_abilities]:
                 ability = ability_dict[choice]
                 magnitude = 100 # placeholder
@@ -569,28 +611,31 @@ class CombatSequence():
     def monster_abilty_sequence(self, elixir):
         ability_sequence = []
         available_elixir = elixir
-        random.shuffle(self.monster.abilities)
-        print(self.monster.abilities)
+
         cheapest_cost = text.cheapest_ability_cost # to be updated if needed
         
         while available_elixir >= cheapest_cost:
+            random.shuffle(self.monster.abilities)
+            print('available monster elixir left: ' + str(available_elixir))
             for ability in self.monster.abilities:
-                if ability.elixir <= available_elixir:
+                a = ability
+                if a.elixir <= available_elixir:
                     magnitude = random.randint(1, available_elixir)
-                    if ability.name == "attack":
-                        ability.attack = magnitude
-                        ability.magnitude = magnitude
-                    elif ability.name == "shield":
-                        ability.shield = magnitude
-                        ability.magnitude = magnitude
-                    elif ability.name == "heal":
-                        ability.heal = magnitude
-                        ability.magnitude = magnitude
-                    elif ability.name == "save":
-                        ability.saved_elixir = magnitude
-                        ability.magnitude = magnitude
+                    if a.name == "attack":
+                        a.attack = magnitude
+                        a.magnitude = magnitude
+                    elif a.name == "shield":
+                        a.shield = magnitude
+                        a.magnitude = magnitude
+                    elif a.name == "heal":
+                        a.heal = magnitude
+                        a.magnitude = magnitude
+                    elif a.name == "save":
+                        a.saved_elixir = magnitude
+                        a.magnitude = magnitude
                     available_elixir -= magnitude
-                    ability_sequence.append(ability)
+                    print(f'appended: {a.name}')
+                    ability_sequence.append(a)
         return ability_sequence
 
     def end_sequence(self):

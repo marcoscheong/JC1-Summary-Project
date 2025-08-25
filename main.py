@@ -11,7 +11,10 @@ if __name__ == "__main__":
     #player = data.create_player()
     #game.add_player(player)
     while True:
-        print(text.printing_text_spacing)
+        if type(game.maze.current_room) == mud.TreasureRoom:
+            print(text.treasure_room_text)
+        elif type(game.maze.current_room) == mud.MonsterRoom:
+            print(text.monster_room_text)
         choices = game.get_options()
         command = game.prompt_player_choice(choices).strip().lower()
         if command.isdigit():
@@ -19,7 +22,7 @@ if __name__ == "__main__":
                 print('length of choices: ' + str(len(choices)))
                 print(text.input_error_prompt)
             else:
-                command = choices[int(command) - 1]
+                command = choices[int(command) - 1].strip().lower()
         if command in ['quit', 'exit']:
             print(text.thanks_message)
             sys.exit()
@@ -35,11 +38,14 @@ if __name__ == "__main__":
                 pass
             pass
         elif command.startswith('fight'):
-            #fight monster
-            pass
+            monster = mud.Monster(mud.Stats(text.Monsters[game.maze.current_room.monster][0], text.Monsters[game.maze.current_room.monster][1]))
+            combat_seq = mud.CombatSequence(game.get_player(), monster, 3, 20)
+            combat_seq.start_sequence()
         else:
             #print ABSTRACTED error message
             print(text.input_error_prompt)
+
+        print(text.printing_text_spacing)
 
         if game.game_state == 'travel':
             game.maze.draw_rooms()

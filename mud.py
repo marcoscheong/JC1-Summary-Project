@@ -12,6 +12,7 @@ class Game:
         self.game_state = ''
         self.maze = None
         self.storage = storage
+        self.player = None
 
     def set_state(self, state):
         self.game_state = state
@@ -29,10 +30,10 @@ class Game:
         elif self.game_state == 'travel':
             choices = self.maze.room_options()
             if type(self.maze.current_room) == MonsterRoom:
-                choices.append('fight monster')
+                choices.insert(0, 'Fight monster')
                 return choices
             elif type(self.maze.current_room) == TreasureRoom:
-                choices.append('open chest')
+                choices.insert(0, 'Open chest')
                 return choices
             elif type(self.maze.current_room) == Room:
                 return choices
@@ -46,10 +47,20 @@ class Game:
     def start_game(self):
         #instantiate maze
         rooms = []
-        for i in range(text.maze_size):
-            rooms.append(Room(i + 1))
+        rooms.append(Room(0))
+        for i in range(1, text.maze_size):
+            if i % 2 == 0:
+                room = MonsterRoom((i + 1), text.Monsters.keys())
+                room.generateMonster()
+                rooms.append(room)
+            elif i % 2 == 1:
+                rooms.append(TreasureRoom(i + 1))
+            else:
+                rooms.append(Room(i + 1))
         self.maze = Maze(rooms, rooms[0])
         self.maze.generate_maze()
+        self.create_player()
+        print(text.printing_text_spacing)
         print(text.started_text)
         self.set_state('travel')
 
@@ -71,6 +82,13 @@ class Game:
             elif choice == 'quit' or choice == '2':
                 chosen = True
                 self.quit_game()
+
+    def create_player(self):
+        stats = Stats(text.default_health, text.default_attack)
+        self.player = Player(stats)
+    
+    def get_player(self):
+        return self.player
 
     def load_data(self):
         pass
@@ -244,8 +262,8 @@ class Room:
             self.connects[direction] = room
 
 class TreasureRoom(Room):
-    def __init__(self, currency):
-        self.currency = currency
+    def __init__(self, id):
+        super().__init__(id)
 
     def generateItems(self):
         """
@@ -254,7 +272,8 @@ class TreasureRoom(Room):
         """
 
 class MonsterRoom(Room):
-    def __init__(self, availableMonsters: list):
+    def __init__(self, id, availableMonsters: list):
+        super().__init__(id)
         self.monster = ''
         self.availableMonsters = availableMonsters
 
@@ -265,25 +284,30 @@ class MonsterRoom(Room):
         """
         if len(self.availableMonsters) == 0:
             return 'list of monsters is empty'
-        i = random.randint(len(self.availableMonsters) - 1)
-        return self.availableMonsters[i]
+        i = random.randint(0, len(self.availableMonsters) - 1)
+        self.monster = list(self.availableMonsters)[i]
 
 
 # CHARACTER CLASSES
 class Character:
     def __init__(self, stats):
         self.stats = stats
+        self.abilities = []
+        for a in text.move_pool:
+            self.abilities.append(Ability(a))
         # self.inventory = Inventory() (to be updated)
  
 class Player(Character):
-    def __init__(self):
-        pass
+    def __init__(self, stats):
+        super().__init__(stats)
+        self.inventory = None
 
     def load_from_storage(self, storage: Storage, file: str):
         data = storage.get_data(file)
         self.stats.maxHealth = data["Player_max_health"]
         self.stats.currentHealth = data["Player_current_health"]
         self.stats.attack = data["Player_attack"]
+        self.inventory = Inventory(storage, file)
 
     def save_to_storage(self, storage: Storage, file: str):
         storage.save_data(file, {
@@ -291,6 +315,7 @@ class Player(Character):
             "Player_current_health": self.stats.currentHealth,
             "Player_attack": self.stats.attack
         })
+        self.inventory.save_inventory()
 
 class Inventory:
     def __init__(self, storage: Storage, file: str):
@@ -348,25 +373,9 @@ class Inventory:
                 print(f"{item}: {qty}")
     
 
-class Player:
-    def __init__(self, health: int = 0, attack: int = 0):
-        self.health = health
-        self.attack = attack
-
-    def load_from_storage(self, storage: Storage, file: str):
-        data = storage.get_data(file)
-        self.health = data["Player_health"]
-        self.attack = data["Player_attack"]
-
-    def save_to_storage(self, storage: Storage, file: str):
-        storage.save_data(file, {
-            "Player_health": self.health,
-            "Player_attack": self.attack
-        })
-
 class Monster(Character):
     def __init__(self, stats):
-        self.stats = stats
+        super().__init__(stats)
 
 class Stats():
     def __init__(self, maxHealth: int, attack: int):
@@ -392,6 +401,7 @@ class Ability():
         self.attack = 0
         self.shield = 0
         self.heal = 0
+        self.elixir = 1
         self.saved_elixir = 0
 
 class CombatSequence():
@@ -483,7 +493,7 @@ class CombatSequence():
 
                     self.saved_p = player_seq[i].saved_elixir
                     self.saved_m = monster_seq[i].saved_elixir
-            current_turn += 1
+            self.current_turn += 1
         self.end_sequence()
     def player_ability_sequence(self, elixir):
         ability_sequence = []
@@ -492,24 +502,29 @@ class CombatSequence():
         
         cheapest_cost = text.cheapest_ability_cost #to be updated if needed
 
-        while elixir > cheapest_cost:
+        while elixir >= cheapest_cost:
             available_abilities = []
 
             for ability in self.player.abilities:
-                if ability.elixir > available_elixir:
+                if ability.elixir >= available_elixir:
                     available_abilities.append(ability)
 
             print(text.combat_sequence_prompt)
             for i, ability in enumerate(available_abilities):
-                print(f"{i}. {ability.name}")
+                print(f"{i + 1}. {ability.name}")
 
             choice = input(text.input_prompt).strip().lower()
+
+            if choice.isdigit():
+                choice = int(choice)
+                if choice < len(available_abilities):
+                    choice = available_abilities[choice - 1].name.strip().lower()
 
             if choice in [a.name for a in available_abilities]:
                 ability = ability_dict[choice]
                 magnitude = 100 # placeholder
                 while magnitude > available_elixir:
-                    magnitude = input(text.magnitude_prompt)
+                    magnitude = int(input(text.magnitude_prompt))
                     if magnitude > available_elixir:
                         print(text.input_error_prompt)
                 if choice == "attack":
@@ -527,12 +542,12 @@ class CombatSequence():
     def monster_abilty_sequence(self, elixir):
         ability_sequence = []
         available_elixir = elixir
-        random.shuffle(self.monster.abilities())
+        random.shuffle(self.monster.abilities)
         
         cheapest_cost = text.cheapest_ability_cost # to be updated if needed
         
         while available_elixir > cheapest_cost:
-            for ability in self.monster.abilities():
+            for ability in self.monster.abilities:
                 if ability.elixir < available_elixir:
                     ability_sequence.append(ability)
         return ability_sequence

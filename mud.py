@@ -1,4 +1,4 @@
-
+import time
 import random
 import json
 import text
@@ -436,11 +436,11 @@ class CombatSequence():
 
             player_str = '\nP: '
             for i in range(len(player_seq)):
-                player_str += f'{player_seq[i].name}{player_seq[i].magnitude}'
+                player_str += f'{player_seq[i].name}({player_seq[i].magnitude}) '
             print(player_str)
             monster_str = 'M: '
             for i in range(len(monster_seq)):
-                monster_str += f'{monster_seq[i].name}{monster_seq[i].magnitude}'
+                monster_str += f'{monster_seq[i].name}({monster_seq[i].magnitude}) '
             print(monster_str + '\n')
             if len(player_seq) > len(monster_seq):
                 for i in range(len(monster_seq)):
@@ -554,8 +554,9 @@ class CombatSequence():
 
                     self.saved_p = player_seq[i].saved_elixir
                     self.saved_m = monster_seq[i].saved_elixir
-
-                    
+            
+            print(f"--- End of turn {self.current_turn} ---")
+            input()
             self.current_turn += 1
         return self.end_sequence()
     def player_ability_sequence(self, elixir):
@@ -566,7 +567,7 @@ class CombatSequence():
         cheapest_cost = text.cheapest_ability_cost #to be updated if needed
 
         while available_elixir >= cheapest_cost:
-            print('Current amount of elixir: ' + str(available_elixir))
+            print('Elixir: ' + str(available_elixir) + '\n')
 
             available_abilities = []
 
@@ -616,7 +617,6 @@ class CombatSequence():
         
         while available_elixir >= cheapest_cost:
             random.shuffle(self.monster.abilities)
-            print('available monster elixir left: ' + str(available_elixir))
             for ability in self.monster.abilities:
                 a = ability
                 if a.elixir <= available_elixir:
@@ -634,7 +634,6 @@ class CombatSequence():
                         a.saved_elixir = magnitude
                         a.magnitude = magnitude
                     available_elixir -= magnitude
-                    print(f'appended: {a.name}')
                     ability_sequence.append(a)
         return ability_sequence
 

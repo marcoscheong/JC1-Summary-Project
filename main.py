@@ -18,7 +18,7 @@ if __name__ == "__main__":
         choices = game.get_options()
         command = game.prompt_player_choice(choices).strip().lower()
         if command.isdigit():
-            if int(command) >= len(choices):
+            if int(command) > len(choices):
                 print('length of choices: ' + str(len(choices)))
                 print(text.input_error_prompt)
             else:

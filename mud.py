@@ -459,7 +459,9 @@ class CombatSequence():
                     self.player.stats.heal(p_healed)
                     self.monster.stats.heal(m_healed)
                     print(f'Player has taken {p_dmg_taken} and healed {p_healed}')
+                    time.sleep(0.5)
                     print(text.ability_spacing_text)
+                    time.sleep(0.5)
                     print(f'Monster has taken {m_dmg_taken} and healed {m_healed}')
                     if p_state == 'died':
                         return self.end_sequence()
@@ -474,7 +476,9 @@ class CombatSequence():
 
                     p_healed = player_seq[i].heal
                     
+                    time.sleep(0.5)
                     print(text.ability_spacing_text)
+                    time.sleep(0.5)
                     
                     if p_healed != 0:
                         print(f'Played has healed {p_healed}')
@@ -502,7 +506,9 @@ class CombatSequence():
                     self.player.stats.heal(p_healed)
                     self.monster.stats.heal(m_healed)
                     print(f'Player has taken {p_dmg_taken} and healed {p_healed}')
+                    time.sleep(0.5)
                     print(text.ability_spacing_text)
+                    time.sleep(0.5)
                     print(f'Monster has taken {m_dmg_taken} and healed {m_healed}')
                     if p_state == 'died':
                         return self.end_sequence()
@@ -516,8 +522,9 @@ class CombatSequence():
                     p_dmg_taken = monster_seq[i].attack * self.monster.stats.attack / 10
 
                     m_healed = monster_seq[i].heal
-
+                    time.sleep(0.5)
                     print(text.ability_spacing_text)
+                    time.sleep(0.5)
 
                     if p_dmg_taken != 0:
                         print(f'Player has taken {p_dmg_taken}')
@@ -545,8 +552,10 @@ class CombatSequence():
                     self.player.stats.heal(p_healed)
                     self.monster.stats.heal(m_healed)
                     print(f'Player has taken {p_dmg_taken} and healed {p_healed}')
+                    time.sleep(0.5)
                     print(text.ability_spacing_text)
                     print(f'Monster has taken {m_dmg_taken} and healed {m_healed}')
+                    time.sleep(0.5)
                     if p_state == 'died':
                         return self.end_sequence()
                     if m_state == 'died':
@@ -555,7 +564,7 @@ class CombatSequence():
                     self.saved_p = player_seq[i].saved_elixir
                     self.saved_m = monster_seq[i].saved_elixir
             
-            print(f"--- End of turn {self.current_turn} ---")
+            print(f"========= End of turn {self.current_turn} =========")
             input()
             self.current_turn += 1
         return self.end_sequence()

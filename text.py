@@ -163,6 +163,8 @@ armourweights15 = [30, 30, 30, 30, 30, 30, 30, 30, 20, 20, 20, 20, 15, 15, 15, 1
 armourweights20 = [20, 20, 20, 20, 25, 25, 25, 25, 25, 25, 25, 25, 20, 20, 20, 20]
 armourweights25 = [10, 10, 10, 10, 15, 15, 15, 15, 20, 20, 20, 20, 25, 25, 25, 25]
 
+player_save_file = "data.json"
+
 printing_text_large_spacing = '\n══════════════ • ══════════════ \n'
 combat_spacing_text = '────── ◈ ──────'
 ability_spacing_text = '··─··'

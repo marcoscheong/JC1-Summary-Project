@@ -104,6 +104,7 @@ class Game:
     def create_player(self):
         stats = Stats(text.default_health, text.default_attack)
         self.player = Player(stats)
+        self.player.load_from_storage(self.storage, text.player_save_file)
     
     def get_player(self):
         return self.player
@@ -111,18 +112,18 @@ class Game:
     def load_data(self):
         pass
 
-    def store_currentdata(self, file):    
+    def save_all_data(self, file):    
         self.storage.save_data(file, {
             "Room_id": self.maze.current_room.id
         })
-        
+        self.player.save_to_storage(self.storage, text.player_save_file)
 
 class Storage:
     def __init(self):
         pass
         
-    def get_data(self)-> None:
-        with open('data.json', 'r', encoding='utf-8') as f:
+    def get_data(self, file)-> None:
+        with open(file, 'r', encoding='utf-8') as f:
             # data from data.json is deserialised into data_dict
             data_dict = json.load(f)
             return data_dict
@@ -347,6 +348,12 @@ class Player(Character):
             "Player_attack": self.stats.attack
         })
         self.inventory.save_inventory()
+    
+    def show_inventory(self):
+        if self.inventory:
+            self.inventory.show_inventory()
+        else:
+            print("No inventory loaded.")
 
 class Inventory:
     def __init__(self, storage: Storage, file: str):
@@ -354,7 +361,7 @@ class Inventory:
         self.file = file
         try:
             data = self.storage.get_data(file)
-            self.items = data.get("items", {})
+            self.items = data.get("Items", {})
         except FileNotFoundError:
             self.items = {}
             self.save_inventory()  # create file if not exists
@@ -381,6 +388,24 @@ class Inventory:
             del self.items[item_name]
         self.save_inventory()
         return True
+    
+    def equip_weapon(self, weapon_name: str):
+        """Equip a weapon to the player, given a weapon name."""
+        if weapon_name in text.Weapon.keys():
+            self.items["Weapon"] = weapon_name
+            print(f"{weapon_name} has been equipped.")
+        else:
+            print(f"{weapon_name} not found.")
+            return False
+    
+    def equip_armour(self, armour_name: str):
+        """Equip armour to the player, given an armour name."""
+        if armour_name in text.Armour.keys():
+            self.items["Armour"] = armour_name
+            print(f"{armour_name} has been equipped.")
+        else:
+            print(f"{armour_name} not found.")
+            return False
 
     def remove_item(self, item_name: str):
         """Remove an item completely."""
@@ -413,13 +438,28 @@ class Drop():
         self.weaponWeights = weaponWeights
         self.armourWeights = armourWeights
         self.drop = self.generateDrop()
+        self.type = ''
+        self.name = ''
     
     def generateDrop(self):
-        random = random.randint(0, 1)
+        random = random.randint(0, 2)
         if random == 0:
             drop = random.choices(list(text.Weapon.keys()), self.weaponWeights)[0]
+            self.type = 'weapon'
         elif random == 1:
             drop = random.choices(list(text.Armour.keys()), self.armourWeights)[0]
+            self.type = 'armour'
+        elif random == 2:
+            number = random.randint(1, 3)
+            if number == 1:
+                drop = 'Attack_potion'
+                self.type = 'consumable'
+            elif number == 2:
+                drop = 'Health_potion'
+                self.type = 'consumable'
+            else:
+                drop = 'Healing_potion'
+                self.type = 'consumable'
         return drop
 
 class Stats():

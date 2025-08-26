@@ -1,5 +1,7 @@
-Game_name = "Gametitle": "Labyrinth Ascension"
-Game_info = "Game_info": [
+import mud
+
+Game_name = "Labyrinth Ascension"
+Game_info = [
     "Explore Maze Rooms: Each maze run is procedurally generated (different layouts each time).",
     "Rooms contain enemies, puzzles, traps, or treasure.",
     "Fight Enemies: Defeat enemies to gain EXP and Rank Points.",
@@ -10,17 +12,22 @@ Game_info = "Game_info": [
     "Death & Respawn: If you die, you respawn at your base camp with your rank intact but lose temporary loot."
   ]
 
-Game_lore = "Game_lore": [
+
+Game_lore = [
     "In a world where warriors prove themselves in an endless shifting labyrinth, your journey starts at rock bottom.",
     "Climb the ranks, earn your place among legends, and uncover the secret of the maze — a truth that might change everything."
   ]
 room_types = ['treasure', 'monster']
 
-maze_size = 15
+maze_size = 24
+
+player_save_file = "player_data.json"
 
 welcome_prompt = "Welcome to Labyrinth Ascension, a Single Player MUD game. Do you want to start or load your game?"
 start_choices = ['start', 'quit', 'load']
-started_text = 'To choose an option, type out the entire option.'
+started_text = 'In this world of labyrinths, you have arrived in the top-most level.\nBegin your descent to the lowest level to uncover the long lost secrets of this labyrinth. \n\nTo select an option, type out the number of your choice or the full command.\nE.g. "1", or "Go down".\nWhen you want to continue to the next scene, press the "Enter" key to procede.\n'
+treasure_room_text = 'You have entered a room containing treasure. Do you want to open the chest or travel to another room?'
+monster_room_text = 'You have encountered a monster. Do you want to fight this monster?'
 
 input_prompt = "Please select a choice: "
 input_error_prompt = "Please input again."
@@ -36,7 +43,50 @@ thanks_message = "Thanks for playing!"
 directions = ['up', 'down', 'left', 'right']
 
 printing_text_spacing = '\n=================== \n'
-Monsters = "Monsters": {
+
+# Dictionary of all combinations
+rooms = {
+    "N":    " │ ",
+    "S":    " │ ",
+    "E":    "── ",
+    "W":    " ──",
+    "NS":   " │ ",
+    "NE":   " └─",
+    "NW":   "─┘ ",
+    "SE":   " ┌─",
+    "SW":   "─┐ ",
+    "EW":   "───",
+    "NSE":  " ├─",
+    "NSW":  "─┤ ",
+    "NEW":  "─┴─",
+    "SEW":  "─┬─",
+    "NSEW": "─┼─",
+}
+
+player_rooms = {
+    "N":    " O ",
+    "S":    " O ",
+    "E":    "─O ",
+    "W":    " O─",
+    "NS":   " O ",
+    "NE":   " O─",
+    "NW":   "─O ",
+    "SE":   " O─",
+    "SW":   "─O ",
+    "EW":   "─O─",
+    "NSE":  " O─",
+    "NSW":  "─O ",
+    "NEW":  "─O─",
+    "SEW":  "─O─",
+    "NSEW": "─O─",
+}
+
+move_pool = ['attack', 'shield', 'heal', 'save']
+
+default_health = 15
+default_attack = 10
+
+Monsters = {
     "Slime": [10, 10],
     "Pig": [15, 15],
     "Hog": [20, 20],
@@ -61,3 +111,7 @@ Monsters = "Monsters": {
     "Demon Lord": [9000, 2500],
     "Elder Dragon": [10000, 3000]
   }
+
+printing_text_large_spacing = '\n══════════════ • ══════════════ \n'
+combat_spacing_text = '────── ◈ ──────'
+ability_spacing_text = '··─··'

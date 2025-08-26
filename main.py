@@ -22,7 +22,7 @@ if __name__ == "__main__":
             else:
                 command = choices[int(command) - 1].strip().lower()
         if command in ['quit', 'exit']:
-            game.save_all_data()
+            game.save_all_data(text.player_save_file)
 
             print(text.thanks_message)
             sys.exit()
@@ -30,19 +30,19 @@ if __name__ == "__main__":
             direction = command.split()[1]
             if direction in text.directions:
                 game.maze.travel_to(direction)
-                game.save_all_data()
+                game.save_all_data(text.player_save_file)
             else:
                 print(text.input_error_prompt)
         elif command.startswith('open'):
             if type(game.get_maze().current_room) == mud.TreasureRoom:
                 #open chest
-                if game.get_maze().current_room.get_drops().type == 'weapon':
-                    game.get_player().add_weapon(game.get_maze().current_room.get_drops().drop)
-                elif game.get_maze().current_room.get_drops().type == 'armour':
-                    game.get_player().add_armour(game.get_maze().current_room.get_drops().drop)
-                elif game.get_maze().current_room.get_drops().type == 'consumable':
-                    game.get_player().add_item(game.get_maze().current_room.get_drops().drop)
-                print('You have obtained a ' + game.get_maze().current_room.get_drops().drop + '!')
+                if game.get_maze().current_room.get_type() == 'weapon':
+                    game.get_player().add_weapon(game.get_maze().current_room.get_drops())
+                elif game.get_maze().current_room.get_type() == 'armour':
+                    game.get_player().add_armour(game.get_maze().current_room.get_drops())
+                elif game.get_maze().current_room.get_type() == 'consumable':
+                    game.get_player().add_item(game.get_maze().current_room.get_drops())
+                print('You have obtained a ' + game.get_maze().current_room.get_drops() + '!')
                 game.get_maze().current_room.drops = None
             pass
         elif command.startswith('fight'):
@@ -55,7 +55,7 @@ if __name__ == "__main__":
             print(text.input_error_prompt)
 
         #print(text.printing_text_large_spacing)
-        os.system('clear')
+        #os.system('clear')
         
 
         if game.game_state == 'travel':

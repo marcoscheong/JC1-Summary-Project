@@ -4,15 +4,16 @@ import json
 import text
 import sys
 import select
+import os
 
 class Game:
     """
     Class constructor for Game
     """
-    def _init_(self, storage):
+    def __init__(self):
         self.game_state = ''
         self.maze = None
-        self.storage = storage
+        self.storage = Storage()
         self.player = None
 
     def set_state(self, state):
@@ -104,8 +105,9 @@ class Game:
     def create_player(self):
         stats = Stats(text.default_health, text.default_attack)
         self.player = Player(stats)
+        print('its this')
         self.player.load_from_storage(self.storage, text.player_save_file)
-    
+
     def get_player(self):
         return self.player
 
@@ -116,23 +118,34 @@ class Game:
         self.storage.save_data(file, {
             "Room_id": self.maze.current_room.id
         })
-        self.player.save_to_storage(self.storage, text.player_save_file)
+        self.player.save_to_storage(self.storage, file)
 
 class Storage:
-    def __init(self):
+    def __init__(self):
         pass
         
-    def get_data(self, file)-> None:
+    def get_data(self, file) -> dict:
+        if not os.path.exists(file):
+            return {}
         with open(file, 'r', encoding='utf-8') as f:
-            # data from data.json is deserialised into data_dict
-            data_dict = json.load(f)
-            return data_dict
-            #f.close()
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return {}
             
-    def save_data(self, obj)-> None:
-        with open('data.json', 'w', encoding='utf-8') as f:
-            json.dump(obj, f)
-            #f.close()
+    def save_data(self, file, obj) -> None:
+        data = self.get_data(file)
+
+        if isinstance(data, dict) and isinstance(obj, dict):
+            data.update(obj)
+        elif isinstance(data, list) and isinstance(obj, list):
+            data.extend(obj)
+        else:
+            data = obj 
+
+        # save back
+        with open(file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
 
 #List of things we need to do
 #Create maze
@@ -300,6 +313,12 @@ class TreasureRoom(Room):
         """
         return self.drop.drop
 
+    def get_type(self):
+        """
+        Returns the type of item that is contained in the treasure room.
+        """
+        return self.drop.type
+
 class MonsterRoom(Room):
     def __init__(self, id: int, availableMonsters: list):
         super().__init__(id)
@@ -343,7 +362,7 @@ class Player(Character):
 
     def save_to_storage(self, storage: Storage, file: str):
         storage.save_data(file, {
-            "Player_health": self.stats.maxHealth,
+            "Player_max_health": self.stats.maxHealth,
             "Player_current_health": self.stats.currentHealth,
             "Player_attack": self.stats.attack
         })
@@ -442,14 +461,14 @@ class Drop():
         self.name = ''
     
     def generateDrop(self):
-        random = random.randint(0, 2)
-        if random == 0:
+        r = random.randint(0, 2)
+        if r == 0:
             drop = random.choices(list(text.Weapon.keys()), self.weaponWeights)[0]
             self.type = 'weapon'
-        elif random == 1:
+        elif r == 1:
             drop = random.choices(list(text.Armour.keys()), self.armourWeights)[0]
             self.type = 'armour'
-        elif random == 2:
+        elif r == 2:
             number = random.randint(1, 3)
             if number == 1:
                 drop = 'Attack_potion'

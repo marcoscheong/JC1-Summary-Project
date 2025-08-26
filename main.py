@@ -22,18 +22,32 @@ if __name__ == "__main__":
             else:
                 command = choices[int(command) - 1].strip().lower()
         if command in ['quit', 'exit']:
+            game.save_all_data(text.player_save_file)
+
             print(text.thanks_message)
             sys.exit()
         elif command.startswith('go'):
             direction = command.split()[1]
             if direction in text.directions:
                 game.maze.travel_to(direction)
+                game.save_all_data(text.player_save_file)
             else:
                 print(text.input_error_prompt)
         elif command.startswith('open'):
             if type(game.get_maze().current_room) == mud.TreasureRoom:
                 #open chest
-                pass
+                treasure_type = game.get_maze().current_room.get_type()
+                drop = game.get_maze().current_room.get_drops()
+
+                
+                if treasure_type == 'weapon':
+                    game.get_player().equip_weapon(drop)
+                elif treasure_type == 'armour':
+                    game.get_player().equip_armour(drop)
+                elif treasure_type == 'consumable':
+                    game.get_player().add_item(drop)
+                print('You have obtained a ' + drop + '!')
+                game.get_maze().current_room.drops = None
             pass
         elif command.startswith('fight'):
             os.system('clear')
@@ -45,7 +59,7 @@ if __name__ == "__main__":
             print(text.input_error_prompt)
 
         #print(text.printing_text_large_spacing)
-        os.system('clear')
+        #os.system('clear')
         
 
         if game.game_state == 'travel':

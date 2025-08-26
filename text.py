@@ -119,13 +119,13 @@ Monsters = {
 
 Weapon = {
   "Fist": 1,
+  "Beginner Daggers": 2,
   "Beginner Wand": 3,
   "Wooden Sword": 5,
-  "Beginner Daggers": 2,
-  "Knucklebust": 10,
+  "Intermediate Daggers": 7,
   "Intermediate Wand": 8,
+  "Knucklebust": 10,
   "Stone Sword": 20,
-  "Intermediate Daggers": 7
 }
 
 Armour = {
@@ -150,6 +150,18 @@ Armour = {
   "Draconic Helmet": 300,
   "Draconic Chestplate": 300
 }
+
+weaponweights5 = [50, 40, 30, 25, 20, 15, 10, 5]
+weaponweights10 = [40, 30, 30, 30, 20, 15, 10, 10]
+weaponweights15 = [25, 25, 30, 30, 25, 25, 20, 15]
+weaponweights20 = [10, 10, 15, 15, 20, 20, 25, 30]
+weaponweights25 = [5, 5, 10, 10, 15, 15, 20, 25]
+
+armourweights5 = [50, 50, 50, 50, 25, 25, 25, 25, 10, 10, 10, 10, 5, 5, 5, 5]
+armourweights10 = [40, 40, 40, 40, 30, 30, 30, 30, 15, 15, 15, 15, 10, 10, 10, 10]
+armourweights15 = [30, 30, 30, 30, 30, 30, 30, 30, 20, 20, 20, 20, 15, 15, 15, 15]
+armourweights20 = [20, 20, 20, 20, 25, 25, 25, 25, 25, 25, 25, 25, 20, 20, 20, 20]
+armourweights25 = [10, 10, 10, 10, 15, 15, 15, 15, 20, 20, 20, 20, 25, 25, 25, 25]
 
 printing_text_large_spacing = '\n══════════════ • ══════════════ \n'
 combat_spacing_text = '────── ◈ ──────'

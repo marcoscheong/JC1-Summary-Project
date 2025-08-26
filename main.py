@@ -26,6 +26,11 @@ if __name__ == "__main__":
 
             print(text.thanks_message)
             sys.exit()
+        elif command in ['view inventory', 'inventory', 'inv']:
+            os.system('clear')
+            print(game.get_player().inventory.return_inventory())
+            input('Press enter to continue...')
+            os.system('clear')
         elif command.startswith('go'):
             direction = command.split()[1]
             if direction in text.directions:
@@ -38,17 +43,33 @@ if __name__ == "__main__":
                 #open chest
                 treasure_type = game.get_maze().current_room.get_type()
                 drop = game.get_maze().current_room.get_drops()
+                if treasure_type == 'weapon' or treasure_type == 'armour':
+                    game.set_state('item chest')
 
-                
-                if treasure_type == 'weapon':
-                    game.get_player().equip_weapon(drop)
-                elif treasure_type == 'armour':
-                    game.get_player().equip_armour(drop)
+                    print(f"You have found a {drop}!")
+
+                    choices = game.get_options()
+                    command = game.prompt_player_choice(choices).strip().lower()
+                    if command.isdigit():
+                        if int(command) > len(choices):
+                            print(text.input_error_prompt)
+                        else:
+                            command = choices[int(command) - 1].strip().lower()
+                    if command in ['go back', 'back']:
+                        game.set_state('travel')
+                    elif command in ['equip item', 'equip']:
+                        if treasure_type == 'weapon':
+                            game.get_player().inventory.equip_weapon(drop)
+                        elif treasure_type == 'armour':
+                            game.get_player().inventory.equip_armour(drop)
+                        game.get_maze().current_room.drops = None
+                        game.set_state('travel')
                 elif treasure_type == 'consumable':
-                    game.get_player().add_item(drop)
-                print('You have obtained a ' + drop + '!')
-                game.get_maze().current_room.drops = None
-            pass
+                    print('ss')
+                    game.get_player().inventory.add_item(drop)
+                    print('You have obtained a ' + drop + '!')
+                    game.get_maze().current_room.drops = None
+            
         elif command.startswith('fight'):
             os.system('clear')
             monster = mud.Monster(mud.Stats(text.Monsters[game.maze.current_room.monster][0], text.Monsters[game.maze.current_room.monster][1]))

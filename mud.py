@@ -399,12 +399,17 @@ class Monster(Character):
         super().__init__(stats)
 
 class Drop():
-    def __init__(self, name: str, dropWeight: int):
-        self.name = name
-        self.dropWeight = dropWeight
+    def __init__(self, weaponWeights, armourWeights):
+        self.weaponWeights = weaponWeights
+        self.armourWeights = armourWeights
     
     def generateDrop(self):
-        pass
+        random = random.randint(0, 1)
+        if random == 0:
+            drop = random.choices(list(text.Weapon.keys()), self.weaponWeights)[0]
+        elif random == 1:
+            drop = random.choices(list(text.Armour.keys()), self.armourWeights)[0]
+        return drop
 
 class Stats():
     def __init__(self, maxHealth: int, attack: int):

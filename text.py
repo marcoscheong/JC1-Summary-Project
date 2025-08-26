@@ -27,6 +27,7 @@ welcome_prompt = "Welcome to Labyrinth Ascension, a Single Player MUD game. Do y
 start_choices = ['start', 'quit', 'load']
 started_text = 'In this world of labyrinths, you have arrived in the top-most level.\nBegin your descent to the lowest level to uncover the long lost secrets of this labyrinth. \n\nTo select an option, type out the number of your choice or the full command.\nE.g. "1", or "Go down".\nWhen you want to continue to the next scene, press the "Enter" key to procede.\n'
 treasure_room_text = 'You have entered a room containing treasure. Do you want to open the chest or travel to another room?'
+claimed_treasure_room_text = 'You have entered a room containing an empty chest. Do you want to travel to another room?'
 monster_room_text = 'You have encountered a monster. Do you want to fight this monster?'
 
 input_prompt = "Please select a choice: "
@@ -128,6 +129,11 @@ Weapon = {
   "Stone Sword": 20,
 }
 
+Consumable = {
+  "Health potion": 5,
+  "Attack potion": 5,
+  "Healing potion": 10
+}
 Armour = {
   "Leather Leggings": 1,
   "Leather Boots": 1,
@@ -151,6 +157,39 @@ Armour = {
   "Draconic Chestplate": 300
 }
 
+ArmourSlots = {
+    # Leather
+    "Leather Helmet": "Helmet",
+    "Leather Chestplate": "Chestplate",
+    "Leather Leggings": "Leggings",
+    "Leather Boots": "Boots",
+
+    # Chainmail
+    "Chainmail Helmet": "Helmet",
+    "Chainmail Chestplate": "Chestplate",
+    "Chainmail Leggings": "Leggings",
+    "Chainmail Boots": "Boots",
+
+    # Iron
+    "Iron Helmet": "Helmet",
+    "Iron Chestplate": "Chestplate",
+    "Iron Leggings": "Leggings",
+    "Iron Boots": "Boots",
+
+    # Diamond
+    "Diamond Helmet": "Helmet",
+    "Diamond Chestplate": "Chestplate",
+    "Diamond Leggings": "Leggings",
+    "Diamond Boots": "Boots",
+
+    # Draconic
+    "Draconic Helmet": "Helmet",
+    "Draconic Chestplate": "Chestplate",
+    "Draconic Leggings": "Leggings",
+    "Draconic Boots": "Boots",
+}
+
+
 weaponweights5 = [50, 40, 30, 25, 20, 15, 10, 5]
 weaponweights10 = [40, 30, 30, 30, 20, 15, 10, 10]
 weaponweights15 = [25, 25, 30, 30, 25, 25, 20, 15]
@@ -164,7 +203,8 @@ armourweights20 = [30, 30, 30, 30, 28, 28, 28, 28, 25, 25, 25, 25, 23, 23, 23, 2
 armourweights25 = [20, 20, 20, 20, 22, 22, 22, 22, 25, 25, 25, 25, 28, 28, 28, 28, 30, 30, 30, 30]
 
 
-player_save_file = "data.json"
+player_save_file = "player_data.json"
+default_save_file = "data.json"
 
 printing_text_large_spacing = '\n══════════════ • ══════════════ \n'
 combat_spacing_text = '────── ◈ ──────'

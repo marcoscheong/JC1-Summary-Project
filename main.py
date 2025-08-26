@@ -9,8 +9,16 @@ if __name__ == "__main__":
     #player = data.create_player()
     #game.add_player(player)
     while True:
+        os.system('clear')
+
+        if game.game_state == 'travel':
+            game.maze.draw_rooms()
+
         if type(game.maze.current_room) == mud.TreasureRoom:
-            print(text.treasure_room_text)
+            if game.maze.current_room.claimed == False:
+                print(text.treasure_room_text)
+            else:
+                print(text.claimed_treasure_room_text)
         elif type(game.maze.current_room) == mud.MonsterRoom:
             print(text.monster_room_text)
         choices = game.get_options()
@@ -29,7 +37,7 @@ if __name__ == "__main__":
         elif command in ['view inventory', 'inventory', 'inv']:
             os.system('clear')
             print(game.get_player().inventory.return_inventory())
-            input('Press enter to continue...')
+            input('\nPress enter to continue...')
             os.system('clear')
         elif command.startswith('go'):
             direction = command.split()[1]
@@ -60,15 +68,53 @@ if __name__ == "__main__":
                     elif command in ['equip item', 'equip']:
                         if treasure_type == 'weapon':
                             game.get_player().inventory.equip_weapon(drop)
+                            game.get_player().recalculate_stats()
+                            input('\nPress enter to continue...')
                         elif treasure_type == 'armour':
-                            game.get_player().inventory.equip_armour(drop)
-                        game.get_maze().current_room.drops = None
+                            slot = text.ArmourSlots[drop]
+                            game.get_player().inventory.equip_armour(slot, drop)
+                            game.get_player().recalculate_stats()
+                            input('\nPress enter to continue...')
+
+                        game.get_maze().current_room.drop = None
+                        game.get_maze().current_room.claimed = True
                         game.set_state('travel')
                 elif treasure_type == 'consumable':
-                    print('ss')
                     game.get_player().inventory.add_item(drop)
                     print('You have obtained a ' + drop + '!')
-                    game.get_maze().current_room.drops = None
+                    game.set_state('consumable chest')
+                    choices = game.get_options()
+                    command = game.prompt_player_choice(choices).strip().lower()
+                    if command.isdigit():
+                        if int(command) > len(choices):
+                            print(text.input_error_prompt)
+                        else:
+                            command = choices[int(command) - 1].strip().lower()
+                    if command in ['go back', 'back']:
+                        game.set_state('travel')
+                    elif command in ['consume item', 'consume']:
+                        if drop in text.Consumables:
+                            if game.get_player().inventory.consume_item(drop):
+                                if drop == 'Health potion':
+                                    magnitude = game.get_player().stats.maxhealth * 0.1
+                                    game.get_player().stats.maxhealth += magnitude
+                                    print(f"Your max health has increased by {magnitude}!")
+                                elif drop == 'Healing potion':
+                                    magnitude = game.get_player().stats.maxhealth * 0.1
+                                    game.get_player().stats.heal(magnitude)
+                                    print(f'You have healed {magnitude} health!')
+                                elif drop == 'Attack potion':
+                                    magnitude = game.get_player().stats.attack * 0.1
+                                    game.get_player().stats.attack += magnitude
+                                    print(f'Your attack has increased by {magnitude}!')
+                                input('\nPress enter to continue...')
+                            else:
+                                print(text.input_error_prompt)
+                        else:
+                            print(text.input_error_prompt)
+                    game.get_maze().current_room.drop = None
+                    game.get_maze().current_room.claimed = True
+                    game.set_state('travel')
             
         elif command.startswith('fight'):
             os.system('clear')
@@ -79,12 +125,8 @@ if __name__ == "__main__":
             #print ABSTRACTED error message
             print(text.input_error_prompt)
 
-        #print(text.printing_text_large_spacing)
-        #os.system('clear')
-        
+        #print(text.printing_text_large_spacing)    
 
-        if game.game_state == 'travel':
-            game.maze.draw_rooms()
         #choices = game.get_options()
         #choice = mud.prompt_player_choice(choices)
         #actions = game.get_actions(choices, choice)

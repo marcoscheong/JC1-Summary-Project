@@ -34,7 +34,8 @@ class Game:
             if type(self.maze.current_room) == MonsterRoom:
                 choices.insert(0, 'Fight monster')
             elif type(self.maze.current_room) == TreasureRoom:
-                choices.insert(0, 'Open chest')
+                if self.maze.current_room.claimed == False:
+                    choices.insert(0, 'Open chest')
             elif type(self.maze.current_room) == Room:
                 return choices
             choices.append('View inventory')
@@ -43,6 +44,9 @@ class Game:
             return choices
         elif self.game_state == 'item chest':
             choices = ['Equip item', 'Go back']
+            return choices
+        elif self.game_state == 'consumable chest':
+            choices = ['Consume item', 'Go back']
             return choices
         
     def prompt_player_choice(self, choices):
@@ -110,7 +114,7 @@ class Game:
     def create_player(self):
         stats = Stats(text.default_health, text.default_attack)
         self.player = Player(stats)
-        self.player.load_from_storage(self.storage, text.player_save_file)
+        self.player.create_new_storage(self.storage, text.player_save_file)
 
     def get_player(self):
         return self.player
@@ -300,6 +304,7 @@ class Room:
 class TreasureRoom(Room):
     def __init__(self, id):
         super().__init__(id)
+        self.claimed = False
         if id < 5:
             self.drop = Drop(text.weaponweights5, text.armourweights5)
         elif id < 10:
@@ -357,6 +362,11 @@ class Player(Character):
         super().__init__(stats)
         self.inventory = None
 
+    def create_new_storage(self, storage: Storage, file: str):
+        default_data = storage.get_data(text.default_save_file)
+        storage.save_data(file, default_data)
+        self.load_from_storage(storage, file)
+
     def load_from_storage(self, storage: Storage, file: str):
         data = storage.get_data(file)
         self.stats.maxHealth = data["Player_max_health"]
@@ -377,6 +387,17 @@ class Player(Character):
             self.inventory.show_inventory()
         else:
             print("No inventory loaded.")
+    
+    def recalculate_stats(self):
+        weapon = self.inventory.items.get("Weapon", "Fist")
+        armour = self.inventory.items.get("Armour", {})
+        attack_bonus = text.Weapon.get(weapon, 0)
+        defence_bonus = sum(text.Armour.get(part, 0) for part in armour.values() if part)
+        
+        self.stats.attack = text.default_attack + attack_bonus
+        self.stats.maxHealth = text.default_health + defence_bonus
+        if self.stats.currentHealth > self.stats.maxHealth:
+            self.stats.currentHealth = self.stats.maxHealth
 
 class Inventory:
     def __init__(self, storage: Storage, file: str):
@@ -391,10 +412,16 @@ class Inventory:
 
     def add_item(self, item_name: str, quantity: int = 1):
         """Add an item and save to JSON."""
-        if item_name in self.items:
-            self.items[item_name] += quantity
+        if item_name in text.Consumable.keys():
+            if item_name in self.items["Consumables"]:
+                self.items["Consumables"][item_name] += quantity
+            else:
+                self.items["Consumables"][item_name] = quantity
         else:
-            self.items[item_name] = quantity
+            if item_name in self.items:
+                self.items[item_name] += quantity
+            else:
+                self.items[item_name] = quantity
         self.save_inventory()
 
     def use_item(self, item_name: str, quantity: int = 1):
@@ -417,18 +444,23 @@ class Inventory:
         if weapon_name in text.Weapon.keys():
             self.items["Weapon"] = weapon_name
             print(f"{weapon_name} has been equipped.")
+            self.save_inventory()
         else:
             print(f"{weapon_name} not found.")
             return False
     
-    def equip_armour(self, armour_name: str):
-        """Equip armour to the player, given an armour name."""
-        if armour_name in text.Armour.keys():
-            self.items["Armour"] = armour_name
-            print(f"{armour_name} has been equipped.")
+    def equip_armour(self, slot: str, armour_name: str):
+        """Equip armour to a given slot."""
+        if armour_name in text.Armour:
+            if "Armour" not in self.items:
+                self.items["Armour"] = {}
+            self.items["Armour"][slot] = armour_name
+            print(f"{armour_name} equipped in {slot}.")
+            self.save_inventory()
         else:
             print(f"{armour_name} not found.")
             return False
+
 
     def remove_item(self, item_name: str):
         """Remove an item completely."""
@@ -439,18 +471,45 @@ class Inventory:
             print(f"{item_name} not found in inventory.")
 
     def save_inventory(self):
-        """Save current inventory to the JSON file."""
-        self.storage.save_data(self.file, {"items": self.items})
+        """Save inventory into the JSON file."""
+        try:
+            data = self.storage.get_data(self.file)
+        except FileNotFoundError:
+            data = {}
+        data["Items"] = self.items
+        self.storage.save_data(self.file, data)
+
 
     def return_inventory(self):
-        """Print the current inventory."""
         if not self.items:
             return "Inventory is empty."
+
+        lines = ["╔═ Inventory ═══════════════╗"]
+
+        # Weapon
+        weapon = self.items.get("Weapon", "None")
+        lines.append(f"  Weapon       » {weapon}")
+
+        # Armour
+        lines.append("  Armour")
+        armour = self.items.get("Armour", {})
+        for part in ["Helmet", "Chestplate", "Leggings", "Boots"]:
+            equipped = armour.get(part, "None")
+            lines.append(f"    {part:<11} » {equipped}")
+
+        # Consumables
+        lines.append("  Consumables")
+        consumables = self.items.get("Consumables", {})
+        if consumables:
+            for item, qty in consumables.items():
+                lines.append(f"    {item:<11} » x{qty}")
         else:
-            string = "Inventory:\n"
-            for item, qty in self.items.items():
-                string += f"{item}: {qty}\n"
-            return string
+            lines.append("    None")
+
+        lines.append("╚═══════════════════════════╝")
+
+        return "\n".join(lines)
+
     
 
 class Monster(Character):
@@ -766,4 +825,5 @@ class CombatSequence():
     def end_sequence(self):
         #return victory/defeat result
         print('combat done') # placeholder
+        input('Press enter to continue...')
 #Objects

@@ -282,12 +282,22 @@ class Room:
 class TreasureRoom(Room):
     def __init__(self, id):
         super().__init__(id)
+        if id < 5:
+            self.drop = Drop(text.weaponweights5, text.armourweights5)
+        elif id < 10:
+            self.drop = Drop(text.weaponweights10, text.armourweights10)
+        elif id < 15:
+            self.drop = Drop(text.weaponweights15, text.armourweights15)
+        elif id < 20: 
+            self.drop = Drop(text.weaponweights20, text.armourweights20)
+        else:
+            self.drop = Drop(text.weaponweights25, text.armourweights25)
 
-    def generateItems(self):
+    def get_drops(self):
         """
         Returns the items that are contained in the treasure room.
-        Temporary function until better system is found.
         """
+        return self.drop.drop
 
 class MonsterRoom(Room):
     def __init__(self, id: int, availableMonsters: list):
@@ -399,12 +409,18 @@ class Monster(Character):
         super().__init__(stats)
 
 class Drop():
-    def __init__(self, name: str, dropWeight: int):
-        self.name = name
-        self.dropWeight = dropWeight
+    def __init__(self, weaponWeights, armourWeights):
+        self.weaponWeights = weaponWeights
+        self.armourWeights = armourWeights
+        self.drop = self.generateDrop()
     
     def generateDrop(self):
-        pass
+        random = random.randint(0, 1)
+        if random == 0:
+            drop = random.choices(list(text.Weapon.keys()), self.weaponWeights)[0]
+        elif random == 1:
+            drop = random.choices(list(text.Armour.keys()), self.armourWeights)[0]
+        return drop
 
 class Stats():
     def __init__(self, maxHealth: int, attack: int):

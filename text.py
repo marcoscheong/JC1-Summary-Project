@@ -91,30 +91,77 @@ default_health = 15
 default_attack = 10
 
 Monsters = {
-    "Slime": [10, 10],
-    "Pig": [15, 15],
-    "Hog": [20, 20],
-    "Goblin": [50, 30],
-    "Wolf": [80, 40],
-    "Orc": [150, 80],
-    "Skeleton": [120, 60],
-    "Zombie": [200, 70],
-    "Bandit": [250, 100],
-    "Giant Spider": [300, 120],
-    "Dark Knight": [500, 200],
-    "Stone Golem": [800, 300],
-    "Troll": [1000, 350],
-    "Wyvern": [1500, 500],
-    "Minotaur": [2000, 600],
-    "Hydra": [3000, 800],
-    "Ancient Treant": [4000, 900],
-    "Fire Drake": [5000, 1200],
-    "Shadow Reaper": [6000, 1500],
-    "Frost Titan": [7000, 1700],
-    "Chaos Serpent": [8000, 2000],
-    "Demon Lord": [9000, 2500],
-    "Elder Dragon": [10000, 3000]
-  }
+  "Slime": [10, 10],
+  "Pig": [15, 15],
+  "Hog": [20, 20],
+  "Goblin": [50, 30],
+  "Wolf": [80, 40],
+  "Orc": [150, 80],
+  "Skeleton": [120, 60],
+  "Zombie": [200, 70],
+  "Bandit": [250, 100],
+  "Giant Spider": [300, 120],
+  "Dark Knight": [500, 200],
+  "Stone Golem": [800, 300],
+  "Troll": [1000, 350],
+  "Wyvern": [1500, 500],
+  "Minotaur": [2000, 600],
+  "Hydra": [3000, 800],
+  "Ancient Treant": [4000, 900],
+  "Fire Drake": [5000, 1200],
+  "Shadow Reaper": [6000, 1500],
+  "Frost Titan": [7000, 1700],
+  "Chaos Serpent": [8000, 2000],
+  "Demon Lord": [9000, 2500],
+  "Elder Dragon": [10000, 3000]
+}
+
+
+Weapon = {
+  "Fist": 1,
+  "Beginner Daggers": 2,
+  "Beginner Wand": 3,
+  "Wooden Sword": 5,
+  "Intermediate Daggers": 7,
+  "Intermediate Wand": 8,
+  "Knucklebust": 10,
+  "Stone Sword": 20,
+}
+
+Armour = {
+  "Leather Leggings": 1,
+  "Leather Boots": 1,
+  "Leather Helmet": 1,
+  "Leather Chestplate": 1,
+  "Chainmail Leggings": 5,
+  "Chainmail Boots": 5,
+  "Chainmail Helmet": 5,
+  "Chainmail Chestplate": 5,
+  "Iron Leggings": 25,
+  "Iron Boots": 25,
+  "Iron Helmet": 25,
+  "Iron Chestplate": 25,
+  "Diamond Leggings": 50,
+  "Diamond Boots": 50,
+  "Diamond Helmet": 50,
+  "Diamond Chestplate": 50,
+  "Draconic Leggings": 300,
+  "Draconic Boots": 300,
+  "Draconic Helmet": 300,
+  "Draconic Chestplate": 300
+}
+
+weaponweights5 = [50, 40, 30, 25, 20, 15, 10, 5]
+weaponweights10 = [40, 30, 30, 30, 20, 15, 10, 10]
+weaponweights15 = [25, 25, 30, 30, 25, 25, 20, 15]
+weaponweights20 = [10, 10, 15, 15, 20, 20, 25, 30]
+weaponweights25 = [5, 5, 10, 10, 15, 15, 20, 25]
+
+armourweights5 = [50, 50, 50, 50, 25, 25, 25, 25, 10, 10, 10, 10, 5, 5, 5, 5]
+armourweights10 = [40, 40, 40, 40, 30, 30, 30, 30, 15, 15, 15, 15, 10, 10, 10, 10]
+armourweights15 = [30, 30, 30, 30, 30, 30, 30, 30, 20, 20, 20, 20, 15, 15, 15, 15]
+armourweights20 = [20, 20, 20, 20, 25, 25, 25, 25, 25, 25, 25, 25, 20, 20, 20, 20]
+armourweights25 = [10, 10, 10, 10, 15, 15, 15, 15, 20, 20, 20, 20, 25, 25, 25, 25]
 
 printing_text_large_spacing = '\n══════════════ • ══════════════ \n'
 combat_spacing_text = '────── ◈ ──────'

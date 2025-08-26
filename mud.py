@@ -33,12 +33,17 @@ class Game:
             choices = self.maze.room_options()
             if type(self.maze.current_room) == MonsterRoom:
                 choices.insert(0, 'Fight monster')
-                return choices
             elif type(self.maze.current_room) == TreasureRoom:
                 choices.insert(0, 'Open chest')
-                return choices
             elif type(self.maze.current_room) == Room:
                 return choices
+            choices.append('View inventory')
+            choices.append('Quit')
+
+            return choices
+        elif self.game_state == 'item chest':
+            choices = ['Equip item', 'Go back']
+            return choices
         
     def prompt_player_choice(self, choices):
         for i, opt in enumerate(choices):
@@ -105,7 +110,6 @@ class Game:
     def create_player(self):
         stats = Stats(text.default_health, text.default_attack)
         self.player = Player(stats)
-        print('its this')
         self.player.load_from_storage(self.storage, text.player_save_file)
 
     def get_player(self):
@@ -438,14 +442,15 @@ class Inventory:
         """Save current inventory to the JSON file."""
         self.storage.save_data(self.file, {"items": self.items})
 
-    def show_inventory(self):
+    def return_inventory(self):
         """Print the current inventory."""
         if not self.items:
-            print("Inventory is empty.")
+            return "Inventory is empty."
         else:
-            print("Current Inventory:")
+            string = "Inventory:\n"
             for item, qty in self.items.items():
-                print(f"{item}: {qty}")
+                string += f"{item}: {qty}\n"
+            return string
     
 
 class Monster(Character):
@@ -457,7 +462,6 @@ class Drop():
         self.weaponWeights = weaponWeights
         self.armourWeights = armourWeights
         self.drop = self.generateDrop()
-        self.type = ''
         self.name = ''
     
     def generateDrop(self):
@@ -471,13 +475,13 @@ class Drop():
         elif r == 2:
             number = random.randint(1, 3)
             if number == 1:
-                drop = 'Attack_potion'
+                drop = 'Attack potion'
                 self.type = 'consumable'
             elif number == 2:
-                drop = 'Health_potion'
+                drop = 'Health potion'
                 self.type = 'consumable'
             else:
-                drop = 'Healing_potion'
+                drop = 'Healing potion'
                 self.type = 'consumable'
         return drop
 

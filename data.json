@@ -5,7 +5,12 @@
 
   "Items": {
     "Weapon": "Fist",
-    "Armour": "",
+    "Armour": {
+      "Leggings": "",
+      "Boots": "",
+      "Helmet": "",
+      "Chestplate": ""
+    },
     "Consumables": {
       "Attack_potion": 3,
       "Health_potion": 3,

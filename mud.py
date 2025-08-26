@@ -3,6 +3,7 @@ import random
 import json
 import text
 import sys
+import select
 
 class Game:
     """
@@ -41,6 +42,7 @@ class Game:
     def prompt_player_choice(self, choices):
         for i, opt in enumerate(choices):
             print(f'{(i + 1)}. {opt}')
+            time.sleep(0.05)
         _input = input(text.input_prompt)
         return _input
 
@@ -61,9 +63,25 @@ class Game:
         self.maze.generate_maze()
         self.create_player()
         print(text.printing_text_large_spacing)
-        print(text.started_text)
+        self.pretty_print(text.started_text)
+        input()
+        self.maze.draw_rooms()
         self.set_state('travel')
 
+    def pretty_print(self, text):
+        i = 0
+        while i < len(text):
+            if select.select([sys.stdin], [], [], 0)[0]:
+                sys.stdin.readline()
+
+                sys.stdout.write(text[i:]) 
+                # sys.stdout.flush()
+                
+                break
+            sys.stdout.write(text[i])
+            sys.stdout.flush()
+            time.sleep(0.032)
+            i += 1
 
     def quit_game(self):
         sys.exit()
@@ -272,7 +290,7 @@ class TreasureRoom(Room):
         """
 
 class MonsterRoom(Room):
-    def __init__(self, id, availableMonsters: list):
+    def __init__(self, id: int, availableMonsters: list):
         super().__init__(id)
         self.monster = ''
         self.availableMonsters = availableMonsters
@@ -284,7 +302,10 @@ class MonsterRoom(Room):
         """
         if len(self.availableMonsters) == 0:
             return 'list of monsters is empty'
-        i = random.randint(0, len(self.availableMonsters) - 1)
+        if id == 0:
+            i = 0
+        else:
+            i = random.randint(0, self.id//2)
         self.monster = list(self.availableMonsters)[i]
 
 
@@ -377,6 +398,14 @@ class Monster(Character):
     def __init__(self, stats):
         super().__init__(stats)
 
+class Drop():
+    def __init__(self, name: str, dropWeight: int):
+        self.name = name
+        self.dropWeight = dropWeight
+    
+    def generateDrop(self):
+        pass
+
 class Stats():
     def __init__(self, maxHealth: int, attack: int):
         self.maxHealth = maxHealth
@@ -432,7 +461,7 @@ class CombatSequence():
             print(f'Current monster health: {self.monster.stats.currentHealth}\n')
 
             player_seq = self.player_ability_sequence(p_elixir)
-            monster_seq = self.monster_abilty_sequence(m_elixir)
+            monster_seq = self.monster_ability_sequence(m_elixir)
 
             player_str = '\nP: '
             for i in range(len(player_seq)):
@@ -592,15 +621,21 @@ class CombatSequence():
 
             if choice.isdigit():
                 choice = int(choice)
-                if choice <= len(available_abilities):
+                if 0 < choice <= len(available_abilities):
                     choice = available_abilities[choice - 1].name.strip().lower()
             if choice in [a.name for a in available_abilities]:
-                ability = ability_dict[choice]
+                ability = Ability(ability_dict[choice].name)
                 magnitude = 100 # placeholder
                 while magnitude > available_elixir:
-                    magnitude = int(input(text.magnitude_prompt))
-                    if magnitude > available_elixir:
+
+                    magnitude = input(text.magnitude_prompt)
+                    if not magnitude.isdigit():
                         print(text.input_error_prompt)
+                        magnitude = 100
+                    elif magnitude.isdigit():
+                        magnitude = int(magnitude)
+                        if magnitude > available_elixir:
+                            print(text.input_error_prompt)
                 if choice == "attack":
                     ability.attack = magnitude
                     ability.magnitude = magnitude
@@ -618,32 +653,35 @@ class CombatSequence():
             else:
                 print(text.ability_addition_error)
         return ability_sequence
-    def monster_abilty_sequence(self, elixir):
+    def monster_ability_sequence(self, elixir):
         ability_sequence = []
         available_elixir = elixir
 
         cheapest_cost = text.cheapest_ability_cost # to be updated if needed
         
+
+
         while available_elixir >= cheapest_cost:
-            random.shuffle(self.monster.abilities)
-            for ability in self.monster.abilities:
-                a = ability
-                if a.elixir <= available_elixir:
-                    magnitude = random.randint(1, available_elixir)
-                    if a.name == "attack":
-                        a.attack = magnitude
-                        a.magnitude = magnitude
-                    elif a.name == "shield":
-                        a.shield = magnitude
-                        a.magnitude = magnitude
-                    elif a.name == "heal":
-                        a.heal = magnitude
-                        a.magnitude = magnitude
-                    elif a.name == "save":
-                        a.saved_elixir = magnitude
-                        a.magnitude = magnitude
-                    available_elixir -= magnitude
-                    ability_sequence.append(a)
+            #random.shuffle(self.monster.abilities)
+            original = random.choices(self.monster.abilities, text.monster_ability_weights)[0]
+            a = Ability(original.name)
+            if a.elixir <= available_elixir:
+                magnitude = random.randint(1, available_elixir)
+                print(f'{a.name} with magnitude: {magnitude}')
+                if a.name == "attack":
+                    a.attack = magnitude
+                    a.magnitude = magnitude
+                elif a.name == "shield":
+                    a.shield = magnitude
+                    a.magnitude = magnitude
+                elif a.name == "heal":
+                    a.heal = magnitude
+                    a.magnitude = magnitude
+                elif a.name == "save":
+                    a.saved_elixir = magnitude
+                    a.magnitude = magnitude
+                available_elixir -= magnitude
+                ability_sequence.append(a)
         return ability_sequence
 
     def end_sequence(self):

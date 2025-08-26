@@ -83,6 +83,10 @@ player_rooms = {
 
 move_pool = ['attack', 'shield', 'heal', 'save']
 
+monster_ability_weights = [20, 4, 3, 6]
+
+
+
 default_health = 15
 default_attack = 10
 

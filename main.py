@@ -1,7 +1,5 @@
 # Import statements
-import mud
-import text
-import sys
+import mud, sys, text, os
 
 if __name__ == "__main__":
     game = mud.Game()
@@ -38,6 +36,7 @@ if __name__ == "__main__":
                 pass
             pass
         elif command.startswith('fight'):
+            os.system('clear')
             monster = mud.Monster(mud.Stats(text.Monsters[game.maze.current_room.monster][0], text.Monsters[game.maze.current_room.monster][1]))
             combat_seq = mud.CombatSequence(game.get_player(), monster, 3, 20)
             combat_seq.start_sequence()
@@ -45,7 +44,9 @@ if __name__ == "__main__":
             #print ABSTRACTED error message
             print(text.input_error_prompt)
 
-        print(text.printing_text_large_spacing)
+        #print(text.printing_text_large_spacing)
+        os.system('clear')
+        
 
         if game.game_state == 'travel':
             game.maze.draw_rooms()

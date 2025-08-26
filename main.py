@@ -36,13 +36,17 @@ if __name__ == "__main__":
         elif command.startswith('open'):
             if type(game.get_maze().current_room) == mud.TreasureRoom:
                 #open chest
-                if game.get_maze().current_room.get_type() == 'weapon':
-                    game.get_player().add_weapon(game.get_maze().current_room.get_drops())
-                elif game.get_maze().current_room.get_type() == 'armour':
-                    game.get_player().add_armour(game.get_maze().current_room.get_drops())
-                elif game.get_maze().current_room.get_type() == 'consumable':
-                    game.get_player().add_item(game.get_maze().current_room.get_drops())
-                print('You have obtained a ' + game.get_maze().current_room.get_drops() + '!')
+                treasure_type = game.get_maze().current_room.get_type()
+                drop = game.get_maze().current_room.get_drops()
+
+                
+                if treasure_type == 'weapon':
+                    game.get_player().equip_weapon(drop)
+                elif treasure_type == 'armour':
+                    game.get_player().equip_armour(drop)
+                elif treasure_type == 'consumable':
+                    game.get_player().add_item(drop)
+                print('You have obtained a ' + drop + '!')
                 game.get_maze().current_room.drops = None
             pass
         elif command.startswith('fight'):

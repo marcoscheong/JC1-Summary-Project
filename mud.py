@@ -432,44 +432,44 @@ class MonsterRoom(Room):
             if self.id < 5:
                 drop = Drop(text.weaponweights5, text.armourweights5)
                 drop.generateArmourDrop()
-                self.drop = drop.drop
+                self.drop = drop
             elif self.id < 10:
                 drop = Drop(text.weaponweights10, text.armourweights10)
                 drop.generateArmourDrop()
-                self.drop = drop.drop
+                self.drop = drop
             elif self.id < 15:
                 drop = Drop(text.weaponweights15, text.armourweights15)
                 drop.generateArmourDrop()
-                self.drop = drop.drop
+                self.drop = drop
             elif self.id < 20: 
                 drop = Drop(text.weaponweights20, text.armourweights20)
                 drop.generateArmourDrop()
-                self.drop = drop.drop
+                self.drop = drop
             else:
                 drop = Drop(text.weaponweights25, text.armourweights25)
                 drop.generateArmourDrop()
-                self.drop = drop.drop
+                self.drop = drop
         elif i == 1:
             if self.id < 5:
                 drop = Drop(text.weaponweights5, text.armourweights5)
                 drop.generateWeaponDrop()
-                self.drop = drop.drop
+                self.drop = drop
             elif self.id < 10:
                 drop = Drop(text.weaponweights10, text.armourweights10)
                 drop.generateWeaponDrop()
-                self.drop = drop.drop
+                self.drop = drop
             elif self.id < 15:
                 drop = Drop(text.weaponweights15, text.armourweights15)
                 drop.generateWeaponDrop()
-                self.drop = drop.drop
+                self.drop = drop
             elif self.id < 20: 
                 drop = Drop(text.weaponweights20, text.armourweights20)
                 drop.generateWeaponDrop()
-                self.drop = drop.drop
+                self.drop = drop
             else:
                 drop = Drop(text.weaponweights25, text.armourweights25)
                 drop.generateWeaponDrop()
-                self.drop = drop.drop
+                self.drop = drop
 
 class BossRoom(Room):
     def __init__(self, id: int):
@@ -493,6 +493,8 @@ class Player(Character):
     def __init__(self, stats):
         super().__init__(stats)
         self.inventory = None
+        self.base_atk = text.default_attack
+        self.base_health = text.default_health
 
     def create_new_storage(self, storage: Storage, file: str):
         default_data = storage.get_data(text.default_save_file)
@@ -520,16 +522,38 @@ class Player(Character):
         else:
             print("No inventory loaded.")
     
+    def atk_potion(self, amt):
+        self.base_atk += amt
+    
+    def health_potion(self, amt):
+        self.base_health += amt
+
     def recalculate_stats(self):
-        weapon = self.inventory.items.get("Weapon", "Fist")
+        # Reset attack and health back to base
+        self.stats.attack = self.base_atk
+        old_max_health = self.stats.max_health
+        old_current_health = self.stats.current_health
+
+        weapon = self.inventory.items.get("Weapon", None)
+        attack_bonus = text.Weapon.get(weapon, 0) if weapon else 0
+
         armour = self.inventory.items.get("Armour", {})
-        attack_bonus = text.Weapon.get(weapon, 0)
         defence_bonus = sum(text.Armour.get(part, 0) for part in armour.values() if part)
-        
-        self.stats.attack = text.default_attack + attack_bonus
-        self.stats.max_health = text.default_health + defence_bonus
+
+        self.stats.attack = self.base_atk + attack_bonus
+        self.stats.max_health = self.base_health + defence_bonus
+
+        if old_max_health > 0:
+            health_ratio = old_current_health / old_max_health
+        else:
+            health_ratio = 1.0
+
+        self.stats.current_health = round(self.stats.max_health * health_ratio, 1)
+
+        # Ensure it never goes above max
         if self.stats.current_health > self.stats.max_health:
             self.stats.current_health = self.stats.max_health
+
 
 class Inventory:
     def __init__(self, storage: Storage, file: str):
@@ -740,93 +764,92 @@ class CombatSequence():
 
         self.saved_p = 0 # saved player elixir from each turn
         self.saved_m = 0 # saved monster elixir from each turn
+    def _fmt(self, x):
+        """Format numbers to 1 decimal if needed, no trailing .0."""
+        return int(x) if isinstance(x, (int, float)) and float(x).is_integer() else round(x, 1)
+
+
     def start_sequence(self, is_boss=False):
         """
-        Unified combat sequence for both normal monsters and bosses.
-        If is_boss=True, special elixir manipulation and aesthetic display apply.
+        Compact combat display for normal monsters and bosses in minimal format.
         """
         while self.current_turn <= self.max_turns:
-            # ===== Calculate elixir =====
             elixir = (self.base_elixir * self.current_turn) // 2
             p_elixir = elixir + self.saved_p
             m_elixir = elixir + self.saved_m
             self.saved_p = 0
             self.saved_m = 0
 
-            # ===== Aesthetic display for boss or normal combat =====
-            if is_boss:
-                print(f"\n===== Turn {self.current_turn} =====")
-                print(f"Player Health: {self.player.stats.current_health} | Boss Health: {self.monster.stats.current_health}")
-                print(f"Player Elixir: {p_elixir} | Boss Elixir: {m_elixir}\n")
-            else:
-                print(f"\n===== Turn {self.current_turn} =====")
-                print(f"Player Health: {self.player.stats.current_health} | Monster Health: {self.monster.stats.current_health}")
-                print(f"Player Elixir: {p_elixir} | Monster Elixir: {m_elixir}\n")
+            print(f"\n===== Turn {self.current_turn} =====\n")
+            print(f"Player Health: {self._fmt(self.player.stats.current_health)} | "
+                f"{'Boss' if is_boss else 'Monster'} Health: {self._fmt(self.monster.stats.current_health)}")
+            print(f"Player Elixir: {p_elixir} | {'Boss' if is_boss else 'Monster'} Elixir: {m_elixir}\n")
 
-            # ===== Player & Monster choose abilities =====
+            # Choose abilities
             player_seq = self.player_ability_sequence(p_elixir)
             monster_seq = self.monster_ability_sequence(m_elixir)
 
-            # ===== Apply abilities with shared fate =====
-            max_len = max(len(player_seq), len(monster_seq))
-            shared_fate_percent = 0.25 if is_boss else 0  # Only mirror damage for boss
+            # Aggregate totals
+            p_total_attack = sum(a.attack for a in player_seq)
+            p_total_shield = sum(a.shield for a in player_seq)
+            p_total_heal = sum(a.heal for a in player_seq)
+            p_total_save = sum(a.saved_elixir for a in player_seq)
 
-            for i in range(max_len):
-                # Player action
-                if i < len(player_seq):
-                    p_act = player_seq[i]
-                    m_shield = monster_seq[i].shield if i < len(monster_seq) else 0
-                    dmg_to_monster = max(0, (p_act.attack - m_shield) * (self.player.stats.attack / 10))
-                    self.monster.stats.take_damage(dmg_to_monster)
-                    self.player.stats.heal(p_act.heal)
-                    self.saved_p = p_act.saved_elixir
+            m_total_attack = sum(a.attack for a in monster_seq)
+            m_total_shield = sum(a.shield for a in monster_seq)
+            m_total_heal = sum(a.heal for a in monster_seq)
+            m_total_save = sum(a.saved_elixir for a in monster_seq)
 
-                    p_display = [f"P: {p_act.name}"]
-                    if dmg_to_monster > 0:
-                        p_display.append(f"dmg: {dmg_to_monster}")
-                    if p_act.heal > 0:
-                        p_display.append(f"heal: {p_act.heal}")
-                    if p_act.saved_elixir > 0:
-                        p_display.append(f"saved elixir: {p_act.saved_elixir}")
-                    print(" | ".join(p_display))
+            # Compute damage after shields
+            dmg_to_monster = max(0, (p_total_attack - m_total_shield) * (self.player.stats.attack / 10))
+            dmg_to_player = max(0, (m_total_attack - p_total_shield) * (self.monster.stats.attack / 10))
 
-                # Monster/Boss action
-                if i < len(monster_seq):
-                    m_act = monster_seq[i]
-                    p_shield = player_seq[i].shield if i < len(player_seq) else 0
-                    dmg_to_player = max(0, (m_act.attack - p_shield) * (self.monster.stats.attack / 10))
-                    self.player.stats.take_damage(dmg_to_player)
-                    self.monster.stats.heal(m_act.heal)
-                    self.saved_m = m_act.saved_elixir
+            # Apply effects
+            self.monster.stats.take_damage(dmg_to_monster)
+            self.player.stats.take_damage(dmg_to_player)
+            self.player.stats.heal(p_total_heal)
+            self.monster.stats.heal(m_total_heal)
+            self.saved_p = p_total_save
+            self.saved_m = m_total_save
 
-                    m_display = [f"M: {m_act.name}"]
-                    if dmg_to_player > 0:
-                        m_display.append(f"dmg: {dmg_to_player}")
-                    if m_act.heal > 0:
-                        m_display.append(f"heal: {m_act.heal}")
-                    if m_act.saved_elixir > 0:
-                        m_display.append(f"saved elixir: {m_act.saved_elixir}")
-                    print(" | ".join(m_display))
-                
-                print(text.ability_spacing_text)
-                time.sleep(0.5)
+            # Display turn summary
+            player_abilities = []
+            if p_total_attack > 0: player_abilities.append(f"Attack {p_total_attack}")
+            if p_total_shield > 0: player_abilities.append(f"Shield {p_total_shield}")
+            if p_total_heal > 0: player_abilities.append(f"Heal {p_total_heal}")
+            if p_total_save > 0: player_abilities.append(f"Save {p_total_save}")
 
-                # ===== Check if someone died mid-turn =====
-                if self.player.stats.current_health <= 0:
-                    print(text.defeat_text)
-                    return 'defeat'
-                if self.monster.stats.current_health <= 0:
-                    print(text.victory_text)
-                    return 'victory'
+            monster_abilities = []
+            if m_total_attack > 0: monster_abilities.append(f"Attack {m_total_attack}")
+            if m_total_shield > 0: monster_abilities.append(f"Shield {m_total_shield}")
+            if m_total_heal > 0: monster_abilities.append(f"Heal {m_total_heal}")
+            if m_total_save > 0: monster_abilities.append(f"Save {m_total_save}")
 
-            # ===== End of turn summary =====
-            print(f"\nEnd of Turn {self.current_turn}")
-            print(f"Player Health: {self.player.stats.current_health} | {'Boss' if is_boss else 'Monster'} Health: {self.monster.stats.current_health}")
-            input("Press Enter to continue...")
+            print(text.combat_spacing_text)
+            print(f"Player Abilities: {' | '.join(player_abilities)}")
+            print(f"Monster Abilities: {' | '.join(monster_abilities)}\n")
+
+            if dmg_to_player > 0: print(f"Damage to Player: {self._fmt(dmg_to_player)}")
+            if dmg_to_monster > 0: print(f"Damage to Monster: {self._fmt(dmg_to_monster)}")
+            if p_total_heal > 0: print(f"Player Healed: {self._fmt(p_total_heal)}")
+            if m_total_heal > 0: print(f"Monster Healed: {self._fmt(m_total_heal)}")
+            print(f"Saved Elixir  -> Player: {self.saved_p} | Monster: {self.saved_m}")
+            print(f"Health Status -> Player: {self._fmt(self.player.stats.current_health)} | "
+                f"{'Boss' if is_boss else 'Monster'}: {self._fmt(self.monster.stats.current_health)}")
+
+            # Next turn
+            input("\nPress Enter to continue...")
             self.current_turn += 1
             os.system('clear')
 
-        # Max turns reached, determine winner
+            if self.player.stats.current_health <= 0:
+                print(text.defeat_text)
+                return 'defeat'
+            if self.monster.stats.current_health <= 0:
+                print(text.victory_text)
+                return 'victory'
+
+        # End of sequence winner
         if self.player.stats.current_health > self.monster.stats.current_health:
             print(text.victory_text)
             return 'victory'
@@ -834,8 +857,11 @@ class CombatSequence():
             print(text.defeat_text)
             return 'defeat'
 
-    
+
     def start_boss_sequence(self):
+        """
+        Boss sequence with elixir steal, shared fate, and minimal, clean display.
+        """
         while self.current_turn <= self.max_turns:
             # ===== Calculate elixir =====
             elixir = (self.base_elixir * self.current_turn) // 2
@@ -844,113 +870,98 @@ class CombatSequence():
             self.saved_p = 0
             self.saved_m = 0
 
-            # ===== Aesthetic display =====
-            print(f"\n===== Turn {self.current_turn} =====")
-            print(f"Player Health: {self.player.stats.current_health} | Boss Health: {self.monster.stats.current_health}")
-            print(f"Player Elixir: {p_elixir} | Boss Elixir: {m_elixir}\n")
-
-            # ===== Boss-specific elixir manipulation =====
-            steal_amount = random.randint(0, max(1, p_elixir // 3))
+            # ===== Display turn header =====
+            print(f"\n===== Turn {self.current_turn} =====\n")
+            # ===== Boss steals elixir =====
+            steal_amount = random.randint(0, p_elixir // 3)
             p_elixir -= steal_amount
             m_elixir += steal_amount
             if steal_amount > 0:
                 print(f"{text.boss_monster} steals {steal_amount} elixir from you!")
+            print(f"Player Health: {self._fmt(self.player.stats.current_health)} | Boss Health: {self._fmt(self.monster.stats.current_health)}")
+            print(f"Player Elixir: {p_elixir} | Boss Elixir: {m_elixir}\n")
 
             # ===== Player & Boss choose abilities =====
             player_seq = self.player_ability_sequence(p_elixir)
             monster_seq = self.monster_ability_sequence(m_elixir)
 
-            # ===== Apply abilities with shared fate =====
-            max_len = max(len(player_seq), len(monster_seq))
-            shared_fate_percent = 0.25  # 25% of damage is mirrored
+            # ===== Aggregate totals =====
+            p_total_attack = sum(a.attack for a in player_seq)
+            p_total_shield = sum(a.shield for a in player_seq)
+            p_total_heal = sum(a.heal for a in player_seq)
+            p_total_save = sum(a.saved_elixir for a in player_seq)
 
-            for i in range(max_len):
-                # Player action
-                if i < len(player_seq):
-                    p_act = player_seq[i]
-                    m_shield = monster_seq[i].shield if i < len(monster_seq) else 0
-                    dmg_to_monster = max(0, (p_act.attack - m_shield) * (self.player.stats.attack / 10))
-                    dmg_mirror = dmg_to_monster * shared_fate_percent
-                    self.monster.stats.take_damage(dmg_to_monster + dmg_mirror)
-                    self.player.stats.heal(p_act.heal)
-                    self.saved_p = p_act.saved_elixir
+            m_total_attack = sum(a.attack for a in monster_seq)
+            m_total_shield = sum(a.shield for a in monster_seq)
+            m_total_heal = sum(a.heal for a in monster_seq)
+            m_total_save = sum(a.saved_elixir for a in monster_seq)
 
-                    # Normal start sequence style output
-                    p_display = [f"P: {p_act.name}"]
-                    if dmg_to_monster > 0:
-                        p_display.append(f"dmg: {dmg_to_monster}")
-                    if dmg_mirror > 0:
-                        p_display.append(f"+{dmg_mirror} mirrored")
-                    if p_act.heal > 0:
-                        p_display.append(f"heal: {p_act.heal}")
-                    if p_act.saved_elixir > 0:
-                        p_display.append(f"saved elixir: {p_act.saved_elixir}")
-                    print(" | ".join(p_display))
+            # ===== Compute damage with shared fate =====
+            shared_fate_percent = 0.25
+            dmg_to_monster = max(0, (p_total_attack - m_total_shield) * (self.player.stats.attack / 10))
+            dmg_to_player = max(0, (m_total_attack - p_total_shield) * (self.monster.stats.attack / 10))
 
+            dmg_to_monster_total = dmg_to_monster * (1 + shared_fate_percent)
+            dmg_to_player_total = dmg_to_player * (1 + shared_fate_percent)
 
-                # Boss action
-                if i < len(monster_seq):
-                    m_act = monster_seq[i]
-                    p_shield = player_seq[i].shield if i < len(player_seq) else 0
-                    dmg_to_player = max(0, (m_act.attack - p_shield) * (self.monster.stats.attack / 10))
-                    dmg_mirror = dmg_to_player * shared_fate_percent
-                    self.player.stats.take_damage(dmg_to_player + dmg_mirror)
-                    self.monster.stats.heal(m_act.heal)
-                    self.saved_m = m_act.saved_elixir
+            # ===== Apply effects =====
+            self.monster.stats.take_damage(dmg_to_monster_total)
+            self.player.stats.take_damage(dmg_to_player_total)
+            self.player.stats.heal(p_total_heal)
+            self.monster.stats.heal(m_total_heal)
+            self.saved_p = p_total_save
+            self.saved_m = m_total_save
 
-                    m_display = [f"M: {m_act.name}"]
-                    if dmg_to_player > 0:
-                        m_display.append(f"dmg: {dmg_to_player}")
-                    if dmg_mirror > 0:
-                        m_display.append(f"+{dmg_mirror} mirrored")
-                    if m_act.heal > 0:
-                        m_display.append(f"heal: {m_act.heal}")
-                    if m_act.saved_elixir > 0:
-                        m_display.append(f"saved elixir: {m_act.saved_elixir}")
-                    print(" | ".join(m_display))
+            # ===== Special shared fate every 3rd turn =====
+            if self.current_turn % 3 == 0:
+                self.player.stats.take_damage(dmg_to_monster)
+                self.monster.stats.take_damage(dmg_to_player)
+                self.monster.stats.heal(p_total_heal)
+                self.player.stats.heal(m_total_heal)
+                print("Shared Fate Triggered! Effects mirrored this turn.")
 
+            # ===== Minimal display =====
+            player_abilities = []
+            if p_total_attack > 0: player_abilities.append(f"Attack {p_total_attack}")
+            if p_total_shield > 0: player_abilities.append(f"Shield {p_total_shield}")
+            if p_total_heal > 0: player_abilities.append(f"Heal {p_total_heal}")
 
-                # Check special shared fate turn (every 3rd turn)
-                if self.current_turn % 3 == 0:
-                    # Mirror damage & healing effects
-                    if dmg_to_monster > 0:
-                        self.player.stats.take_damage(dmg_to_monster)  # Player suffers same damage they dealt
-                    if dmg_to_player > 0:
-                        self.monster.stats.take_damage(dmg_to_player)  # Monster suffers same damage they dealt
-                    
-                    if p_act.heal > 0:
-                        self.monster.stats.heal(p_act.heal)  # Monster heals same amount player healed
-                    if m_act.heal > 0:
-                        self.player.stats.heal(m_act.heal)  # Player heals same amount monster healed
+            boss_abilities = []
+            if m_total_attack > 0: boss_abilities.append(f"Attack {m_total_attack}")
+            if m_total_shield > 0: boss_abilities.append(f"Shield {m_total_shield}")
+            if m_total_heal > 0: boss_abilities.append(f"Heal {m_total_heal}")
 
-                    print("⚠ Shared Fate Triggered! Both sides suffer and heal equally this turn.")
+            print(f"Player Abilities: {' | '.join(player_abilities)}")
+            print(f"Boss Abilities: {' | '.join(boss_abilities)}\n")
 
+            print(f"Damage to Boss: {self._fmt(dmg_to_monster_total)}")
+            print(f"Damage to Player: {self._fmt(dmg_to_player_total)}")
+            print(f"Player Healed: {self._fmt(p_total_heal)}")
+            print(f"Boss Healed: {self._fmt(m_total_heal)}")
+            print(f"Saved Elixir  -> Player: {self.saved_p} | Boss: {self.saved_m}")
+            print(f"Health Status -> Player: {self._fmt(self.player.stats.current_health)} | Boss: {self._fmt(self.monster.stats.current_health)}")
 
-                print(text.ability_spacing_text)
-                time.sleep(0.5)
-
-                # Check death mid-turn
-                if self.player.stats.current_health <= 0:
-                    print(text.defeat_text)
-                    return 'defeat'
-                if self.monster.stats.current_health <= 0:
-                    print(text.victory_text)
-                    return 'victory'
-
-            # ===== End of turn summary =====
-            print(f"\nEnd of Turn {self.current_turn}")
-            print(f"Player Health: {self.player.stats.current_health} | Boss Health: {self.monster.stats.current_health}")
-            input("Press Enter to continue...")
+            # ===== Next turn =====
+            input("\nPress Enter to continue...")
             self.current_turn += 1
             os.system('clear')
 
-        # Max turns reached, determine winner by remaining health
+            # ===== Mid-turn death check =====
+            if self.player.stats.current_health <= 0:
+                print(text.defeat_text)
+                return 'defeat'
+            if self.monster.stats.current_health <= 0:
+                print(text.victory_text)
+                return 'victory'
+
+        # ===== End-of-sequence winner =====
         if self.player.stats.current_health > self.monster.stats.current_health:
             print(text.victory_text)
             return 'victory'
         else:
             print(text.defeat_text)
             return 'defeat'
+
 
 
 

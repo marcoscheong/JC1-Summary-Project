@@ -20,7 +20,61 @@ if __name__ == "__main__":
             else:
                 print(text.claimed_treasure_room_text)
         elif type(game.maze.current_room) == mud.MonsterRoom:
-            print(text.monster_room_text)
+            if game.maze.current_room.claimed == False:
+                print(text.monster_room_text)
+            else:
+                print(text.claimed_monster_room_text)
+        elif type(game.maze.current_room) == mud.BossRoom:
+            if game.maze.current_room.claimed == False:
+                print(f"You have encountered the boss: {text.boss_monster}. Do you want to fight this boss?")
+                choices = game.get_options()
+                command = game.prompt_player_choice(choices).strip().lower()
+                if command.isdigit():
+                    if int(command) > len(choices):
+                        print(text.input_error_prompt)
+                    else:
+                        command = choices[int(command) - 1].strip().lower()
+                if command in ['quit', 'exit']:
+                    game.save_all_data(text.player_save_file)
+
+                    print(text.thanks_message)
+                    sys.exit()
+                elif command in ['go back', 'back']:
+                    game.set_state('travel')
+                elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
+                    os.system('clear')
+                    print('bro why isn')
+                    monster = game.maze.current_room.boss_monster
+                    input(f"You have encountered {text.boss_monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
+                    os.system('clear')
+                    combat_seq = mud.CombatSequence(game.get_player(), monster, 3, 20)
+                    result = combat_seq.start_boss_sequence()
+                    if result == 'victory':
+                        game.maze.current_room.claimed = True
+                        game.set_state('travel')
+                        game.get_player().recalculate_stats()
+                        game.save_all_data(text.player_save_file)
+                    elif result == 'defeat':
+                        print("You have been defeated by the boss. Game over.")
+                        print('Do you want to retry?')
+                        choices = ['Retry', 'Quit']
+                        command = game.prompt_player_choice(choices).strip().lower()
+                        if command.isdigit():
+                            if int(command) > len(choices):
+                                print(text.input_error_prompt)
+                            else:
+                                command = choices[int(command) - 1].strip().lower()
+                        if command in ['quit', 'exit']:
+                            game.save_all_data(text.player_save_file)
+
+                            print(text.thanks_message)
+                            sys.exit()
+                        elif command in ['retry', 'start', 'play']:
+                            game = mud.Game()
+                            game.set_state('start')
+                            game.welcome()
+            else:
+                print("You have defeated the boss. Do you want to travel to another room?")
         choices = game.get_options()
         command = game.prompt_player_choice(choices).strip().lower()
         if command.isdigit():
@@ -34,6 +88,9 @@ if __name__ == "__main__":
 
             print(text.thanks_message)
             sys.exit()
+        elif command == 'enter boss chamber' or command.startswith('enter boss'):
+            game.get_maze().travel_to('boss chamber')
+            game.get_maze().draw_rooms()
         elif command in ['view inventory', 'inventory', 'inv']:
             game.set_state('inventory')
 
@@ -190,7 +247,39 @@ if __name__ == "__main__":
             input(f"You have encountered a {game.maze.current_room.monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
             os.system('clear')
             combat_seq = mud.CombatSequence(game.get_player(), monster, 3, 20)
-            combat_seq.start_sequence()
+            result = combat_seq.start_sequence()
+            if result == 'victory':
+                current_room = game.maze.current_room
+                current_room.monster = None
+                current_room.claimed = True
+
+                drop = current_room.drop
+                print(f"You have obtained a {drop}!")
+                game.set_state('item chest')
+                choices = game.get_options()
+                command = game.prompt_player_choice(choices).strip().lower()
+                if command.isdigit():
+                    if int(command) > len(choices):
+                        print(text.input_error_prompt)
+                    else:
+                        command = choices[int(command) - 1].strip().lower()
+                if command in ['go back', 'back']:
+                    game.set_state('travel')
+                elif command in ['equip item', 'equip']:
+                    if drop in text.Weapon:
+                        game.get_player().inventory.equip_weapon(drop)
+                        game.get_player().recalculate_stats()
+                        input('\nPress enter to continue...')
+                    elif drop in text.Armour:
+                        slot = text.ArmourSlots[drop]
+                        game.get_player().inventory.equip_armour(slot, drop)
+                        game.get_player().recalculate_stats()
+                        input('\nPress enter to continue...')
+                    game.set_state('travel')
+
+                game.set_state('travel')
+                game.get_player().recalculate_stats()
+                game.save_all_data(text.player_save_file)
         else:
             #print ABSTRACTED error message
             print(text.input_error_prompt)

@@ -1,19 +1,19 @@
 {
-  "Room_id": 4,
-  "Player_max_health": 10,
-  "Player_current_health": 10,
-  "Player_attack": 10,
+  "Room_id": 11,
+  "Player_max_health": 16,
+  "Player_current_health": 8.3,
+  "Player_attack": 30,
   "Items": {
-    "Weapon": "Fist",
+    "Weapon": "Steel Sword",
     "Armour": {
       "Leggings": "",
       "Boots": "",
       "Helmet": "",
-      "Chestplate": ""
+      "Chestplate": "Leather Chestplate"
     },
     "Consumables": {
       "attack potion": 0,
-      "health potion": 0,
+      "health potion": 1,
       "healing potion": 0
     }
   }

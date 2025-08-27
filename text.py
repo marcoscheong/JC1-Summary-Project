@@ -1,5 +1,3 @@
-import mud
-
 Game_name = "Labyrinth Ascension"
 Game_info = [
     "Explore Maze Rooms: Each maze run is procedurally generated (different layouts each time).",
@@ -29,6 +27,7 @@ started_text = 'In this world of labyrinths, you have arrived in the top-most le
 treasure_room_text = 'You have entered a room containing treasure. Do you want to open the chest or travel to another room?'
 claimed_treasure_room_text = 'You have entered a room containing an empty chest. Do you want to travel to another room?'
 monster_room_text = 'You have encountered a monster. Do you want to fight this monster?'
+claimed_monster_room_text = 'You have entered a room containing an empty monster lair. Do you want to travel to another room?'
 
 input_prompt = "Please select a choice: "
 input_error_prompt = "Please input again."
@@ -62,6 +61,7 @@ rooms = {
     "NEW":  "─┴─",
     "SEW":  "─┬─",
     "NSEW": "─┼─",
+    "BOSS": " ⬢ ",
 }
 
 player_rooms = {
@@ -80,6 +80,7 @@ player_rooms = {
     "NEW":  "─O─",
     "SEW":  "─O─",
     "NSEW": "─O─",
+    "BOSS": " ⬢ ",
 }
 
 move_pool = ['attack', 'shield', 'heal', 'save']
@@ -191,9 +192,14 @@ armourweights15 = [35, 35, 35, 35, 30, 30, 30, 30, 25, 25, 25, 25, 20, 20, 20, 2
 armourweights20 = [30, 30, 30, 30, 28, 28, 28, 28, 25, 25, 25, 25, 23, 23, 23, 23, 20, 20, 20, 20]
 armourweights25 = [20, 20, 20, 20, 22, 22, 22, 22, 25, 25, 25, 25, 28, 28, 28, 28, 30, 30, 30, 30]
 
+boss_monster = "Origin of Chaos"
+boss_monster_stats = [5000, 300]
 
 player_save_file = "player_data.json"
 default_save_file = "data.json"
+
+victory_text = "You have defeated the monster!"
+defeat_text = "You have been defeated by the monster..."
 
 printing_text_large_spacing = '\n══════════════ • ══════════════ \n'
 combat_spacing_text = '────── ◈ ──────'

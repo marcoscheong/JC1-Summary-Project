@@ -5,6 +5,7 @@ import text
 import sys
 import select
 import os
+import math
 
 class Game:
     """
@@ -32,10 +33,14 @@ class Game:
         elif self.game_state == 'travel':
             choices = self.maze.room_options()
             if type(self.maze.current_room) == MonsterRoom:
-                choices.insert(0, 'Fight monster')
+                if self.maze.current_room.claimed == False:
+                    choices.insert(0, 'Fight monster')
             elif type(self.maze.current_room) == TreasureRoom:
                 if self.maze.current_room.claimed == False:
                     choices.insert(0, 'Open chest')
+            elif type(self.maze.current_room) == BossRoom:
+                if self.maze.current_room.claimed == False:
+                    choices.insert(0, 'Challenge the boss')
             elif type(self.maze.current_room) == Room:
                 return choices
             choices.append('View inventory')
@@ -48,27 +53,58 @@ class Game:
         elif self.game_state == 'consumable chest':
             choices = ['Consume item', 'Go back']
             return choices
+        elif self.game_state == 'inventory':
+            choices = []
+            choices.append('Use item')
+            choices.append('Go back')
+            return choices
+        elif self.game_state == 'boss':
+            choices = ['Fight boss', 'Go back']
+            return choices
         
     def prompt_player_choice(self, choices):
         for i, opt in enumerate(choices):
             print(f'{(i + 1)}. {opt}')
             time.sleep(0.05)
-        _input = input(text.input_prompt)
-        return _input
+        
+        while True:
+            _input = input(text.input_prompt).strip()
+            
+            if not _input:
+                print("Please enter a valid choice.")
+                for i, opt in enumerate(choices):
+                    print(f'{(i + 1)}. {opt}')
+                    time.sleep(0.05)
+                continue
+            
+            if _input in choices:
+                return _input
+            
+            if _input.isdigit():
+                choice_num = int(_input)
+                if 1 <= choice_num <= len(choices):
+                    return choices[choice_num - 1]
+            
+            print("Please type out a valid option or number.")
+            for i, opt in enumerate(choices):
+                print(f'{(i + 1)}. {opt}')
+                time.sleep(0.05)
+            continue
 
     def start_game(self):
-        #instantiate maze
         rooms = []
         rooms.append(Room(0))
         for i in range(1, text.maze_size):
             if i % 2 == 0:
                 room = MonsterRoom((i + 1), text.Monsters.keys())
                 room.generateMonster()
+                room.generateDrops()
                 rooms.append(room)
             elif i % 2 == 1:
                 rooms.append(TreasureRoom(i + 1))
             else:
                 rooms.append(Room(i + 1))
+        rooms.append(BossRoom(text.maze_size + 1))
         self.maze = Maze(rooms, rooms[0])
         self.maze.generate_maze()
         self.create_player()
@@ -170,35 +206,38 @@ class Maze:
         self.current_room = starting_room
 
     def generate_maze(self):
-        """
-        Function to generate the layout of rooms in a 3-column grid.
-        """
         num_cols = 3
-        num_rows = len(self.rooms) // num_cols
-
-        for i, room in enumerate(self.rooms):
-            row = i // num_cols # gives row no
-            col = i % num_cols # gives col no
-
-            # Connect right 
-            if col < num_cols - 1 and (i + 1) < len(self.rooms):
-                right_room = self.rooms[i + 1]
+        regular_rooms = self.rooms[:-1]
+        
+        for i, room in enumerate(regular_rooms):
+            row = i // num_cols
+            col = i % num_cols
+            
+            if col < num_cols - 1 and (i + 1) < len(regular_rooms):
+                right_room = regular_rooms[i + 1]
                 room.connection(right_room, 'right')
                 right_room.connection(room, 'left')
-
-            # Connect down 
-            if row < num_rows - 1 and (i + num_cols) < len(self.rooms):
-                down_room = self.rooms[i + num_cols]
+            
+            num_rows = (len(regular_rooms) + num_cols - 1) // num_cols
+            if row < num_rows - 1 and (i + num_cols) < len(regular_rooms):
+                down_room = regular_rooms[i + num_cols]
                 room.connection(down_room, 'down')
                 down_room.connection(room, 'up')
         
+        boss_room = self.rooms[-1]
+        last_regular_room = regular_rooms[-1]
+        boss_room.connection(last_regular_room, 'up')
+        last_regular_room.connection(boss_room, 'down')
+    
     def get_room_key(self, room):
-        up, down, left, right = (
-            room.connects['up'], 
-            room.connects['down'], 
-            room.connects['left'], 
-            room.connects['right']
-        )
+        # Convert room objects to boolean values
+        up = room.connects['up'] is not None
+        down = room.connects['down'] is not None
+        left = room.connects['left'] is not None
+        right = room.connects['right'] is not None
+
+        if isinstance(room, BossRoom):
+            return "BOSS_CLEAN"
 
         if up and down and left and right: return "NSEW"
 
@@ -218,71 +257,105 @@ class Maze:
         if not up and down and not left and not right: return "S"
         if not up and not down and left and not right: return "W"
         if not up and not down and not left and right: return "E"
-        return "NONE"
-    
+        return "BOSS"
+
     def draw_rooms(self):
-        """
-        Method to print out each room and its connections in a clear format as a proper grid.
-        """
         row_chunks = []
         rooms_per_row = 3
-
-        # Build the grid row by row
-        for row_start in range(0, len(self.rooms), rooms_per_row):
-            row_rooms = self.rooms[row_start:row_start + rooms_per_row]
-
-            # Collect arts for this row
+        
+        regular_rooms = self.rooms[:-1]  # Exclude boss room
+        
+        # Draw regular rooms in grid
+        for row_start in range(0, len(regular_rooms), rooms_per_row):
+            row_rooms = regular_rooms[row_start:row_start + rooms_per_row]
+            
             row_arts = []
             for room in row_rooms:
                 if room.id == self.current_room.id:
-                    row_arts.append(text.player_rooms[self.get_room_key(room)])
+                    room_art = text.player_rooms[self.get_room_key(room)]
                 else:
-                    row_arts.append(text.rooms[self.get_room_key(room)])
-
-            # Determine max height for this row
-            max_height = max(len(r.strip("\n").splitlines()) for r in row_arts)
-            max_width = max(max(len(line) for line in r.strip("\n").splitlines()) for r in row_arts)
-
-            # Initialize row chunk
+                    room_art = text.rooms[self.get_room_key(room)]
+                row_arts.append(room_art)
+            
+            if not row_arts:
+                continue
+                
+            max_height = max(len(art.strip("\n").splitlines()) for art in row_arts)
+            max_width = max(max(len(line) for line in art.strip("\n").splitlines()) for art in row_arts)
+            
             row_chunk = [[] for _ in range(max_height)]
-
-            # Pad rooms and add to row_chunk
+            
             for art in row_arts:
                 lines = art.strip("\n").splitlines()
                 lines = [line.ljust(max_width) for line in lines]
-
-                # Pad bottom if shorter than row's max_height
+                
                 while len(lines) < max_height:
                     lines.append(" " * max_width)
-
+                
                 for i, line in enumerate(lines):
                     row_chunk[i].append(line)
-
+            
             row_chunks.append(row_chunk)
-
-        # Build final string
+        
+        # Print regular maze
         map_str = ""
         for row in row_chunks:
             for line in row:
                 map_str += "".join(line) + "\n"
-
-        print(map_str)
-
-
+        
+        print(map_str.rstrip("\n"))
+        
+        # Print boss area separately
+        boss_room = self.rooms[-1]
+        print("=" * 15)
+        if boss_room.id == self.current_room.id:
+            print("BOSS CHAMBER (YOU ARE HERE)")
+        else:
+            print("BOSS CHAMBER")
+        print("=" * 15)
+        
+        if boss_room.id == self.current_room.id:
+            boss_art = text.player_rooms.get(self.get_room_key(boss_room), "[ BOSS ROOM ]")
+        else:
+            boss_art = text.rooms.get(self.get_room_key(boss_room), "[ BOSS ROOM ]")
+        
+        boss_lines = boss_art.strip("\n").splitlines()
+        for line in boss_lines:
+            print(line.center(14) + '\n')
+    
     def room_options(self):
         options = []
         for direction in text.directions:
             connected_room = self.current_room.connects.get(direction)
             if connected_room:
-                options.append('go ' + direction)
+                # Special handling for boss room access
+                if isinstance(connected_room, BossRoom):
+                    options.append('enter boss chamber')
+                else:
+                    options.append('go ' + direction)
         return options
 
     def travel_to(self, direction):
+        # Handle special boss room access
+        if direction == 'boss chamber' or direction == 'boss':
+            # Find if current room connects to boss room
+            for dir_key, connected_room in self.current_room.connects.items():
+                if isinstance(connected_room, BossRoom):
+                    self.current_room = connected_room
+                    print("You step through the ominous doorway into the Boss Chamber...")
+                    return
+            print("You cannot access the Boss Chamber from here.")
+            return
+        
+        # Regular movement
         connected_room = self.current_room.connects.get(direction)
         if connected_room:
             self.current_room = connected_room
-            print(text.successful_room_travel + str(connected_room.id))
-    
+            if isinstance(connected_room, BossRoom):
+                print("You enter the foreboding Boss Chamber...")
+            else:
+                print(text.successful_room_travel + str(connected_room.id))
+
 # ROOM CLASSES
 class Room:
     """
@@ -302,19 +375,24 @@ class Room:
             self.connects[direction] = room
 
 class TreasureRoom(Room):
-    def __init__(self, id):
-        super().__init__(id)
+    def __init__(self, _id):
+        super().__init__(_id)
         self.claimed = False
-        if id < 5:
-            self.drop = Drop(text.weaponweights5, text.armourweights5)
-        elif id < 10:
-            self.drop = Drop(text.weaponweights10, text.armourweights10)
-        elif id < 15:
-            self.drop = Drop(text.weaponweights15, text.armourweights15)
-        elif id < 20: 
-            self.drop = Drop(text.weaponweights20, text.armourweights20)
+        if _id < 5:
+            drop = Drop(text.weaponweights5, text.armourweights5)
+            self.drop = drop.generateDrop()
+        elif _id < 10:
+            drop = Drop(text.weaponweights10, text.armourweights10)
+            self.drop = drop.generateDrop()
+        elif _id < 15:
+            drop = Drop(text.weaponweights15, text.armourweights15)
+            self.drop = drop.generateDrop()
+        elif _id < 20: 
+            drop = Drop(text.weaponweights20, text.armourweights20)
+            self.drop = drop.generateDrop()
         else:
-            self.drop = Drop(text.weaponweights25, text.armourweights25)
+            drop = Drop(text.weaponweights25, text.armourweights25)
+            self.drop = drop.generateDrop()
 
     def get_drops(self):
         """
@@ -333,6 +411,7 @@ class MonsterRoom(Room):
         super().__init__(id)
         self.monster = ''
         self.availableMonsters = availableMonsters
+        self.claimed = False
 
     def generateMonster(self):
         """
@@ -346,6 +425,59 @@ class MonsterRoom(Room):
         else:
             i = random.randint(0, self.id//2)
         self.monster = list(self.availableMonsters)[i]
+    
+    def generateDrops(self):
+        i = random.randint(0, 1)
+        if i == 0:
+            if self.id < 5:
+                drop = Drop(text.weaponweights5, text.armourweights5)
+                drop.generateArmourDrop()
+                self.drop = drop.drop
+            elif self.id < 10:
+                drop = Drop(text.weaponweights10, text.armourweights10)
+                drop.generateArmourDrop()
+                self.drop = drop.drop
+            elif self.id < 15:
+                drop = Drop(text.weaponweights15, text.armourweights15)
+                drop.generateArmourDrop()
+                self.drop = drop.drop
+            elif self.id < 20: 
+                drop = Drop(text.weaponweights20, text.armourweights20)
+                drop.generateArmourDrop()
+                self.drop = drop.drop
+            else:
+                drop = Drop(text.weaponweights25, text.armourweights25)
+                drop.generateArmourDrop()
+                self.drop = drop.drop
+        elif i == 1:
+            if self.id < 5:
+                drop = Drop(text.weaponweights5, text.armourweights5)
+                drop.generateWeaponDrop()
+                self.drop = drop.drop
+            elif self.id < 10:
+                drop = Drop(text.weaponweights10, text.armourweights10)
+                drop.generateWeaponDrop()
+                self.drop = drop.drop
+            elif self.id < 15:
+                drop = Drop(text.weaponweights15, text.armourweights15)
+                drop.generateWeaponDrop()
+                self.drop = drop.drop
+            elif self.id < 20: 
+                drop = Drop(text.weaponweights20, text.armourweights20)
+                drop.generateWeaponDrop()
+                self.drop = drop.drop
+            else:
+                drop = Drop(text.weaponweights25, text.armourweights25)
+                drop.generateWeaponDrop()
+                self.drop = drop.drop
+
+class BossRoom(Room):
+    def __init__(self, id: int):
+        super().__init__(id)
+        self.claimed = False
+        self.boss_monster_name = text.boss_monster
+        self.boss_monster = Monster(Stats(text.boss_monster_stats[0], text.boss_monster_stats[1]))
+    
 
 
 # CHARACTER CLASSES
@@ -369,15 +501,15 @@ class Player(Character):
 
     def load_from_storage(self, storage: Storage, file: str):
         data = storage.get_data(file)
-        self.stats.maxHealth = data["Player_max_health"]
-        self.stats.currentHealth = data["Player_current_health"]
+        self.stats.max_health = data["Player_max_health"]
+        self.stats.current_health = data["Player_current_health"]
         self.stats.attack = data["Player_attack"]
         self.inventory = Inventory(storage, file)
 
     def save_to_storage(self, storage: Storage, file: str):
         storage.save_data(file, {
-            "Player_max_health": self.stats.maxHealth,
-            "Player_current_health": self.stats.currentHealth,
+            "Player_max_health": self.stats.max_health,
+            "Player_current_health": self.stats.current_health,
             "Player_attack": self.stats.attack
         })
         self.inventory.save_inventory()
@@ -395,9 +527,9 @@ class Player(Character):
         defence_bonus = sum(text.Armour.get(part, 0) for part in armour.values() if part)
         
         self.stats.attack = text.default_attack + attack_bonus
-        self.stats.maxHealth = text.default_health + defence_bonus
-        if self.stats.currentHealth > self.stats.maxHealth:
-            self.stats.currentHealth = self.stats.maxHealth
+        self.stats.max_health = text.default_health + defence_bonus
+        if self.stats.current_health > self.stats.max_health:
+            self.stats.current_health = self.stats.max_health
 
 class Inventory:
     def __init__(self, storage: Storage, file: str):
@@ -426,16 +558,16 @@ class Inventory:
 
     def use_item(self, item_name: str, quantity: int = 1):
         """Use an item and save to JSON."""
-        if item_name not in self.items:
+        if item_name not in self.items["Consumables"]:
             print(f"{item_name} not found in inventory.")
             return False
-        if self.items[item_name] < quantity:
+        if self.items["Consumables"][item_name] < quantity:
             print(f"Not enough {item_name} to use.")
             return False
         
-        self.items[item_name] -= quantity
-        if self.items[item_name] <= 0:
-            del self.items[item_name]
+        self.items["Consumables"][item_name] -= quantity
+        if self.items["Consumables"][item_name] <= 0:
+            del self.items["Consumables"][item_name]
         self.save_inventory()
         return True
     
@@ -443,7 +575,9 @@ class Inventory:
         """Equip a weapon to the player, given a weapon name."""
         if weapon_name in text.Weapon.keys():
             self.items["Weapon"] = weapon_name
+            print('\n' + text.equip_spacing_text)
             print(f"{weapon_name} has been equipped.")
+            print(text.equip_spacing_text + '\n')
             self.save_inventory()
         else:
             print(f"{weapon_name} not found.")
@@ -455,7 +589,9 @@ class Inventory:
             if "Armour" not in self.items:
                 self.items["Armour"] = {}
             self.items["Armour"][slot] = armour_name
+            print('\n' + text.equip_spacing_text)
             print(f"{armour_name} equipped in {slot}.")
+            print(text.equip_spacing_text + '\n')
             self.save_inventory()
         else:
             print(f"{armour_name} not found.")
@@ -520,7 +656,6 @@ class Drop():
     def __init__(self, weaponWeights, armourWeights):
         self.weaponWeights = weaponWeights
         self.armourWeights = armourWeights
-        self.drop = self.generateDrop()
         self.name = ''
     
     def generateDrop(self):
@@ -534,33 +669,55 @@ class Drop():
         elif r == 2:
             number = random.randint(1, 3)
             if number == 1:
-                drop = 'Attack potion'
+                drop = 'attack potion'
                 self.type = 'consumable'
             elif number == 2:
-                drop = 'Health potion'
+                drop = 'health potion'
                 self.type = 'consumable'
             else:
-                drop = 'Healing potion'
+                drop = 'healing potion'
                 self.type = 'consumable'
-        return drop
+        self.drop = drop
+        return self
+    
+    def generateArmourDrop(self):
+        drop = random.choices(list(text.Armour.keys()), self.armourWeights)[0]
+        self.type = 'armour'
+        self.drop = drop
+        return self
+        
+    
+    def generateWeaponDrop(self):
+        drop = random.choices(list(text.Weapon.keys()), self.weaponWeights)[0]
+        self.type = 'weapon'
+        self.drop = drop
+        return self
 
-class Stats():
-    def __init__(self, maxHealth: int, attack: int):
-        self.maxHealth = maxHealth
+class Stats:
+    def __init__(self, max_health: int, attack: int):
+        self.max_health = max_health
         self.attack = attack
-        self.currentHealth = maxHealth
+        self.current_health = max_health
     
     def take_damage(self, damage):
-        if (self.currentHealth - damage) <= 0:
+        if (self.current_health - damage) <= 0:
+            self.current_health = 0
             return 'died'
         else:
-            self.currentHealth -= damage
+            self.current_health -= damage
     
     def heal(self, healAmount):
-        if (self.currentHealth + healAmount) > self.maxHealth:
-            self.currentHealth = self.maxHealth
-        else:
-            self.currentHealth += healAmount
+        self.current_health = min(self.current_health + healAmount, self.max_health)
+    
+    def return_stats(self):
+        """Return a formatted string of the player's stats."""
+        lines = ["╔═ Player Stats ═════════════╗"]
+        lines.append(f"  Health      » {self.current_health}/{self.max_health}")
+        lines.append(f"  Attack      » {self.attack}")
+        # You can add defense if calculated elsewhere
+        lines.append("╚═══════════════════════════╝")
+        return "\n".join(lines)
+
 
 class Ability():
     def __init__(self, name):
@@ -583,158 +740,180 @@ class CombatSequence():
 
         self.saved_p = 0 # saved player elixir from each turn
         self.saved_m = 0 # saved monster elixir from each turn
-    def start_sequence(self):
-        #input logic for combat sequence
-        while self.current_turn < self.max_turns:
+    def start_sequence(self, is_boss=False):
+        """
+        Unified combat sequence for both normal monsters and bosses.
+        If is_boss=True, special elixir manipulation and aesthetic display apply.
+        """
+        while self.current_turn <= self.max_turns:
+            # ===== Calculate elixir =====
             elixir = (self.base_elixir * self.current_turn) // 2
             p_elixir = elixir + self.saved_p
             m_elixir = elixir + self.saved_m
-
             self.saved_p = 0
             self.saved_m = 0
 
-            print(text.combat_spacing_text)
+            # ===== Aesthetic display for boss or normal combat =====
+            if is_boss:
+                print(f"\n===== Turn {self.current_turn} =====")
+                print(f"Player Health: {self.player.stats.current_health} | Boss Health: {self.monster.stats.current_health}")
+                print(f"Player Elixir: {p_elixir} | Boss Elixir: {m_elixir}\n")
 
-            print(f'Current player health: {self.player.stats.currentHealth}')
-            print(f'Current monster health: {self.monster.stats.currentHealth}\n')
+                # Boss-specific elixir manipulation
+                steal_amount = random.randint(0, max(1, p_elixir // 3))
+                p_elixir -= steal_amount
+                m_elixir += steal_amount
+                if steal_amount > 0:
+                    print(f"{self.monster.name} steals {steal_amount} elixir from you!")
+            else:
+                print(f"\n===== Turn {self.current_turn} =====")
+                print(f"Player Health: {self.player.stats.current_health} | Monster Health: {self.monster.stats.current_health}")
+                print(f"Player Elixir: {p_elixir} | Monster Elixir: {m_elixir}\n")
 
+            # ===== Player & Monster choose abilities =====
             player_seq = self.player_ability_sequence(p_elixir)
             monster_seq = self.monster_ability_sequence(m_elixir)
 
-            player_str = '\nP: '
-            for i in range(len(player_seq)):
-                player_str += f'{player_seq[i].name}({player_seq[i].magnitude}) '
-            print(player_str)
-            monster_str = 'M: '
-            for i in range(len(monster_seq)):
-                monster_str += f'{monster_seq[i].name}({monster_seq[i].magnitude}) '
-            print(monster_str + '\n')
-            if len(player_seq) > len(monster_seq):
-                for i in range(len(monster_seq)):
-                    p_dmg_taken = (monster_seq[i].attack - player_seq[i].shield) * (self.monster.stats.attack / 10)
-                    m_dmg_taken = (player_seq[i].attack - monster_seq[i].shield) * (self.player.stats.attack  / 10)
+            # ===== Apply abilities with shared fate =====
+            max_len = max(len(player_seq), len(monster_seq))
+            shared_fate_percent = 0.25 if is_boss else 0  # Only mirror damage for boss
 
-                    p_healed = player_seq[i].heal
-                    m_healed = monster_seq[i].heal
+            for i in range(max_len):
+                # Player action
+                if i < len(player_seq):
+                    p_act = player_seq[i]
+                    m_shield = monster_seq[i].shield if i < len(monster_seq) else 0
+                    dmg_to_monster = max(0, (p_act.attack - m_shield) * (self.player.stats.attack / 10))
+                    dmg_mirror = dmg_to_monster * shared_fate_percent
+                    self.monster.stats.take_damage(dmg_to_monster + dmg_mirror)
+                    self.player.stats.heal(p_act.heal)
+                    self.saved_p = p_act.saved_elixir
 
-                    if p_dmg_taken < 0:
-                        p_dmg_taken = 0
-                    if m_dmg_taken < 0:
-                        m_dmg_taken = 0
-                    p_state = self.player.stats.take_damage(p_dmg_taken)
-                    m_state = self.monster.stats.take_damage(m_dmg_taken)
-                    self.player.stats.heal(p_healed)
-                    self.monster.stats.heal(m_healed)
-                    print(f'Player has taken {p_dmg_taken} and healed {p_healed}')
-                    time.sleep(0.5)
-                    print(text.ability_spacing_text)
-                    time.sleep(0.5)
-                    print(f'Monster has taken {m_dmg_taken} and healed {m_healed}')
-                    if p_state == 'died':
-                        return self.end_sequence()
-                    if m_state == 'died':
-                        return self.end_sequence()
+                    print(f"P: {p_act.name} | dmg: {dmg_to_monster} (+{dmg_mirror} mirrored) | heal: {p_act.heal} | saved elixir: {p_act.saved_elixir}")
 
-                    self.saved_p = player_seq[i].saved_elixir
-                    self.saved_m = monster_seq[i].saved_elixir
-                
-                for i in range(len(monster_seq), len(player_seq)):
-                    m_dmg_taken = player_seq[i].attack * self.player.stats.attack / 10 
+                # Monster/Boss action
+                if i < len(monster_seq):
+                    m_act = monster_seq[i]
+                    p_shield = player_seq[i].shield if i < len(player_seq) else 0
+                    dmg_to_player = max(0, (m_act.attack - p_shield) * (self.monster.stats.attack / 10))
+                    dmg_mirror = dmg_to_player * shared_fate_percent
+                    self.player.stats.take_damage(dmg_to_player + dmg_mirror)
+                    self.monster.stats.heal(m_act.heal)
+                    self.saved_m = m_act.saved_elixir
 
-                    p_healed = player_seq[i].heal
-                    
-                    time.sleep(0.5)
-                    print(text.ability_spacing_text)
-                    time.sleep(0.5)
-                    
-                    if p_healed != 0:
-                        print(f'Played has healed {p_healed}')
-                    if m_dmg_taken != 0:
-                        print(f'Monster has taken {m_dmg_taken}')
+                    print(f"M: {m_act.name} | dmg: {dmg_to_player} (+{dmg_mirror} mirrored) | heal: {m_act.heal} | saved elixir: {m_act.saved_elixir}")
 
-                    self.monster.stats.take_damage(m_dmg_taken)
-                    self.player.stats.heal(p_healed)
+                print(text.ability_spacing_text)
+                time.sleep(0.5)
 
-                    self.saved_p = player_seq[i].saved_elixir
-            elif len(player_seq) < len(monster_seq):
-                for i in range(len(player_seq)):
-                    p_dmg_taken = (monster_seq[i].attack - player_seq[i].shield) * (self.monster.stats.attack / 10)
-                    m_dmg_taken = (player_seq[i].attack - monster_seq[i].shield) * (self.player.stats.attack  / 10)
+                # ===== Check if someone died mid-turn =====
+                if self.player.stats.current_health <= 0:
+                    print(text.defeat_text)
+                    return 'defeat'
+                if self.monster.stats.current_health <= 0:
+                    print(text.victory_text)
+                    return 'victory'
 
-                    p_healed = player_seq[i].heal
-                    m_healed = monster_seq[i].heal
-
-                    if p_dmg_taken < 0:
-                        p_dmg_taken = 0
-                    if m_dmg_taken < 0:
-                        m_dmg_taken = 0
-                    p_state = self.player.stats.take_damage(p_dmg_taken)
-                    m_state = self.monster.stats.take_damage(m_dmg_taken)
-                    self.player.stats.heal(p_healed)
-                    self.monster.stats.heal(m_healed)
-                    print(f'Player has taken {p_dmg_taken} and healed {p_healed}')
-                    time.sleep(0.5)
-                    print(text.ability_spacing_text)
-                    time.sleep(0.5)
-                    print(f'Monster has taken {m_dmg_taken} and healed {m_healed}')
-                    if p_state == 'died':
-                        return self.end_sequence()
-                    if m_state == 'died':
-                        return self.end_sequence()
-
-                    self.saved_p = player_seq[i].saved_elixir
-                    self.saved_m = monster_seq[i].saved_elixir
-                
-                for i in range(len(player_seq), len(monster_seq)):
-                    p_dmg_taken = monster_seq[i].attack * self.monster.stats.attack / 10
-
-                    m_healed = monster_seq[i].heal
-                    time.sleep(0.5)
-                    print(text.ability_spacing_text)
-                    time.sleep(0.5)
-
-                    if p_dmg_taken != 0:
-                        print(f'Player has taken {p_dmg_taken}')
-                    if m_healed != 0:
-                        print(f'Monster has healed {m_healed}')
-
-                    self.player.stats.take_damage(p_dmg_taken)
-                    self.monster.stats.heal(m_healed)
-
-                    self.saved_m = monster_seq[i].saved_elixir
-            else: 
-                for i in range(len(player_seq)):
-                    p_dmg_taken = (monster_seq[i].attack - player_seq[i].shield) * (self.monster.stats.attack / 10)
-                    m_dmg_taken = (player_seq[i].attack - monster_seq[i].shield) * (self.player.stats.attack  / 10)
-
-                    p_healed = player_seq[i].heal
-                    m_healed = monster_seq[i].heal
-
-                    if p_dmg_taken < 0:
-                        p_dmg_taken = 0
-                    if m_dmg_taken < 0:
-                        m_dmg_taken = 0
-                    p_state = self.player.stats.take_damage(p_dmg_taken)
-                    m_state = self.monster.stats.take_damage(m_dmg_taken)
-                    self.player.stats.heal(p_healed)
-                    self.monster.stats.heal(m_healed)
-                    print(f'Player has taken {p_dmg_taken} and healed {p_healed}')
-                    time.sleep(0.5)
-                    print(text.ability_spacing_text)
-                    print(f'Monster has taken {m_dmg_taken} and healed {m_healed}')
-                    time.sleep(0.5)
-                    if p_state == 'died':
-                        return self.end_sequence()
-                    if m_state == 'died':
-                        return self.end_sequence()
-
-                    self.saved_p = player_seq[i].saved_elixir
-                    self.saved_m = monster_seq[i].saved_elixir
-            
-            print(f"========= End of turn {self.current_turn} =========")
-            input()
+            # ===== End of turn summary =====
+            print(f"\nEnd of Turn {self.current_turn}")
+            print(f"Player Health: {self.player.stats.current_health} | {'Boss' if is_boss else 'Monster'} Health: {self.monster.stats.current_health}")
+            input("Press Enter to continue...")
             self.current_turn += 1
-        return self.end_sequence()
+            os.system('clear')
+
+        # Max turns reached, determine winner
+        if self.player.stats.current_health > self.monster.stats.current_health:
+            print(text.victory_text)
+            return 'victory'
+        else:
+            print(text.defeat_text)
+            return 'defeat'
+
+    
+    def start_boss_sequence(self):
+        while self.current_turn <= self.max_turns:
+            # ===== Calculate elixir =====
+            elixir = (self.base_elixir * self.current_turn) // 2
+            p_elixir = elixir + self.saved_p
+            m_elixir = elixir + self.saved_m
+            self.saved_p = 0
+            self.saved_m = 0
+
+            # ===== Aesthetic display =====
+            print(f"\n===== Turn {self.current_turn} =====")
+            print(f"Player Health: {self.player.stats.current_health} | Boss Health: {self.monster.stats.current_health}")
+            print(f"Player Elixir: {p_elixir} | Boss Elixir: {m_elixir}\n")
+
+            # ===== Boss-specific elixir manipulation =====
+            steal_amount = random.randint(0, max(1, p_elixir // 3))
+            p_elixir -= steal_amount
+            m_elixir += steal_amount
+            if steal_amount > 0:
+                print(f"{self.monster.name} steals {steal_amount} elixir from you!")
+
+            # ===== Player & Boss choose abilities =====
+            player_seq = self.player_ability_sequence(p_elixir)
+            monster_seq = self.monster_ability_sequence(m_elixir)
+
+            # ===== Apply abilities with shared fate =====
+            max_len = max(len(player_seq), len(monster_seq))
+            shared_fate_percent = 0.25  # 25% of damage is mirrored
+
+            for i in range(max_len):
+                # Player action
+                if i < len(player_seq):
+                    p_act = player_seq[i]
+                    m_shield = monster_seq[i].shield if i < len(monster_seq) else 0
+                    dmg_to_monster = max(0, (p_act.attack - m_shield) * (self.player.stats.attack / 10))
+                    dmg_mirror = dmg_to_monster * shared_fate_percent
+                    self.monster.stats.take_damage(dmg_to_monster + dmg_mirror)
+                    self.player.stats.heal(p_act.heal)
+                    self.saved_p = p_act.saved_elixir
+
+                    # Normal start sequence style output
+                    print(f"P: {p_act.name} | dmg: {dmg_to_monster} (+{dmg_mirror} mirrored) | heal: {p_act.heal} | saved elixir: {p_act.saved_elixir}")
+
+                # Boss action
+                if i < len(monster_seq):
+                    m_act = monster_seq[i]
+                    p_shield = player_seq[i].shield if i < len(player_seq) else 0
+                    dmg_to_player = max(0, (m_act.attack - p_shield) * (self.monster.stats.attack / 10))
+                    dmg_mirror = dmg_to_player * shared_fate_percent
+                    self.player.stats.take_damage(dmg_to_player + dmg_mirror)
+                    self.monster.stats.heal(m_act.heal)
+                    self.saved_m = m_act.saved_elixir
+
+                    print(f"M: {m_act.name} | dmg: {dmg_to_player} (+{dmg_mirror} mirrored) | heal: {m_act.heal} | saved elixir: {m_act.saved_elixir}")
+
+                print(text.ability_spacing_text)
+                time.sleep(0.5)
+
+                # Check death mid-turn
+                if self.player.stats.current_health <= 0:
+                    print(text.defeat_text)
+                    return 'defeat'
+                if self.monster.stats.current_health <= 0:
+                    print(text.victory_text)
+                    return 'victory'
+
+            # ===== End of turn summary =====
+            print(f"\nEnd of Turn {self.current_turn}")
+            print(f"Player Health: {self.player.stats.current_health} | Boss Health: {self.monster.stats.current_health}")
+            input("Press Enter to continue...")
+            self.current_turn += 1
+            os.system('clear')
+
+        # Max turns reached, determine winner by remaining health
+        if self.player.stats.current_health > self.monster.stats.current_health:
+            print(text.victory_text)
+            return 'victory'
+        else:
+            print(text.defeat_text)
+            return 'defeat'
+
+
+
+
     def player_ability_sequence(self, elixir):
         ability_sequence = []
         available_elixir = elixir
@@ -805,7 +984,6 @@ class CombatSequence():
             a = Ability(original.name)
             if a.elixir <= available_elixir:
                 magnitude = random.randint(1, available_elixir)
-                print(f'{a.name} with magnitude: {magnitude}')
                 if a.name == "attack":
                     a.attack = magnitude
                     a.magnitude = magnitude
@@ -822,8 +1000,15 @@ class CombatSequence():
                 ability_sequence.append(a)
         return ability_sequence
 
+    def returnMonsterDrop(self):
+        return self.monster.drop
+
     def end_sequence(self):
-        #return victory/defeat result
-        print('combat done') # placeholder
+        if self.player.stats.current_health == 0:
+            print(text.defeat_text)
+            return 'defeat'
+        elif self.monster.stats.current_health == 0:
+            print(text.victory_text)
+            return 'victory'
         input('Press enter to continue...')
 #Objects

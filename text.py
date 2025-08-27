@@ -1,5 +1,3 @@
-import mud
-
 Game_name = "Labyrinth Ascension"
 Game_info = [
     "Explore Maze Rooms: Each maze run is procedurally generated (different layouts each time).",
@@ -29,6 +27,7 @@ started_text = 'In this world of labyrinths, you have arrived in the top-most le
 treasure_room_text = 'You have entered a room containing treasure. Do you want to open the chest or travel to another room?'
 claimed_treasure_room_text = 'You have entered a room containing an empty chest. Do you want to travel to another room?'
 monster_room_text = 'You have encountered a monster. Do you want to fight this monster?'
+claimed_monster_room_text = 'You have entered a room containing an empty monster lair. Do you want to travel to another room?'
 
 input_prompt = "Please select a choice: "
 input_error_prompt = "Please input again."
@@ -62,6 +61,7 @@ rooms = {
     "NEW":  "─┴─",
     "SEW":  "─┬─",
     "NSEW": "─┼─",
+    "BOSS": " ⬢ ",
 }
 
 player_rooms = {
@@ -80,6 +80,7 @@ player_rooms = {
     "NEW":  "─O─",
     "SEW":  "─O─",
     "NSEW": "─O─",
+    "BOSS": " ⬢ ",
 }
 
 move_pool = ['attack', 'shield', 'heal', 'save']
@@ -88,74 +89,63 @@ monster_ability_weights = [20, 4, 3, 6]
 
 
 
-default_health = 15
+default_health = 10
 default_attack = 10
 
 Monsters = {
-  "Slime": [10, 10],
-  "Pig": [15, 15],
-  "Hog": [20, 20],
-  "Goblin": [50, 30],
-  "Wolf": [80, 40],
-  "Orc": [150, 80],
-  "Skeleton": [120, 60],
-  "Zombie": [200, 70],
-  "Bandit": [250, 100],
-  "Giant Spider": [300, 120],
-  "Dark Knight": [500, 200],
-  "Stone Golem": [800, 300],
-  "Troll": [1000, 350],
-  "Wyvern": [1500, 500],
-  "Minotaur": [2000, 600],
-  "Hydra": [3000, 800],
-  "Ancient Treant": [4000, 900],
-  "Fire Drake": [5000, 1200],
-  "Shadow Reaper": [6000, 1500],
-  "Frost Titan": [7000, 1700],
-  "Chaos Serpent": [8000, 2000],
-  "Demon Lord": [9000, 2500],
-  "Elder Dragon": [10000, 3000]
+    "Slime": [5, 1],
+    "Pig": [8, 2],
+    "Goblin": [12, 3],
+    "Wolf": [20, 5],
+    "Orc": [35, 8],
+    "Skeleton": [50, 10],
+    "Zombie": [70, 12],
+    "Bandit": [90, 15],
+    "Giant Spider": [120, 18],
+    "Dark Knight": [180, 25],
+    "Stone Golem": [250, 35],
+    "Troll": [350, 45],
+    "Wyvern": [500, 60],
+    "Minotaur": [650, 80],
+    "Hydra": [900, 100],
+    "Ancient Treant": [1200, 130],
+    "Fire Drake": [1500, 160],
+    "Shadow Reaper": [1800, 200],
+    "Frost Titan": [2200, 240],
+    "Chaos Serpent": [2600, 280]
 }
 
 
 Weapon = {
-  "Fist": 1,
-  "Beginner Daggers": 2,
-  "Beginner Wand": 3,
-  "Wooden Sword": 5,
-  "Intermediate Daggers": 7,
-  "Intermediate Wand": 8,
-  "Knucklebust": 10,
-  "Stone Sword": 20,
+    "Fist": 1,
+    "Wooden Sword": 3,
+    "Beginner Daggers": 4,
+    "Beginner Wand": 5,
+    "Stone Sword": 8,
+    "Intermediate Daggers": 10,
+    "Intermediate Wand": 12,
+    "Iron Sword": 15,
+    "Steel Sword": 20,
+    "Knucklebust": 25,
+    "Silver Sword": 30,
+    "Diamond Sword": 40,
+    "Mythril Sword": 50,
+    "Draconic Blade": 70
 }
 
 Consumable = {
-  "Health potion": 5,
-  "Attack potion": 5,
-  "Healing potion": 10
+  "health potion": 5,
+  "attack potion": 5,
+  "healing potion": 10
 }
 Armour = {
-  "Leather Leggings": 1,
-  "Leather Boots": 1,
-  "Leather Helmet": 1,
-  "Leather Chestplate": 1,
-  "Chainmail Leggings": 5,
-  "Chainmail Boots": 5,
-  "Chainmail Helmet": 5,
-  "Chainmail Chestplate": 5,
-  "Iron Leggings": 25,
-  "Iron Boots": 25,
-  "Iron Helmet": 25,
-  "Iron Chestplate": 25,
-  "Diamond Leggings": 50,
-  "Diamond Boots": 50,
-  "Diamond Helmet": 50,
-  "Diamond Chestplate": 50,
-  "Draconic Leggings": 300,
-  "Draconic Boots": 300,
-  "Draconic Helmet": 300,
-  "Draconic Chestplate": 300
+    "Leather Boots": 3, "Leather Leggings": 4, "Leather Helmet": 3, "Leather Chestplate": 6,
+    "Chainmail Boots": 6, "Chainmail Leggings": 8, "Chainmail Helmet": 6, "Chainmail Chestplate": 12,
+    "Iron Boots": 10, "Iron Leggings": 12, "Iron Helmet": 10, "Iron Chestplate": 20,
+    "Diamond Boots": 20, "Diamond Leggings": 25, "Diamond Helmet": 20, "Diamond Chestplate": 35,
+    "Draconic Boots": 30, "Draconic Leggings": 40, "Draconic Helmet": 30, "Draconic Chestplate": 50
 }
+
 
 ArmourSlots = {
     # Leather
@@ -190,11 +180,11 @@ ArmourSlots = {
 }
 
 
-weaponweights5 = [50, 40, 30, 25, 20, 15, 10, 5]
-weaponweights10 = [40, 30, 30, 30, 20, 15, 10, 10]
-weaponweights15 = [25, 25, 30, 30, 25, 25, 20, 15]
-weaponweights20 = [10, 10, 15, 15, 20, 20, 25, 30]
-weaponweights25 = [5, 5, 10, 10, 15, 15, 20, 25]
+weaponweights5  = [50, 40, 35, 30, 25, 20, 15, 10, 8, 5, 3, 2, 1, 1]
+weaponweights10 = [40, 35, 30, 28, 25, 20, 15, 12, 10, 8, 5, 3, 2, 1]
+weaponweights15 = [30, 28, 25, 22, 20, 18, 15, 12, 10, 8, 5, 3, 2, 2]
+weaponweights20 = [20, 18, 15, 12, 10, 10, 12, 15, 18, 20, 25, 30, 35, 25]
+weaponweights25 = [5, 5, 5, 5, 8, 10, 12, 15, 20, 25, 30, 40, 50, 40]
 
 armourweights5 =  [50, 50, 50, 50, 40, 40, 40, 40, 25, 25, 25, 25, 15, 15, 15, 15, 10, 10, 10, 10]
 armourweights10 = [40, 40, 40, 40, 35, 35, 35, 35, 25, 25, 25, 25, 15, 15, 15, 15, 10, 10, 10, 10]
@@ -202,10 +192,16 @@ armourweights15 = [35, 35, 35, 35, 30, 30, 30, 30, 25, 25, 25, 25, 20, 20, 20, 2
 armourweights20 = [30, 30, 30, 30, 28, 28, 28, 28, 25, 25, 25, 25, 23, 23, 23, 23, 20, 20, 20, 20]
 armourweights25 = [20, 20, 20, 20, 22, 22, 22, 22, 25, 25, 25, 25, 28, 28, 28, 28, 30, 30, 30, 30]
 
+boss_monster = "Origin of Chaos"
+boss_monster_stats = [5000, 300]
 
 player_save_file = "player_data.json"
 default_save_file = "data.json"
 
+victory_text = "You have defeated the monster!"
+defeat_text = "You have been defeated by the monster..."
+
 printing_text_large_spacing = '\n══════════════ • ══════════════ \n'
 combat_spacing_text = '────── ◈ ──────'
 ability_spacing_text = '··─··'
+equip_spacing_text = "───┈───"

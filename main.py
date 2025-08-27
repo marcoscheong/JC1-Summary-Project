@@ -43,7 +43,6 @@ if __name__ == "__main__":
                     game.set_state('travel')
                 elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
                     os.system('clear')
-                    print('bro why isn')
                     monster = game.maze.current_room.boss_monster
                     input(f"You have encountered {text.boss_monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
                     os.system('clear')
@@ -51,9 +50,10 @@ if __name__ == "__main__":
                     result = combat_seq.start_boss_sequence()
                     if result == 'victory':
                         game.maze.current_room.claimed = True
-                        game.set_state('travel')
-                        game.get_player().recalculate_stats()
                         game.save_all_data(text.player_save_file)
+                        print('You have defeated the boss! Congratulations on completing the game!')
+                        input('Press enter to exit.')
+                        sys.exit()
                     elif result == 'defeat':
                         print("You have been defeated by the boss. Game over.")
                         print('Do you want to retry?')
@@ -127,7 +127,8 @@ if __name__ == "__main__":
                     elif game.get_player().inventory.use_item(item_name):
                         if item_name == 'health potion':
                             magnitude = game.get_player().stats.max_health * 0.2
-                            game.get_player().stats.max_health += magnitude
+                            game.get_player().health_potion(magnitude)
+                            game.get_player.recalculate_stats()
                             print('\n' + text.equip_spacing_text)
                             print(f"Your max health has increased by {magnitude}!")
                             print(text.equip_spacing_text + '\n')
@@ -139,7 +140,8 @@ if __name__ == "__main__":
                             print(text.equip_spacing_text + '\n')
                         elif item_name == 'attack potion':
                             magnitude = game.get_player().stats.attack * 0.2
-                            game.get_player().stats.attack += magnitude
+                            game.get_player().atk_potion(magnitude)
+                            game.get_player().recalculate_stats()
                             print('\n' + text.equip_spacing_text)
                             print(f'Your attack has increased by {magnitude}!')
                             print(text.equip_spacing_text + '\n')
@@ -216,7 +218,8 @@ if __name__ == "__main__":
                             if game.get_player().inventory.use_item(drop):
                                 if drop == 'health potion':
                                     magnitude = game.get_player().stats.max_health * 0.2
-                                    game.get_player().stats.max_health += magnitude
+                                    game.get_player().health_potion(magnitude)
+                                    game.get_player().recalculate_stats()
                                     print('\n' + text.equip_spacing_text)
                                     print(f"Your max health has increased by {magnitude}!")
                                     print(text.equip_spacing_text + '\n')
@@ -228,7 +231,8 @@ if __name__ == "__main__":
                                     print(text.equip_spacing_text + '\n')
                                 elif drop == 'attack potion':
                                     magnitude = game.get_player().stats.attack * 0.2
-                                    game.get_player().stats.attack += magnitude
+                                    game.get_player().atk_potion(magnitude)
+                                    game.get_player().recalculate_stats()
                                     print('\n' + text.equip_spacing_text)
                                     print(f'Your attack has increased by {magnitude}!')
                                     print(text.equip_spacing_text + '\n')
@@ -254,7 +258,11 @@ if __name__ == "__main__":
                 current_room.claimed = True
 
                 drop = current_room.drop
-                print(f"You have obtained a {drop}!")
+                if drop.type == 'weapon':
+                    print(f"You have obtained a {drop.drop}({text.Weapon[drop.drop]})!")
+                elif drop.type == 'armour':
+                    slot = text.ArmourSlots[drop.drop]
+                    print(f"You have obtained {drop.drop} (slot: {slot}, def: {text.Armour[drop.drop]})!")
                 game.set_state('item chest')
                 choices = game.get_options()
                 command = game.prompt_player_choice(choices).strip().lower()
@@ -266,20 +274,41 @@ if __name__ == "__main__":
                 if command in ['go back', 'back']:
                     game.set_state('travel')
                 elif command in ['equip item', 'equip']:
-                    if drop in text.Weapon:
-                        game.get_player().inventory.equip_weapon(drop)
+                    if drop.drop in text.Weapon:
+                        game.get_player().inventory.equip_weapon(drop.drop)
                         game.get_player().recalculate_stats()
+                        game.save_all_data(text.player_save_file)
                         input('\nPress enter to continue...')
-                    elif drop in text.Armour:
-                        slot = text.ArmourSlots[drop]
-                        game.get_player().inventory.equip_armour(slot, drop)
+                    elif drop.drop in text.Armour:
+                        slot = text.ArmourSlots[drop.drop]
+                        game.get_player().inventory.equip_armour(slot, drop.drop)
                         game.get_player().recalculate_stats()
+                        game.save_all_data(text.player_save_file)
                         input('\nPress enter to continue...')
                     game.set_state('travel')
 
                 game.set_state('travel')
                 game.get_player().recalculate_stats()
                 game.save_all_data(text.player_save_file)
+            elif result == 'defeat':
+                print("You have been defeated by the monster. Game over.")
+                print('Do you want to retry?')
+                choices = ['Retry', 'Quit']
+                command = game.prompt_player_choice(choices).strip().lower()
+                if command.isdigit():
+                    if int(command) > len(choices):
+                        print(text.input_error_prompt)
+                    else:
+                        command = choices[int(command) - 1].strip().lower()
+                if command in ['quit', 'exit']:
+                    game.save_all_data(text.player_save_file)
+
+                    print(text.thanks_message)
+                    sys.exit()
+                elif command in ['retry', 'start', 'play']:
+                    game = mud.Game()
+                    game.set_state('start')
+                    game.welcome()
         else:
             #print ABSTRACTED error message
             print(text.input_error_prompt)

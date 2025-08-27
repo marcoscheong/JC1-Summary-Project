@@ -103,16 +103,16 @@ Monsters = {
     "Bandit": [90, 15],
     "Giant Spider": [120, 18],
     "Dark Knight": [180, 25],
-    "Stone Golem": [250, 35],
-    "Troll": [350, 45],
-    "Wyvern": [500, 60],
-    "Minotaur": [650, 80],
-    "Hydra": [900, 100],
-    "Ancient Treant": [1200, 130],
-    "Fire Drake": [1500, 160],
-    "Shadow Reaper": [1800, 200],
-    "Frost Titan": [2200, 240],
-    "Chaos Serpent": [2600, 280]
+    "Stone Golem": [180, 35],
+    "Troll": [180, 40],
+    "Wyvern": [250, 60],
+    "Minotaur": [250, 70],
+    "Hydra": [500, 90],
+    "Ancient Treant": [200, 100],
+    "Fire Drake": [450, 160],
+    "Shadow Reaper": [50, 500],
+    "Frost Titan": [1000, 20],
+    "Chaos Serpent": [700, 280]
 }
 
 
@@ -193,7 +193,7 @@ armourweights20 = [30, 30, 30, 30, 28, 28, 28, 28, 25, 25, 25, 25, 23, 23, 23, 2
 armourweights25 = [20, 20, 20, 20, 22, 22, 22, 22, 25, 25, 25, 25, 28, 28, 28, 28, 30, 30, 30, 30]
 
 boss_monster = "Origin of Chaos"
-boss_monster_stats = [5000, 300]
+boss_monster_stats = [2500, 250]
 
 player_save_file = "player_data.json"
 default_save_file = "data.json"

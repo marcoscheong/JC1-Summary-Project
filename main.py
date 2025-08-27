@@ -40,6 +40,7 @@ if __name__ == "__main__":
             while game.get_state() == 'inventory':
                 os.system('clear')
                 print(game.get_player().inventory.return_inventory())
+                print(game.get_player().stats.return_stats())
 
                 choices = game.get_options()
                 command = game.prompt_player_choice(choices).strip().lower()

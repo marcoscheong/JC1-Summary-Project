@@ -758,13 +758,6 @@ class CombatSequence():
                 print(f"\n===== Turn {self.current_turn} =====")
                 print(f"Player Health: {self.player.stats.current_health} | Boss Health: {self.monster.stats.current_health}")
                 print(f"Player Elixir: {p_elixir} | Boss Elixir: {m_elixir}\n")
-
-                # Boss-specific elixir manipulation
-                steal_amount = random.randint(0, max(1, p_elixir // 3))
-                p_elixir -= steal_amount
-                m_elixir += steal_amount
-                if steal_amount > 0:
-                    print(f"{self.monster.name} steals {steal_amount} elixir from you!")
             else:
                 print(f"\n===== Turn {self.current_turn} =====")
                 print(f"Player Health: {self.player.stats.current_health} | Monster Health: {self.monster.stats.current_health}")
@@ -784,25 +777,37 @@ class CombatSequence():
                     p_act = player_seq[i]
                     m_shield = monster_seq[i].shield if i < len(monster_seq) else 0
                     dmg_to_monster = max(0, (p_act.attack - m_shield) * (self.player.stats.attack / 10))
-                    dmg_mirror = dmg_to_monster * shared_fate_percent
-                    self.monster.stats.take_damage(dmg_to_monster + dmg_mirror)
+                    self.monster.stats.take_damage(dmg_to_monster)
                     self.player.stats.heal(p_act.heal)
                     self.saved_p = p_act.saved_elixir
 
-                    print(f"P: {p_act.name} | dmg: {dmg_to_monster} (+{dmg_mirror} mirrored) | heal: {p_act.heal} | saved elixir: {p_act.saved_elixir}")
+                    p_display = [f"P: {p_act.name}"]
+                    if dmg_to_monster > 0:
+                        p_display.append(f"dmg: {dmg_to_monster}")
+                    if p_act.heal > 0:
+                        p_display.append(f"heal: {p_act.heal}")
+                    if p_act.saved_elixir > 0:
+                        p_display.append(f"saved elixir: {p_act.saved_elixir}")
+                    print(" | ".join(p_display))
 
                 # Monster/Boss action
                 if i < len(monster_seq):
                     m_act = monster_seq[i]
                     p_shield = player_seq[i].shield if i < len(player_seq) else 0
                     dmg_to_player = max(0, (m_act.attack - p_shield) * (self.monster.stats.attack / 10))
-                    dmg_mirror = dmg_to_player * shared_fate_percent
-                    self.player.stats.take_damage(dmg_to_player + dmg_mirror)
+                    self.player.stats.take_damage(dmg_to_player)
                     self.monster.stats.heal(m_act.heal)
                     self.saved_m = m_act.saved_elixir
 
-                    print(f"M: {m_act.name} | dmg: {dmg_to_player} (+{dmg_mirror} mirrored) | heal: {m_act.heal} | saved elixir: {m_act.saved_elixir}")
-
+                    m_display = [f"M: {m_act.name}"]
+                    if dmg_to_player > 0:
+                        m_display.append(f"dmg: {dmg_to_player}")
+                    if m_act.heal > 0:
+                        m_display.append(f"heal: {m_act.heal}")
+                    if m_act.saved_elixir > 0:
+                        m_display.append(f"saved elixir: {m_act.saved_elixir}")
+                    print(" | ".join(m_display))
+                
                 print(text.ability_spacing_text)
                 time.sleep(0.5)
 
@@ -849,7 +854,7 @@ class CombatSequence():
             p_elixir -= steal_amount
             m_elixir += steal_amount
             if steal_amount > 0:
-                print(f"{self.monster.name} steals {steal_amount} elixir from you!")
+                print(f"{text.boss_monster} steals {steal_amount} elixir from you!")
 
             # ===== Player & Boss choose abilities =====
             player_seq = self.player_ability_sequence(p_elixir)
@@ -871,7 +876,17 @@ class CombatSequence():
                     self.saved_p = p_act.saved_elixir
 
                     # Normal start sequence style output
-                    print(f"P: {p_act.name} | dmg: {dmg_to_monster} (+{dmg_mirror} mirrored) | heal: {p_act.heal} | saved elixir: {p_act.saved_elixir}")
+                    p_display = [f"P: {p_act.name}"]
+                    if dmg_to_monster > 0:
+                        p_display.append(f"dmg: {dmg_to_monster}")
+                    if dmg_mirror > 0:
+                        p_display.append(f"+{dmg_mirror} mirrored")
+                    if p_act.heal > 0:
+                        p_display.append(f"heal: {p_act.heal}")
+                    if p_act.saved_elixir > 0:
+                        p_display.append(f"saved elixir: {p_act.saved_elixir}")
+                    print(" | ".join(p_display))
+
 
                 # Boss action
                 if i < len(monster_seq):
@@ -883,7 +898,33 @@ class CombatSequence():
                     self.monster.stats.heal(m_act.heal)
                     self.saved_m = m_act.saved_elixir
 
-                    print(f"M: {m_act.name} | dmg: {dmg_to_player} (+{dmg_mirror} mirrored) | heal: {m_act.heal} | saved elixir: {m_act.saved_elixir}")
+                    m_display = [f"M: {m_act.name}"]
+                    if dmg_to_player > 0:
+                        m_display.append(f"dmg: {dmg_to_player}")
+                    if dmg_mirror > 0:
+                        m_display.append(f"+{dmg_mirror} mirrored")
+                    if m_act.heal > 0:
+                        m_display.append(f"heal: {m_act.heal}")
+                    if m_act.saved_elixir > 0:
+                        m_display.append(f"saved elixir: {m_act.saved_elixir}")
+                    print(" | ".join(m_display))
+
+
+                # Check special shared fate turn (every 3rd turn)
+                if self.current_turn % 3 == 0:
+                    # Mirror damage & healing effects
+                    if dmg_to_monster > 0:
+                        self.player.stats.take_damage(dmg_to_monster)  # Player suffers same damage they dealt
+                    if dmg_to_player > 0:
+                        self.monster.stats.take_damage(dmg_to_player)  # Monster suffers same damage they dealt
+                    
+                    if p_act.heal > 0:
+                        self.monster.stats.heal(p_act.heal)  # Monster heals same amount player healed
+                    if m_act.heal > 0:
+                        self.player.stats.heal(m_act.heal)  # Player heals same amount monster healed
+
+                    print("⚠ Shared Fate Triggered! Both sides suffer and heal equally this turn.")
+
 
                 print(text.ability_spacing_text)
                 time.sleep(0.5)

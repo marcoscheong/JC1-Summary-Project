@@ -48,6 +48,11 @@ class Game:
         elif self.game_state == 'consumable chest':
             choices = ['Consume item', 'Go back']
             return choices
+        elif self.game_state == 'inventory':
+            choices = []
+            choices.append('Use item')
+            choices.append('Go back')
+            return choices
         
     def prompt_player_choice(self, choices):
         for i, opt in enumerate(choices):
@@ -347,6 +352,10 @@ class MonsterRoom(Room):
             i = random.randint(0, self.id//2)
         self.monster = list(self.availableMonsters)[i]
 
+class BossRoom(Room):
+    def __init__(self, id: int):
+        super().__init__(id)
+        self.boss = 'Dragon'
 
 # CHARACTER CLASSES
 class Character:
@@ -369,15 +378,15 @@ class Player(Character):
 
     def load_from_storage(self, storage: Storage, file: str):
         data = storage.get_data(file)
-        self.stats.maxHealth = data["Player_max_health"]
-        self.stats.currentHealth = data["Player_current_health"]
+        self.stats.max_health = data["Player_max_health"]
+        self.stats.current_health = data["Player_current_health"]
         self.stats.attack = data["Player_attack"]
         self.inventory = Inventory(storage, file)
 
     def save_to_storage(self, storage: Storage, file: str):
         storage.save_data(file, {
-            "Player_max_health": self.stats.maxHealth,
-            "Player_current_health": self.stats.currentHealth,
+            "Player_max_health": self.stats.max_health,
+            "Player_current_health": self.stats.current_health,
             "Player_attack": self.stats.attack
         })
         self.inventory.save_inventory()
@@ -395,9 +404,9 @@ class Player(Character):
         defence_bonus = sum(text.Armour.get(part, 0) for part in armour.values() if part)
         
         self.stats.attack = text.default_attack + attack_bonus
-        self.stats.maxHealth = text.default_health + defence_bonus
-        if self.stats.currentHealth > self.stats.maxHealth:
-            self.stats.currentHealth = self.stats.maxHealth
+        self.stats.max_health = text.default_health + defence_bonus
+        if self.stats.current_health > self.stats.max_health:
+            self.stats.current_health = self.stats.max_health
 
 class Inventory:
     def __init__(self, storage: Storage, file: str):
@@ -426,16 +435,16 @@ class Inventory:
 
     def use_item(self, item_name: str, quantity: int = 1):
         """Use an item and save to JSON."""
-        if item_name not in self.items:
+        if item_name not in self.items["Consumables"]:
             print(f"{item_name} not found in inventory.")
             return False
-        if self.items[item_name] < quantity:
+        if self.items["Consumables"][item_name] < quantity:
             print(f"Not enough {item_name} to use.")
             return False
         
-        self.items[item_name] -= quantity
-        if self.items[item_name] <= 0:
-            del self.items[item_name]
+        self.items["Consumables"][item_name] -= quantity
+        if self.items["Consumables"][item_name] <= 0:
+            del self.items["Consumables"][item_name]
         self.save_inventory()
         return True
     
@@ -443,7 +452,9 @@ class Inventory:
         """Equip a weapon to the player, given a weapon name."""
         if weapon_name in text.Weapon.keys():
             self.items["Weapon"] = weapon_name
+            print('\n' + text.equip_spacing_text)
             print(f"{weapon_name} has been equipped.")
+            print(text.equip_spacing_text + '\n')
             self.save_inventory()
         else:
             print(f"{weapon_name} not found.")
@@ -455,7 +466,9 @@ class Inventory:
             if "Armour" not in self.items:
                 self.items["Armour"] = {}
             self.items["Armour"][slot] = armour_name
+            print('\n' + text.equip_spacing_text)
             print(f"{armour_name} equipped in {slot}.")
+            print(text.equip_spacing_text + '\n')
             self.save_inventory()
         else:
             print(f"{armour_name} not found.")
@@ -534,33 +547,41 @@ class Drop():
         elif r == 2:
             number = random.randint(1, 3)
             if number == 1:
-                drop = 'Attack potion'
+                drop = 'attack potion'
                 self.type = 'consumable'
             elif number == 2:
-                drop = 'Health potion'
+                drop = 'health potion'
                 self.type = 'consumable'
             else:
-                drop = 'Healing potion'
+                drop = 'healing potion'
                 self.type = 'consumable'
         return drop
 
-class Stats():
-    def __init__(self, maxHealth: int, attack: int):
-        self.maxHealth = maxHealth
+class Stats:
+    def __init__(self, max_health: int, attack: int):
+        self.max_health = max_health
         self.attack = attack
-        self.currentHealth = maxHealth
+        self.current_health = max_health
     
     def take_damage(self, damage):
-        if (self.currentHealth - damage) <= 0:
+        if (self.current_health - damage) <= 0:
+            self.current_health = 0
             return 'died'
         else:
-            self.currentHealth -= damage
+            self.current_health -= damage
     
     def heal(self, healAmount):
-        if (self.currentHealth + healAmount) > self.maxHealth:
-            self.currentHealth = self.maxHealth
-        else:
-            self.currentHealth += healAmount
+        self.current_health = min(self.current_health + healAmount, self.max_health)
+    
+    def return_stats(self):
+        """Return a formatted string of the player's stats."""
+        lines = ["╔═ Player Stats ═════════════╗"]
+        lines.append(f"  Health      » {self.current_health}/{self.max_health}")
+        lines.append(f"  Attack      » {self.attack}")
+        # You can add defense if calculated elsewhere
+        lines.append("╚═══════════════════════════╝")
+        return "\n".join(lines)
+
 
 class Ability():
     def __init__(self, name):
@@ -595,8 +616,8 @@ class CombatSequence():
 
             print(text.combat_spacing_text)
 
-            print(f'Current player health: {self.player.stats.currentHealth}')
-            print(f'Current monster health: {self.monster.stats.currentHealth}\n')
+            print(f'Current player health: {self.player.stats.current_health}')
+            print(f'Current monster health: {self.monster.stats.current_health}\n')
 
             player_seq = self.player_ability_sequence(p_elixir)
             monster_seq = self.monster_ability_sequence(m_elixir)

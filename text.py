@@ -17,7 +17,7 @@ Game_lore = [
   ]
 room_types = ['treasure', 'monster']
 
-maze_size = 24
+maze_size = 36
 
 player_save_file = "player_data.json"
 
@@ -128,11 +128,12 @@ Weapon = {
     "Intermediate Wand": 12,
     "Iron Sword": 15,
     "Steel Sword": 20,
-    "Knucklebust": 25,
-    "Silver Sword": 30,
-    "Diamond Sword": 40,
-    "Mythril Sword": 50,
-    "Draconic Blade": 70
+    "Knucklebuster": 25,
+    "Silver Sword": 35,
+    "Diamond Sword": 50,
+    "Mythril Sword": 75,
+    "Draconic Blade": 100,
+    "Excalibur": 150
 }
 
 Consumable = {
@@ -145,7 +146,7 @@ Armour = {
     "Chainmail Boots": 6, "Chainmail Leggings": 8, "Chainmail Helmet": 6, "Chainmail Chestplate": 12,
     "Iron Boots": 10, "Iron Leggings": 12, "Iron Helmet": 10, "Iron Chestplate": 20,
     "Diamond Boots": 20, "Diamond Leggings": 25, "Diamond Helmet": 20, "Diamond Chestplate": 35,
-    "Draconic Boots": 30, "Draconic Leggings": 40, "Draconic Helmet": 30, "Draconic Chestplate": 50
+    "Draconic Boots": 50, "Draconic Leggings": 60, "Draconic Helmet": 50, "Draconic Chestplate": 75
 }
 
 
@@ -182,11 +183,11 @@ ArmourSlots = {
 }
 
 
-weaponweights5  = [50, 40, 35, 30, 25, 20, 15, 10, 8, 5, 3, 2, 1, 1]
-weaponweights10 = [40, 35, 30, 28, 25, 20, 15, 12, 10, 8, 5, 3, 2, 1]
-weaponweights15 = [30, 28, 25, 22, 20, 18, 15, 12, 10, 8, 5, 3, 2, 2]
-weaponweights20 = [20, 18, 15, 12, 10, 10, 12, 15, 18, 20, 25, 30, 35, 25]
-weaponweights25 = [5, 5, 5, 5, 8, 10, 12, 15, 20, 25, 30, 40, 50, 40]
+weaponweights5  = [50, 40, 35, 30, 25, 20, 15, 10, 8, 5, 3, 2, 1, 1, 1]
+weaponweights10 = [40, 35, 30, 28, 25, 20, 15, 12, 10, 8, 5, 3, 2, 1, 1]
+weaponweights15 = [30, 28, 25, 22, 20, 18, 15, 12, 10, 8, 5, 3, 2, 2, 1]
+weaponweights20 = [20, 18, 15, 12, 10, 10, 12, 15, 18, 20, 25, 30, 35, 25, 15]
+weaponweights25 = [5, 5, 5, 5, 8, 10, 12, 15, 20, 25, 30, 40, 50, 40, 35]
 
 armourweights5 =  [50, 50, 50, 50, 40, 40, 40, 40, 25, 25, 25, 25, 15, 15, 15, 15, 10, 10, 10, 10]
 armourweights10 = [40, 40, 40, 40, 35, 35, 35, 35, 25, 25, 25, 25, 15, 15, 15, 15, 10, 10, 10, 10]

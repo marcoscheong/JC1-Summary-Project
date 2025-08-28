@@ -564,6 +564,7 @@ class Player(Character):
         self.stats.current_health = data["Player_current_health"]
         self.stats.attack = data["Player_attack"]
         self.inventory = Inventory(storage, file)
+        self.recalculate_stats()
 
     def save_to_storage(self, storage: Storage, file: str):
         storage.save_data(file, {
@@ -860,6 +861,8 @@ class CombatSequence():
             # Compute damage after shields
             dmg_to_monster = max(0, (p_total_attack - m_total_shield) * (self.player.stats.attack / 10))
             dmg_to_player = max(0, (m_total_attack - p_total_shield) * (self.monster.stats.attack / 10))
+            m_total_heal = max(0, m_total_heal) * self.monster.stats.attack / 10
+            p_total_heal = max(0, p_total_heal) * self.player.stats.attack / 10
 
             # Apply effects
             self.monster.stats.take_damage(dmg_to_monster)

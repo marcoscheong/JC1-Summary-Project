@@ -18,15 +18,27 @@ class Game:
         self.player = None
 
     def set_state(self, state):
+        """
+        setter method for game state 
+        """
         self.game_state = state
     
     def get_state(self):
+        """
+        getter method for game state
+        """
         return self.game_state
     
     def get_maze(self):
+        """
+        getter method for maze
+        """
         return self.maze
  
     def get_options(self):
+        """
+        getter method to get options to display appropriately
+        """
         if self.game_state == 'start':
             choices = text.start_choices
             return choices
@@ -63,6 +75,9 @@ class Game:
             return choices
         
     def prompt_player_choice(self, choices):
+        """
+        displays choices and gets input from player
+        """
         for i, opt in enumerate(choices):
             print(f'{(i + 1)}. {opt}')
             time.sleep(0.05)
@@ -92,6 +107,9 @@ class Game:
             continue
 
     def start_game(self):
+        """
+        starts game sequence
+        """
         rooms = []
         rooms.append(Room(0))
         for i in range(1, text.maze_size):
@@ -115,6 +133,9 @@ class Game:
         self.set_state('travel')
 
     def load_game(self):
+        """
+        load method for json
+        """
         rooms = []
         rooms.append(Room(0))
         for i in range(1, text.maze_size):
@@ -143,6 +164,9 @@ class Game:
         self.set_state('travel')
 
     def pretty_print(self, text):
+        """
+        prints out text charcter-by-character; aesthetics
+        """
         i = 0
         while i < len(text):
             if select.select([sys.stdin], [], [], 0)[0]:
@@ -158,9 +182,15 @@ class Game:
             i += 1
 
     def quit_game(self):
+        """
+        exits game system
+        """
         sys.exit()
 
     def welcome(self):
+        """
+        displays menu that shows when user first starts program
+        """
         print(text.welcome_prompt)
         choices = self.get_options()
         chosen = False
@@ -183,11 +213,17 @@ class Game:
                     self.start_game()
 
     def create_player(self):
+        """
+        initialisation of player
+        """
         stats = Stats(text.default_health, text.default_attack)
         self.player = Player(stats)
         self.player.create_new_storage(self.storage, text.player_save_file)
     
     def load_player(self):
+        """
+        load method for player
+        """
         atk = self.storage.get_data(text.player_save_file).get("Player_attack", text.default_attack)
         current_health = self.storage.get_data(text.player_save_file).get("Player_current_health", text.default_health)
         max_health = self.storage.get_data(text.player_save_file).get("Player_max_health", text.default_health)
@@ -196,12 +232,21 @@ class Game:
         self.player.load_from_storage(self.storage, text.player_save_file)
 
     def get_player(self):
+        """
+        getter method for player
+        """
         return self.player
 
     def load_data(self):
+        """
+        loader method for data
+        """
         pass
 
     def save_all_data(self, file): 
+        """
+        saves data of all current variables
+        """
         claimed_rooms = []
         for room in self.maze.rooms:
             if isinstance(room, TreasureRoom) and room.claimed:
@@ -222,10 +267,16 @@ class Game:
         self.player.save_to_storage(self.storage, file)
 
 class Storage:
+    """
+    class constructor for storage (json)
+    """
     def __init__(self):
         pass
         
     def get_data(self, file) -> dict:
+        """
+        getter method for data from json file
+        """
         if not os.path.exists(file):
             return {}
         with open(file, 'r', encoding='utf-8') as f:
@@ -235,6 +286,9 @@ class Storage:
                 return {}
             
     def save_data(self, file, obj) -> None:
+        """
+        saves data to json file
+        """
         data = self.get_data(file)
 
         if isinstance(data, dict) and isinstance(obj, dict):
@@ -263,6 +317,9 @@ class Maze:
         self.current_room = starting_room
 
     def generate_maze(self):
+        """
+        generates grid of mazes, including the monster and treasure rooms
+        """
         num_cols = 3
         regular_rooms = self.rooms[:-1]
         
@@ -287,6 +344,9 @@ class Maze:
         last_regular_room.connection(boss_room, 'down')
     
     def get_room_key(self, room):
+        """
+        returns the dict keys of the room (connections and boss room)
+        """
         # Convert room objects to boolean values
         up = room.connects['up'] is not None
         down = room.connects['down'] is not None
@@ -317,6 +377,9 @@ class Maze:
         return "BOSS"
 
     def draw_rooms(self):
+        """
+        display function to draw out map layout of all rooms
+        """
         row_chunks = []
         rooms_per_row = 3
         
@@ -381,6 +444,9 @@ class Maze:
             print(line.center(14) + '\n')
     
     def room_options(self):
+        """
+        returns room options based on possible connections and actions
+        """
         options = []
         for direction in text.directions:
             connected_room = self.current_room.connects.get(direction)
@@ -393,6 +459,9 @@ class Maze:
         return options
 
     def travel_to(self, direction):
+        """
+        moves player to another room
+        """
         # Handle special boss room access
         if direction == 'boss chamber' or direction == 'boss':
             # Find if current room connects to boss room
@@ -417,22 +486,26 @@ class Maze:
 class Room:
     """
     Class construtor for Room
-    For each room in the str_chain, it:
-
-    Prints the room's .connects attribute (presumably a dictionary or list of connected rooms by direction)
-
-    Then prints out the IDs of connected rooms, assuming each room has an id attribute.
     """
     def __init__(self, id: int):
         self.id = id
         self.connects = {'up': None, 'left': None, 'right': None, 'down': None}
 
     def connection(self, room, direction):
+        """
+        connects a room to another room
+        """
         if direction in self.connects:
             self.connects[direction] = room
 
 class TreasureRoom(Room):
+    """
+    class constructor for rooms with treasure    
+    """
     def __init__(self, _id):
+        """
+        initialises the room; loot and loot chances are initialised as well
+        """
         super().__init__(_id)
         self.claimed = False
         if _id < 5:
@@ -464,7 +537,13 @@ class TreasureRoom(Room):
         return self.drop.type
 
 class MonsterRoom(Room):
+    """
+    class constructor for rooms with monsters
+    """
     def __init__(self, id: int, availableMonsters: list):
+        """
+        initialises room and the monsters inside
+        """
         super().__init__(id)
         self.monster = ''
         self.availableMonsters = availableMonsters
@@ -484,6 +563,9 @@ class MonsterRoom(Room):
         self.monster = list(self.availableMonsters)[i]
     
     def generateDrops(self):
+        """
+        randomly sets drop that drops from the monster in the room
+        """
         i = random.randint(0, 1)
         if i == 0:
             if self.id < 5:
@@ -529,6 +611,9 @@ class MonsterRoom(Room):
                 self.drop = drop
 
 class BossRoom(Room):
+    """
+    class constructor for the boss room    
+    """
     def __init__(self, id: int):
         super().__init__(id)
         self.claimed = False
@@ -539,6 +624,9 @@ class BossRoom(Room):
 
 # CHARACTER CLASSES
 class Character:
+    """
+    class constructor for characters (enemies and player)    
+    """
     def __init__(self, stats):
         self.stats = stats
         self.abilities = []
@@ -547,6 +635,9 @@ class Character:
         # self.inventory = Inventory() (to be updated)
  
 class Player(Character):
+    """
+    class constructor for player    
+    """
     def __init__(self, stats):
         super().__init__(stats)
         self.inventory = None
@@ -554,11 +645,17 @@ class Player(Character):
         self.base_health = text.default_health
 
     def create_new_storage(self, storage: Storage, file: str):
+        """
+        makes a new, empty storage for the player
+        """
         default_data = storage.get_data(text.default_save_file)
         storage.save_data(file, default_data)
         self.load_from_storage(storage, file)
 
     def load_from_storage(self, storage: Storage, file: str):
+        """
+        retrieves variables from previous saved data
+        """
         data = storage.get_data(file)
         self.stats.max_health = data["Player_max_health"]
         self.stats.current_health = data["Player_current_health"]
@@ -567,6 +664,9 @@ class Player(Character):
         self.recalculate_stats()
 
     def save_to_storage(self, storage: Storage, file: str):
+        """
+        saves variables to player storage
+        """
         storage.save_data(file, {
             "Player_max_health": self.stats.max_health,
             "Player_current_health": self.stats.current_health,
@@ -575,18 +675,30 @@ class Player(Character):
         self.inventory.save_inventory()
     
     def show_inventory(self):
+        """
+        displays player inventory
+        """
         if self.inventory:
             self.inventory.show_inventory()
         else:
             print("No inventory loaded.")
     
     def atk_potion(self, amt):
+        """
+        increases player attack stat
+        """
         self.base_atk += amt
     
     def health_potion(self, amt):
+        """
+        increases player health stat
+        """
         self.base_health += amt
 
     def recalculate_stats(self):
+        """
+        calculates stats based on current buffs / debuffs and equipment
+        """
         # Reset attack and health back to base
         self.stats.attack = self.base_atk
         old_max_health = self.stats.max_health
@@ -614,6 +726,9 @@ class Player(Character):
 
 
 class Inventory:
+    """
+    class constructor for player inventory    
+    """
     def __init__(self, storage: Storage, file: str):
         self.storage = storage
         self.file = file
@@ -699,6 +814,9 @@ class Inventory:
 
 
     def return_inventory(self):
+        """
+        returns the player inventory, including the items inside
+        """
         if not self.items:
             return "Inventory is empty."
 
@@ -735,12 +853,18 @@ class Monster(Character):
         super().__init__(stats)
 
 class Drop():
+    """
+    class constructor for drop (loot dropped from monsters)
+    """
     def __init__(self, weaponWeights, armourWeights):
         self.weaponWeights = weaponWeights
         self.armourWeights = armourWeights
         self.name = ''
     
     def generateDrop(self):
+        """
+        randomly sets own type of loot
+        """
         r = random.randint(0, 2)
         if r == 0:
             drop = random.choices(list(text.Weapon.keys()), self.weaponWeights)[0]
@@ -763,6 +887,9 @@ class Drop():
         return self
     
     def generateArmourDrop(self):
+        """
+        sets own type to armor
+        """
         drop = random.choices(list(text.Armour.keys()), self.armourWeights)[0]
         self.type = 'armour'
         self.drop = drop
@@ -770,18 +897,27 @@ class Drop():
         
     
     def generateWeaponDrop(self):
+        """
+        sets own type to weapon
+        """
         drop = random.choices(list(text.Weapon.keys()), self.weaponWeights)[0]
         self.type = 'weapon'
         self.drop = drop
         return self
 
 class Stats:
+    """
+    class constructor for character stats (enemy and player)    
+    """
     def __init__(self, max_health: int, attack: int):
         self.max_health = max_health
         self.attack = attack
         self.current_health = max_health
     
     def take_damage(self, damage):
+        """
+        reduces health stat of character
+        """
         if (self.current_health - damage) <= 0:
             self.current_health = 0
             return 'died'
@@ -789,6 +925,9 @@ class Stats:
             self.current_health -= damage
     
     def heal(self, healAmount):
+        """
+        increases current health of character
+        """
         self.current_health = min(self.current_health + healAmount, self.max_health)
     
     def return_stats(self):
@@ -802,6 +941,9 @@ class Stats:
 
 
 class Ability():
+    """
+    class constructor for player actions     
+    """
     def __init__(self, name):
         self.name = name
         self.attack = 0
@@ -812,6 +954,9 @@ class Ability():
         self.magnitude =  0
 
 class CombatSequence():
+    """
+    class constructor for combat sequence (when player fights a monster)    
+    """
     def __init__(self, player, monster, base_elixir: int, max_turns: int):
         self.base_elixir = base_elixir
         self.current_turn = 1
@@ -823,7 +968,7 @@ class CombatSequence():
         self.saved_p = 0 # saved player elixir from each turn
         self.saved_m = 0 # saved monster elixir from each turn
     def _fmt(self, x):
-        """Format numbers to 1 decimal if needed, no trailing .0."""
+        """Format numbers to 1 decimal if needed, no trailing .0. """
         return int(x) if isinstance(x, (int, float)) and float(x).is_integer() else round(x, 1)
 
 
@@ -1027,6 +1172,9 @@ class CombatSequence():
 
 
     def player_ability_sequence(self, elixir):
+        """
+        gets user to choose actions and their corresponding magnitudes
+        """
         ability_sequence = []
         available_elixir = elixir
         ability_dict = {a.name: a for a in self.player.abilities}
@@ -1082,7 +1230,11 @@ class CombatSequence():
             else:
                 print(text.ability_addition_error)
         return ability_sequence
+
     def monster_ability_sequence(self, elixir):
+        """
+        randomly generated monster behaviour to choose actions and their magnitudes
+        """
         ability_sequence = []
         available_elixir = elixir
 
@@ -1113,9 +1265,15 @@ class CombatSequence():
         return ability_sequence
 
     def returnMonsterDrop(self):
+        """
+        returns what the monster drops when killed
+        """
         return self.monster.drop
 
     def end_sequence(self):
+        """
+        ends the combat once either player or enemy dies
+        """
         if self.player.stats.current_health == 0:
             print(text.defeat_text)
             return 'defeat'
@@ -1123,4 +1281,3 @@ class CombatSequence():
             print(text.victory_text)
             return 'victory'
         input('Press enter to continue...')
-#Objects

@@ -114,6 +114,34 @@ class Game:
         self.maze.draw_rooms()
         self.set_state('travel')
 
+    def load_game(self):
+        rooms = []
+        rooms.append(Room(0))
+        for i in range(1, text.maze_size):
+            if i % 2 == 0:
+                room = MonsterRoom((i + 1), text.Monsters.keys())
+                room.generateMonster()
+                room.generateDrops()
+                rooms.append(room)
+            elif i % 2 == 1:
+                rooms.append(TreasureRoom(i + 1))
+            else:
+                rooms.append(Room(i + 1))
+        rooms.append(BossRoom(text.maze_size + 1))
+        for room in rooms:
+            if type(room) == TreasureRoom or type(room) == MonsterRoom or type(room) == BossRoom:
+                if room.id in self.storage.get_data(text.player_save_file).get("Claimed_rooms", []):
+                    room.claimed = True
+        self.maze = Maze(rooms, rooms[0])
+        self.maze.generate_maze()
+        self.load_player()
+        print()
+        print(text.loaded_text)
+        print(text.printing_text_large_spacing)
+        input()
+        self.maze.draw_rooms()
+        self.set_state('travel')
+
     def pretty_print(self, text):
         i = 0
         while i < len(text):
@@ -146,11 +174,26 @@ class Game:
             elif choice == 'quit' or choice == '2':
                 chosen = True
                 self.quit_game()
+            elif choice == 'load' or choice == '3':
+                chosen = True
+                if os.path.exists(text.player_save_file):
+                    self.load_game()
+                else:
+                    print(text.load_error_text)
+                    self.start_game()
 
     def create_player(self):
         stats = Stats(text.default_health, text.default_attack)
         self.player = Player(stats)
         self.player.create_new_storage(self.storage, text.player_save_file)
+    
+    def load_player(self):
+        atk = self.storage.get_data(text.player_save_file).get("Player_attack", text.default_attack)
+        current_health = self.storage.get_data(text.player_save_file).get("Player_current_health", text.default_health)
+        max_health = self.storage.get_data(text.player_save_file).get("Player_max_health", text.default_health)
+        stats = Stats(max_health, atk)
+        self.player = Player(stats)
+        self.player.load_from_storage(self.storage, text.player_save_file)
 
     def get_player(self):
         return self.player
@@ -158,9 +201,23 @@ class Game:
     def load_data(self):
         pass
 
-    def save_all_data(self, file):    
+    def save_all_data(self, file): 
+        claimed_rooms = []
+        for room in self.maze.rooms:
+            if isinstance(room, TreasureRoom) and room.claimed:
+                if room.id not in self.storage.get_data(file).get("Claimed_rooms", []):
+                    claimed_rooms.append(room.id)
+            elif isinstance(room, MonsterRoom) and room.claimed:
+                if room.id not in self.storage.get_data(file).get("Claimed_rooms", []):
+                    claimed_rooms.append(room.id)
+            elif isinstance(room, BossRoom) and room.claimed:
+                if room.id not in self.storage.get_data(file).get("Claimed_rooms", []):
+                    claimed_rooms.append(room.id)
         self.storage.save_data(file, {
-            "Room_id": self.maze.current_room.id
+            "Room_id": self.maze.current_room.id,
+        })
+        self.storage.save_data(file, {
+            "Claimed_rooms": claimed_rooms
         })
         self.player.save_to_storage(self.storage, file)
 

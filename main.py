@@ -65,8 +65,8 @@ if __name__ == "__main__":
                             else:
                                 command = choices[int(command) - 1].strip().lower()
                         if command in ['quit', 'exit']:
-                            game.save_all_data(text.player_save_file)
-
+                            default_data = game.storage.get_data(text.default_save_file)
+                            game.storage.save_data(text.player_save_file, default_data)
                             print(text.thanks_message)
                             sys.exit()
                         elif command in ['retry', 'start', 'play']:
@@ -128,7 +128,7 @@ if __name__ == "__main__":
                         if item_name == 'health potion':
                             magnitude = game.get_player().stats.max_health * 0.2
                             game.get_player().health_potion(magnitude)
-                            game.get_player.recalculate_stats()
+                            game.get_player().recalculate_stats()
                             print('\n' + text.equip_spacing_text)
                             print(f"Your max health has increased by {magnitude}!")
                             print(text.equip_spacing_text + '\n')
@@ -301,8 +301,8 @@ if __name__ == "__main__":
                     else:
                         command = choices[int(command) - 1].strip().lower()
                 if command in ['quit', 'exit']:
-                    game.save_all_data(text.player_save_file)
-
+                    default_data = game.storage.get_data(text.default_save_file)
+                    game.storage.save_data(text.player_save_file, default_data)
                     print(text.thanks_message)
                     sys.exit()
                 elif command in ['retry', 'start', 'play']:

@@ -28,6 +28,8 @@ treasure_room_text = 'You have entered a room containing treasure. Do you want t
 claimed_treasure_room_text = 'You have entered a room containing an empty chest. Do you want to travel to another room?'
 monster_room_text = 'You have encountered a monster. Do you want to fight this monster?'
 claimed_monster_room_text = 'You have entered a room containing an empty monster lair. Do you want to travel to another room?'
+loaded_text = "Game loaded successfully!"
+load_error_text = "No saved game found. Starting a new game instead."
 
 input_prompt = "Please select a choice: "
 input_error_prompt = "Please input again."

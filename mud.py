@@ -990,8 +990,13 @@ class CombatSequence():
             self.saved_m = 0
 
             print(f"\n===== Turn {self.current_turn} =====\n")
-            print(f"Player Health: {self._fmt(self.player.stats.current_health)} | "
-                f"{'Boss' if is_boss else 'Monster'} Health: {self._fmt(self.monster.stats.current_health)}")
+            print(
+                f"Player Health:  {self.health_bar(self.player.stats.current_health, self.player.stats.max_health)}\n"
+                f"Monster Health: {self.health_bar(self.monster.stats.current_health, self.monster.stats.max_health)}"
+            )
+
+
+
             print(f"Player Elixir: {p_elixir} | {'Boss' if is_boss else 'Monster'} Elixir: {m_elixir}\n")
 
             # Choose abilities
@@ -1091,7 +1096,13 @@ class CombatSequence():
             m_elixir += steal_amount
             if steal_amount > 0:
                 print(f"{text.boss_monster} steals {steal_amount} elixir from you!")
-            print(f"Player Health: {self._fmt(self.player.stats.current_health)} | Boss Health: {self._fmt(self.monster.stats.current_health)}")
+            print(
+                f"Player Health: {self.health_bar(self.player.stats.current_health, self.player.stats.max_health)}\n"
+                f"Boss Health:   {self.health_bar(self.monster.stats.current_health, self.monster.stats.max_health)}"
+            )
+
+
+
             print(f"Player Elixir: {p_elixir} | Boss Elixir: {m_elixir}\n")
 
             # ===== Player & Boss choose abilities =====
@@ -1293,3 +1304,10 @@ class CombatSequence():
             print(text.victory_text)
             return 'victory'
         input('Press enter to continue...')
+
+    def health_bar(self, current, maximum, bar_length=20):
+        """Return a string representing a health bar."""
+        ratio = current / maximum
+        filled_length = int(bar_length * ratio)
+        bar = '█' * filled_length + '-' * (bar_length - filled_length)
+        return f"[{bar}] {current}/{maximum}"

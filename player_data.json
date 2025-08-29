@@ -17,5 +17,7 @@
       "healing potion": 0
     }
   },
-  "Claimed_rooms": []
+  "Claimed_rooms": [
+    10
+  ]
 }

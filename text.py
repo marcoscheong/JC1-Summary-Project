@@ -22,7 +22,7 @@ maze_size = 36
 player_save_file = "player_data.json"
 
 welcome_prompt = "Welcome to Labyrinth Ascension, a Single Player MUD game. Do you want to start or load your game?"
-start_choices = ['start', 'quit', 'load']
+start_choices = ['start', 'quit', 'load', 'how to play']
 started_text = 'In this world of labyrinths, you have arrived in the top-most level.\nBegin your descent to the lowest level to uncover the long lost secrets of this labyrinth. \n\nTo select an option, type out the number of your choice or the full command.\nE.g. "1", or "Go down".\nWhen you want to continue to the next scene, press the "Enter" key to procede.\n'
 treasure_room_text = 'You have entered a room containing treasure. Do you want to open the chest or travel to another room?'
 claimed_treasure_room_text = 'You have entered a room containing an empty chest. Do you want to travel to another room?'
@@ -30,6 +30,30 @@ monster_room_text = 'You have encountered a monster. Do you want to fight this m
 claimed_monster_room_text = 'You have entered a room containing an empty monster lair. Do you want to travel to another room?'
 loaded_text = "Game loaded successfully!"
 load_error_text = "No saved game found. Starting a new game instead."
+how_to_play_text = (
+    "How to Play: Labyrinth Ascension\n\n"
+    "1. Objective\n"
+    "   - Explore the labyrinth\n"
+    "   - Defeat monsters\n"
+    "   - Collect loot\n\n"
+    "2. Navigation\n"
+    "   - Move with commands like 'go up', 'go down', etc.\n"
+    "   - You may also use numbers to select your command\n"
+    "   - Rooms may contain treasure, monsters, or be empty\n"
+    "   - Goal: reach the bottom-right corner to face the final boss\n\n"
+    "3. Combat (turn-based)\n"
+    "   Commands:\n"
+    "     attack : deal 1 damage per elixir spent\n"
+    "     shield : block 1 damage per elixir spent\n"
+    "     heal   : restore 1 health per elixir spent\n"
+    "     save   : keep 1 elixir for the next round\n\n"
+    "   Mechanics:\n"
+    "   - Elixir is your combat resource\n"
+    "   - Each magnitude costs 1 elixir\n"
+    "     (e.g. attack x2 = 2 attacks = 2 elixir)\n"
+    "   - Magnitude = number of times a move is applied\n"
+)
+
 
 input_prompt = "Please select a choice: "
 input_error_prompt = "Please input again."

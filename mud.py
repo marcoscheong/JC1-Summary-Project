@@ -211,6 +211,10 @@ class Game:
                 else:
                     print(text.load_error_text)
                     self.start_game()
+            elif choice == 'how to play' or choice == '4':
+                print(text.how_to_play_text)
+                print()
+                input("Press Enter to continue...")
 
     def create_player(self):
         """

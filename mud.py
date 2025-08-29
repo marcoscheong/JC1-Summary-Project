@@ -1108,7 +1108,7 @@ class CombatSequence():
             m_total_shield = sum(a.shield for a in monster_seq)
             m_total_heal = sum(a.heal for a in monster_seq)
             m_total_save = sum(a.saved_elixir for a in monster_seq)
-
+            
             # ===== Compute damage with shared fate =====
             shared_fate_percent = 0.25
             dmg_to_monster = max(0, (p_total_attack - m_total_shield) * (self.player.stats.attack / 10))
@@ -1143,6 +1143,10 @@ class CombatSequence():
             if m_total_attack > 0: boss_abilities.append(f"Attack {m_total_attack}")
             if m_total_shield > 0: boss_abilities.append(f"Shield {m_total_shield}")
             if m_total_heal > 0: boss_abilities.append(f"Heal {m_total_heal}")
+
+            os.system('clear')
+
+            print(text.combat_spacing_text)
 
             print(f"Player Abilities: {' | '.join(player_abilities)}")
             print(f"Boss Abilities: {' | '.join(boss_abilities)}\n")

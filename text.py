@@ -144,20 +144,20 @@ Monsters = {
 
 Weapon = {
     "Fist": 1,
-    "Wooden Sword": 3,
-    "Beginner Daggers": 4,
-    "Beginner Wand": 5,
-    "Stone Sword": 8,
-    "Intermediate Daggers": 10,
-    "Intermediate Wand": 12,
-    "Iron Sword": 15,
-    "Steel Sword": 20,
-    "Knucklebuster": 25,
-    "Silver Sword": 35,
-    "Diamond Sword": 50,
-    "Mythril Sword": 75,
-    "Draconic Blade": 100,
-    "Excalibur": 150
+    "Wooden Sword": 7,
+    "Beginner Daggers": 7,
+    "Beginner Wand": 7,
+    "Stone Sword": 10,
+    "Intermediate Daggers": 15,
+    "Intermediate Wand": 15,
+    "Iron Sword": 20,
+    "Steel Sword": 35,
+    "Knucklebuster": 55,
+    "Silver Sword": 70,
+    "Diamond Sword": 100,
+    "Mythril Sword": 125,
+    "Draconic Blade": 150,
+    "Excalibur": 250
 }
 
 Consumable = {
@@ -166,12 +166,13 @@ Consumable = {
   "healing potion": 10
 }
 Armour = {
-    "Leather Boots": 3, "Leather Leggings": 4, "Leather Helmet": 3, "Leather Chestplate": 6,
-    "Chainmail Boots": 6, "Chainmail Leggings": 8, "Chainmail Helmet": 6, "Chainmail Chestplate": 12,
-    "Iron Boots": 10, "Iron Leggings": 12, "Iron Helmet": 10, "Iron Chestplate": 20,
-    "Diamond Boots": 20, "Diamond Leggings": 25, "Diamond Helmet": 20, "Diamond Chestplate": 35,
-    "Draconic Boots": 50, "Draconic Leggings": 60, "Draconic Helmet": 50, "Draconic Chestplate": 75
+    "Leather Boots": 8, "Leather Leggings": 10, "Leather Helmet": 8, "Leather Chestplate": 16,
+    "Chainmail Boots": 16, "Chainmail Leggings": 20, "Chainmail Helmet": 16, "Chainmail Chestplate": 32,
+    "Iron Boots": 32, "Iron Leggings": 40, "Iron Helmet": 32, "Iron Chestplate": 64,
+    "Diamond Boots": 64, "Diamond Leggings": 80, "Diamond Helmet": 64, "Diamond Chestplate": 128,
+    "Draconic Boots": 128, "Draconic Leggings": 160, "Draconic Helmet": 128, "Draconic Chestplate": 256
 }
+
 
 
 ArmourSlots = {

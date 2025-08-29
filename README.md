@@ -11,120 +11,168 @@
 # This is a J1 Summary Project
 - It is a simple MUD game about ...
 
-```mermaid
 classDiagram
+    %% --- Core Game Controller ---
+    class Game {
+        -game_state: string
+        -maze: Maze
+        -storage: Storage
+        -player: Player
+        +set_state(state)
+        +get_state()
+        +get_maze()
+        +get_options()
+        +prompt_player_choice(choices)
+        +start_game()
+        +load_game()
+        +pretty_print(text)
+        +quit_game()
+        +welcome()
+        +create_player()
+        +load_player()
+        +get_player()
+        +save_all_data(file)
+    }
 
-    Maze : - rooms
-    Maze : - starting_room
-    Maze : - current_room
+    class Storage {
+        +get_data(file) dict
+        +save_data(file, obj) None
+    }
 
-    Room : - id
-    Room : - connects
-    Room <|-- TreasureRoom
-    Room <|-- MonsterRoom
-
-    TreasureRoom : - currency
-    MonsterRoom : - monster
-    MonsterRoom : - availableMonsters
-
-    Character : - stats
-    Character : - ability
-    Character : - inventory
-    Character <|-- Player
-    Character <|-- Monster
-    Player : - inventory
-    Monster : - stats
-
-    Stats : - maxHealth
-    Stats : - attack
-    Stats : - currentHealth
-
-    Game : - game_state
-    Game : - maze
-    Game : - storage
-    Game : - player
-
-    Choice : - topic
-    Choice : - details
-
-    CombatSequence : - base_elixer
-    CombatSequence : - current_turn
-    CombatSequence : - max_turns
-    CombatSequence : - player
-    CombatSequence : - monster
-    CombatSequence : - saved_p
-    CombatSequence : - saved_m
-
-    Inventory : - storage
-    Inventory : - file
-
-    Ability : - name
-    Ability : - attack
-    Ability : - shield
-    Ability : - heal
-    Ability : - elixer
-    Ability : - saved_elixer
-    Ability : - magnitude
+    %% --- World and Maze Structure ---
+    class Maze {
+        -rooms: list~Room~
+        -starting_room: Room
+        -current_room: Room
+        +generate_maze()
+        +get_room_key(room)
+        +draw_rooms()
+        +room_options()
+        +travel_to(direction)
+    }
 
     class Room {
-        + connection()
-    }
-    class Maze {
-        + generate_maze()
-        + get_room_key()
-        + draw_rooms()
-        + room_options()
-        + travel_to()
-    }
-    class Game {
-        + get_data()
-        + get_options()
-        + get_actions()
-        + execute()
-        + set_state()
-        + get_state()
-        + get_maze()
-        + prompt_player_choice()
-        + start_game()
-        + quit_game()
-        + welcome()
-        + create_player()
-        + get_player()
-        + load_data()
-        + store_currentdata()
+        -id: int
+        -connects: dict
+        +connection(room, direction)
     }
     class TreasureRoom {
-        + generateItems()
+        -claimed: bool
+        -drop: Drop
+        +get_drops()
+        +get_type()
     }
     class MonsterRoom {
-        + generateMonster()
+        -claimed: bool
+        -monster: string
+        -availableMonsters: list
+        -drop: Drop
+        +generateMonster()
+        +generateDrops()
     }
-    class Stats {
-        + takeDamage()
-        + heal()
+    class BossRoom {
+        -claimed: bool
+        -boss_monster_name: string
+        -boss_monster: Monster
     }
-    class CombatSequence {
-        + startSequence()
-        + player_ability_sequence()
-        + monster_ability_sequence()
-        + endSequence()
 
-    }
-    class Storage {
-        + get_data()
-        + save_data()
+    %% --- Characters and Stats ---
+    class Character {
+        -stats: Stats
+        -abilities: list~Ability~
     }
 
     class Player {
-        + load_from_storage()
-        + save_to_storage()
+        -inventory: Inventory
+        -base_atk: int
+        -base_health: int
+        +create_new_storage(storage, file)
+        +load_from_storage(storage, file)
+        +save_to_storage(storage, file)
+        +show_inventory()
+        +recalculate_stats()
     }
 
+    class Monster {
+        %% Inherits attributes from Character
+    }
+
+    class Stats {
+        -max_health: int
+        -attack: int
+        -current_health: int
+        +take_damage(damage)
+        +heal(healAmount)
+        +return_stats() string
+    }
+
+    %% --- Items and Inventory ---
     class Inventory {
-        + add_item()
-        + use_item()
-        + remove_item()
-        + save_inventory()
-        + show_inventory()
-
+        -storage: Storage
+        -file: string
+        -items: dict
+        +add_item(item_name, quantity)
+        +use_item(item_name, quantity)
+        +equip_weapon(weapon_name)
+        +equip_armour(slot, armour_name)
+        +remove_item(item_name)
+        +save_inventory()
+        +return_inventory() string
     }
+
+    class Drop {
+        -weaponWeights: list
+        -armourWeights: list
+        -name: string
+        -type: string
+        -drop: string
+        +generateDrop()
+        +generateArmourDrop()
+        +generateWeaponDrop()
+    }
+
+    %% --- Combat System ---
+    class CombatSequence {
+        -base_elixir: int
+        -current_turn: int
+        -max_turns: int
+        -player: Player
+        -monster: Monster
+        -saved_p: int
+        -saved_m: int
+        +start_sequence(is_boss)
+        +start_boss_sequence()
+        +player_ability_sequence(elixir)
+        +monster_ability_sequence(elixir)
+        +returnMonsterDrop()
+        +end_sequence()
+    }
+
+    class Ability {
+        -name: string
+        -attack: int
+        -shield: int
+        -heal: int
+        -elixir: int
+        -saved_elixir: int
+        -magnitude: int
+    }
+
+    %% --- Relationships ---
+    Game "1" o-- "1" Maze
+    Game "1" o-- "1" Player
+    Game "1" o-- "1" Storage
+    Maze "1" *-- "many" Room
+    Room <|-- TreasureRoom
+    Room <|-- MonsterRoom
+    Room <|-- BossRoom
+    TreasureRoom "1" -- "1" Drop
+    MonsterRoom "1" -- "1" Drop
+
+    Character <|-- Player
+    Character <|-- Monster
+    Character "1" o-- "1" Stats
+    Player "1" o-- "1" Inventory
+
+    CombatSequence "1" -- "1" Player
+    CombatSequence "1" -- "1" Monster

@@ -891,6 +891,8 @@ class CombatSequence():
             if m_total_heal > 0: monster_abilities.append(f"Heal {m_total_heal}")
             if m_total_save > 0: monster_abilities.append(f"Save {m_total_save}")
 
+            os.system('clear')
+
             print(text.combat_spacing_text)
             print(f"Player Abilities: {' | '.join(player_abilities)}")
             print(f"Monster Abilities: {' | '.join(monster_abilities)}\n")

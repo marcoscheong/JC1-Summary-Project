@@ -555,16 +555,18 @@ class MonsterRoom(Room):
 
     def generateMonster(self):
         """
-        Returns the randomly generated monster in the room.
-        Temporary function until better system is found.
+        Returns a randomly generated monster in the room.
+        Higher player progress (self.id) increases the chance of stronger monsters.
         """
         if len(self.availableMonsters) == 0:
             return 'list of monsters is empty'
-        if id == 0:
-            i = 0
-        else:
-            i = random.randint(0, self.id//2)
-        self.monster = list(self.availableMonsters)[i]
+
+        # Determine max index based on player progress
+        max_index = min(len(self.availableMonsters) - 1, self.id // 2)
+
+        # Randomly pick a monster from the range [0, max_index]
+        self.monster = list(self.availableMonsters)[random.randint(0, max_index)]
+
     
     def generateDrops(self):
         """

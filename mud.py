@@ -201,16 +201,16 @@ class Game:
             elif choice == 'start' or choice == '1':
                 chosen = True
                 self.start_game()
-            elif choice == 'quit' or choice == '2':
-                chosen = True
-                self.quit_game()
-            elif choice == 'load' or choice == '3':
+            elif choice == 'load' or choice == '2':
                 chosen = True
                 if os.path.exists(text.player_save_file):
                     self.load_game()
                 else:
                     print(text.load_error_text)
                     self.start_game()
+            elif choice == 'quit' or choice == '3':
+                chosen = True
+                self.quit_game()
             elif choice == 'how to play' or choice == '4':
                 print(text.how_to_play_text)
                 print()
@@ -459,7 +459,7 @@ class Maze:
                 if isinstance(connected_room, BossRoom):
                     options.append('enter boss chamber')
                 else:
-                    options.append('go ' + direction)
+                    options.append('Go ' + direction)
         return options
 
     def travel_to(self, direction):

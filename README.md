@@ -28,6 +28,7 @@ classDiagram
     MonsterRoom : - availableMonsters
 
     Character : - stats
+    Character : - ability
     Character : - inventory
     Character <|-- Player
     Character <|-- Monster
@@ -40,18 +41,37 @@ classDiagram
 
     Game : - game_state
     Game : - maze
+    Game : - storage
+    Game : - player
 
     Choice : - topic
     Choice : - details
 
-    CombatSequence : - points
+    CombatSequence : - base_elixer
+    CombatSequence : - current_turn
+    CombatSequence : - max_turns
+    CombatSequence : - player
+    CombatSequence : - monster
+    CombatSequence : - saved_p
+    CombatSequence : - saved_m
+
+    Inventory : - storage
+    Inventory : - file
+
+    Ability : - name
+    Ability : - attack
+    Ability : - shield
+    Ability : - heal
+    Ability : - elixer
+    Ability : - saved_elixer
+    Ability : - magnitude
 
     class Room {
-        + Connection()
-        + connections()
+        + connection()
     }
     class Maze {
         + generate_maze()
+        + get_room_key()
         + draw_rooms()
         + room_options()
         + travel_to()
@@ -61,6 +81,17 @@ classDiagram
         + get_options()
         + get_actions()
         + execute()
+        + set_state()
+        + get_state()
+        + get_maze()
+        + prompt_player_choice()
+        + start_game()
+        + quit_game()
+        + welcome()
+        + create_player()
+        + get_player()
+        + load_data()
+        + store_currentdata()
     }
     class TreasureRoom {
         + generateItems()
@@ -74,9 +105,26 @@ classDiagram
     }
     class CombatSequence {
         + startSequence()
+        + player_ability_sequence()
+        + monster_ability_sequence()
         + endSequence()
+
     }
     class Storage {
         + get_data()
         + save_data()
+    }
+
+    class Player {
+        + load_from_storage()
+        + save_to_storage()
+    }
+
+    class Inventory {
+        + add_item()
+        + use_item()
+        + remove_item()
+        + save_inventory()
+        + show_inventory()
+
     }

@@ -3,6 +3,7 @@ import os
 import random
 import select
 import sys
+import tempfile
 import text
 import time
 
@@ -169,12 +170,15 @@ class Game:
         """
         i = 0
         while i < len(text):
-            if select.select([sys.stdin], [], [], 0)[0]:
-                sys.stdin.readline()
-
-                sys.stdout.write(text[i:]) 
-                # sys.stdout.flush()
-                
+            try:
+                if select.select([sys.stdin], [], [], 0)[0]:
+                    sys.stdin.readline()
+                    sys.stdout.write(text[i:]) 
+                    # sys.stdout.flush()
+                    break
+            except:
+                # Fallback for non-tty/Windows environments
+                sys.stdout.write(text[i:])
                 break
             sys.stdout.write(text[i])
             sys.stdout.flush()
@@ -291,7 +295,7 @@ class Storage:
             
     def save_data(self, file, obj) -> None:
         """
-        saves data to json file
+        saves data to json file using atomic write
         """
         data = self.get_data(file)
 
@@ -302,9 +306,18 @@ class Storage:
         else:
             data = obj 
 
-        # save back
-        with open(file, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2)
+        # Atomic save: write to temp file, then rename
+        dir_name = os.path.dirname(file) or '.'
+        fd, temp_path = tempfile.mkstemp(dir=dir_name, prefix='.tmp_', suffix='.json')
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
+            os.replace(temp_path, file)
+        except:
+            os.close(fd)
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            raise
 
 #List of things we need to do
 #Create maze
@@ -550,7 +563,8 @@ class MonsterRoom(Room):
         """
         super().__init__(id)
         self.monster = ''
-        self.availableMonsters = availableMonsters
+        # Convert dict_keys view to list to avoid issues
+        self.availableMonsters = list(availableMonsters)
         self.claimed = False
 
     def generateMonster(self):
@@ -743,7 +757,16 @@ class Inventory:
             self.items = data.get("Items", {})
         except FileNotFoundError:
             self.items = {}
-            self.save_inventory()  # create file if not exists
+        
+        # Ensure canonical shape always exists
+        if "Weapon" not in self.items:
+            self.items["Weapon"] = None
+        if "Armour" not in self.items:
+            self.items["Armour"] = {}
+        if "Consumables" not in self.items:
+            self.items["Consumables"] = {}
+        
+        self.save_inventory()  # create file if not exists
 
     def add_item(self, item_name: str, quantity: int = 1):
         """Add an item and save to JSON."""
@@ -1307,7 +1330,10 @@ class CombatSequence():
 
     def health_bar(self, current, maximum, bar_length=20):
         """Return a string representing a health bar."""
-        ratio = current / maximum
+        if maximum <= 0:
+            ratio = 0
+        else:
+            ratio = current / maximum
         filled_length = int(bar_length * ratio)
         bar = '█' * filled_length + '-' * (bar_length - filled_length)
         return f"[{bar}] {current}/{maximum}"

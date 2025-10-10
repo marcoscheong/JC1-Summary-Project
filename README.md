@@ -9,7 +9,29 @@
 - Vince
 
 # This is a J1 Summary Project
-- It is a simple MUD game about ...
+- It is a simple MUD game about exploring a campus dungeon, fighting monsters, and collecting loot.
+
+## How to Run
+
+```bash
+python main.py
+```
+
+## Project Structure
+
+```
+campusmud/           # Main game package
+  __init__.py        # Package initialization
+  storage.py         # JSON file persistence
+  models.py          # Data classes (Stats, Drop, Ability)
+  entities.py        # Character, Player, Monster, Inventory
+  maze.py            # Room classes and Maze generation
+  combat.py          # Turn-based combat system
+  game.py            # Game controller and main loop
+  text.py            # All game text and ASCII art
+  config.py          # Configuration constants
+main.py              # Entry point (thin launcher)
+```
 
 ```mermaid
 classDiagram

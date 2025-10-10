@@ -3,8 +3,8 @@ import os
 import select
 import sys
 import tempfile
-import text
 import time
+from campusmud import text
 from campusmud.storage import Storage
 from campusmud.models import Stats
 from campusmud.entities import Player, Monster

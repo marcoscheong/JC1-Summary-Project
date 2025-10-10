@@ -1,6 +1,6 @@
 # Data models - pure data classes for game stats and drops
 import random
-import text
+from campusmud import text
 
 
 class Stats:

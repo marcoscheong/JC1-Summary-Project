@@ -1,5 +1,5 @@
 # Entities - Character, Player, Monster, and Inventory classes
-import text
+from campusmud import text
 from campusmud.storage import Storage
 from campusmud.models import Stats, Ability
 

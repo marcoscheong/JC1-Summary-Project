@@ -1,6 +1,6 @@
 # Maze module - Room classes and Maze generation/navigation
 import random
-import text
+from campusmud import text
 from campusmud.models import Stats, Drop
 from campusmud.entities import Monster
 

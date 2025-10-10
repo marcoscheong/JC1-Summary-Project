@@ -1,7 +1,7 @@
 # Combat module - CombatSequence and combat helper functions
 import os
 import random
-import text
+from campusmud import text
 from campusmud.models import Ability
 
 

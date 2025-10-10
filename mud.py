@@ -7,6 +7,7 @@ import tempfile
 import text
 import time
 from campusmud.storage import Storage
+from campusmud.models import Stats, Drop, Ability
 
 
 class Game:
@@ -838,106 +839,6 @@ class Monster(Character):
     def __init__(self, stats):
         super().__init__(stats)
 
-class Drop():
-    """
-    class constructor for drop (loot dropped from monsters)
-    """
-    def __init__(self, weaponWeights, armourWeights):
-        self.weaponWeights = weaponWeights
-        self.armourWeights = armourWeights
-        self.name = ''
-    
-    def generateDrop(self):
-        """
-        randomly sets own type of loot
-        """
-        r = random.randint(0, 2)
-        if r == 0:
-            drop = random.choices(list(text.Weapon.keys()), self.weaponWeights)[0]
-            self.type = 'weapon'
-        elif r == 1:
-            drop = random.choices(list(text.Armour.keys()), self.armourWeights)[0]
-            self.type = 'armour'
-        elif r == 2:
-            number = random.randint(1, 3)
-            if number == 1:
-                drop = 'attack potion'
-                self.type = 'consumable'
-            elif number == 2:
-                drop = 'health potion'
-                self.type = 'consumable'
-            else:
-                drop = 'healing potion'
-                self.type = 'consumable'
-        self.drop = drop
-        return self
-    
-    def generateArmourDrop(self):
-        """
-        sets own type to armor
-        """
-        drop = random.choices(list(text.Armour.keys()), self.armourWeights)[0]
-        self.type = 'armour'
-        self.drop = drop
-        return self
-        
-    
-    def generateWeaponDrop(self):
-        """
-        sets own type to weapon
-        """
-        drop = random.choices(list(text.Weapon.keys()), self.weaponWeights)[0]
-        self.type = 'weapon'
-        self.drop = drop
-        return self
-
-class Stats:
-    """
-    class constructor for character stats (enemy and player)    
-    """
-    def __init__(self, max_health: int, attack: int):
-        self.max_health = max_health
-        self.attack = attack
-        self.current_health = max_health
-    
-    def take_damage(self, damage):
-        """
-        reduces health stat of character
-        """
-        if (self.current_health - damage) <= 0:
-            self.current_health = 0
-            return 'died'
-        else:
-            self.current_health -= damage
-    
-    def heal(self, healAmount):
-        """
-        increases current health of character
-        """
-        self.current_health = min(self.current_health + healAmount, self.max_health)
-    
-    def return_stats(self):
-        """Return a formatted string of the player's stats."""
-        lines = ["╔═ Player Stats ═════════════╗"]
-        lines.append(f"  Health      » {self.current_health}/{self.max_health}")
-        lines.append(f"  Attack      » {self.attack}")
-        # You can add defense if calculated elsewhere
-        lines.append("╚═══════════════════════════╝")
-        return "\n".join(lines)
-
-
-class Ability():
-    """
-    class constructor for player actions     
-    """
-    def __init__(self, name):
-        self.name = name
-        self.attack = 0
-        self.shield = 0
-        self.heal = 0
-        self.elixir = 1
-        self.saved_elixir = 0
-        self.magnitude =  0
 
 class CombatSequence():
     """

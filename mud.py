@@ -6,6 +6,7 @@ import sys
 import tempfile
 import text
 import time
+from campusmud.storage import Storage
 
 
 class Game:
@@ -274,50 +275,6 @@ class Game:
         })
         self.player.save_to_storage(self.storage, file)
 
-class Storage:
-    """
-    class constructor for storage (json)
-    """
-    def __init__(self):
-        pass
-        
-    def get_data(self, file) -> dict:
-        """
-        getter method for data from json file
-        """
-        if not os.path.exists(file):
-            return {}
-        with open(file, 'r', encoding='utf-8') as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                return {}
-            
-    def save_data(self, file, obj) -> None:
-        """
-        saves data to json file using atomic write
-        """
-        data = self.get_data(file)
-
-        if isinstance(data, dict) and isinstance(obj, dict):
-            data.update(obj)
-        elif isinstance(data, list) and isinstance(obj, list):
-            data.extend(obj)
-        else:
-            data = obj 
-
-        # Atomic save: write to temp file, then rename
-        dir_name = os.path.dirname(file) or '.'
-        fd, temp_path = tempfile.mkstemp(dir=dir_name, prefix='.tmp_', suffix='.json')
-        try:
-            with os.fdopen(fd, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2)
-            os.replace(temp_path, file)
-        except:
-            os.close(fd)
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-            raise
 
 #List of things we need to do
 #Create maze

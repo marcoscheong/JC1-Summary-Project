@@ -297,6 +297,32 @@ class Game:
         else:
             print("You have defeated the boss. Do you want to travel to another room?")
 
+    def use_item(self, item_name):
+        """
+        Handle the logic for using an item.
+        """
+        if item_name == 'health potion':
+            magnitude = self.get_player().stats.max_health * 0.2
+            self.get_player().health_potion(magnitude)
+            self.get_player().recalculate_stats()
+            print('\n' + text.equip_spacing_text)
+            print(f"Your max health has increased by {magnitude}!")
+            print(text.equip_spacing_text + '\n')
+        elif item_name == 'healing potion':
+            magnitude = self.get_player().stats.max_health * 0.2
+            self.get_player().stats.heal(magnitude)
+            print('\n' + text.equip_spacing_text)
+            print(f'You have healed {magnitude} health!')
+            print(text.equip_spacing_text + '\n')
+        elif item_name == 'attack potion':
+            magnitude = self.get_player().stats.attack * 0.2
+            self.get_player().atk_potion(magnitude)
+            self.get_player().recalculate_stats()
+            print('\n' + text.equip_spacing_text)
+            print(f'Your attack has increased by {magnitude}!')
+            print(text.equip_spacing_text + '\n')
+        input("\nPress enter to continue...")
+
 def run():
     """
     Main game loop - handles user input and game state.
@@ -350,28 +376,7 @@ def run():
                         input("\nPress enter to continue...")
 
                     elif game.get_player().inventory.use_item(item_name):
-                        if item_name == 'health potion':
-                            magnitude = game.get_player().stats.max_health * 0.2
-                            game.get_player().health_potion(magnitude)
-                            game.get_player().recalculate_stats()
-                            print('\n' + text.equip_spacing_text)
-                            print(f"Your max health has increased by {magnitude}!")
-                            print(text.equip_spacing_text + '\n')
-                        elif item_name == 'healing potion':
-                            magnitude = game.get_player().stats.max_health * 0.2
-                            game.get_player().stats.heal(magnitude)
-                            print('\n' + text.equip_spacing_text)
-                            print(f'You have healed {magnitude} health!')
-                            print(text.equip_spacing_text + '\n')
-                        elif item_name == 'attack potion':
-                            magnitude = game.get_player().stats.attack * 0.2
-                            game.get_player().atk_potion(magnitude)
-                            game.get_player().recalculate_stats()
-                            print('\n' + text.equip_spacing_text)
-                            print(f'Your attack has increased by {magnitude}!')
-                            print(text.equip_spacing_text + '\n')
-
-                        input("\nPress enter to continue...")
+                        game.use_item(item_name)
                         game.set_state('travel')
 
                     else:
@@ -435,27 +440,7 @@ def run():
                     elif command in ['consume item', 'consume']:
                         if drop in text.Consumable:
                             if game.get_player().inventory.use_item(drop):
-                                if drop == 'health potion':
-                                    magnitude = game.get_player().stats.max_health * 0.2
-                                    game.get_player().health_potion(magnitude)
-                                    game.get_player().recalculate_stats()
-                                    print('\n' + text.equip_spacing_text)
-                                    print(f"Your max health has increased by {magnitude}!")
-                                    print(text.equip_spacing_text + '\n')
-                                elif drop == 'healing potion':
-                                    magnitude = game.get_player().stats.max_health * 0.2
-                                    game.get_player().stats.heal(magnitude)
-                                    print('\n' + text.equip_spacing_text)
-                                    print(f'You have healed {magnitude} health!')
-                                    print(text.equip_spacing_text + '\n')
-                                elif drop == 'attack potion':
-                                    magnitude = game.get_player().stats.attack * 0.2
-                                    game.get_player().atk_potion(magnitude)
-                                    game.get_player().recalculate_stats()
-                                    print('\n' + text.equip_spacing_text)
-                                    print(f'Your attack has increased by {magnitude}!')
-                                    print(text.equip_spacing_text + '\n')
-                                input('\nPress enter to continue...')
+                                game.use_item(drop)
                             else:
                                 print(text.input_error_prompt)
                         else:

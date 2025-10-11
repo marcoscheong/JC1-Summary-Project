@@ -246,6 +246,56 @@ class Game:
         })
         self.player.save_to_storage(self.storage, file)
 
+    def display_room_info(self):
+        """
+        Display information about the current room based on its type.
+        """
+        current_room = self.maze.current_room
+        if isinstance(current_room, TreasureRoom):
+            print(text.treasure_room_text if not current_room.claimed else text.claimed_treasure_room_text)
+        elif isinstance(current_room, MonsterRoom):
+            print(text.monster_room_text if not current_room.claimed else text.claimed_monster_room_text)
+        elif isinstance(current_room, BossRoom):
+            if not current_room.claimed:
+                command = prompt_player_choice(
+                    preamble=f"You have encountered the boss: {text.boss_monster}. Do you want to fight this boss?",
+                    choices=self.get_options()
+                )
+                if command in ['quit', 'exit']:
+                    self.save_all_data(text.player_save_file)
+                    print(text.thanks_message)
+                    sys.exit()
+                elif command in ['go back', 'back']:
+                    self.set_state('travel')
+                elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
+                    os.system('clear')
+                    monster = current_room.boss_monster
+                    input(f"You have encountered {text.boss_monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
+                    os.system('clear')
+                    combat_seq = CombatSequence(self.get_player(), monster, 3, 20)
+                    result = combat_seq.start_boss_sequence()
+                    if result == 'victory':
+                        current_room.claimed = True
+                        self.save_all_data(text.player_save_file)
+                        print('You have defeated the boss! Congratulations on completing the game!')
+                        input('Press enter to exit.')
+                        sys.exit()
+                    elif result == 'defeat':
+                        command = prompt_player_choice(
+                            preamble="You have been defeated by the boss. Game over.",
+                            choices=['Retry', 'Quit']
+                        )
+                        if command in ['quit', 'exit']:
+                            default_data = self.storage.get_data(text.default_save_file)
+                            self.storage.save_data(text.player_save_file, default_data)
+                            print(text.thanks_message)
+                            sys.exit()
+                        elif command in ['retry', 'start', 'play']:
+                            self.__init__()
+                            self.set_state('start')
+                            self.welcome()
+        else:
+            print("You have defeated the boss. Do you want to travel to another room?")
 
 def run():
     """
@@ -262,57 +312,7 @@ def run():
             game.maze.draw_rooms()
 
         # Display room-specific text
-        if type(game.maze.current_room) == TreasureRoom:
-            if game.maze.current_room.claimed == False:
-                print(text.treasure_room_text)
-            else:
-                print(text.claimed_treasure_room_text)
-        elif type(game.maze.current_room) == MonsterRoom:
-            if game.maze.current_room.claimed == False:
-                print(text.monster_room_text)
-            else:
-                print(text.claimed_monster_room_text)
-        elif type(game.maze.current_room) == BossRoom:
-            if game.maze.current_room.claimed == False:
-                command = prompt_player_choice(
-                    preamble=f"You have encountered the boss: {text.boss_monster}. Do you want to fight this boss?",
-                    choices=game.get_options()
-                )
-                if command in ['quit', 'exit']:
-                    game.save_all_data(text.player_save_file)
-                    print(text.thanks_message)
-                    sys.exit()
-                elif command in ['go back', 'back']:
-                    game.set_state('travel')
-                elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
-                    os.system('clear')
-                    monster = game.maze.current_room.boss_monster
-                    input(f"You have encountered {text.boss_monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
-                    os.system('clear')
-                    combat_seq = CombatSequence(game.get_player(), monster, 3, 20)
-                    result = combat_seq.start_boss_sequence()
-                    if result == 'victory':
-                        game.maze.current_room.claimed = True
-                        game.save_all_data(text.player_save_file)
-                        print('You have defeated the boss! Congratulations on completing the game!')
-                        input('Press enter to exit.')
-                        sys.exit()
-                    elif result == 'defeat':
-                        command = prompt_player_choice(
-                            preamble="You have been defeated by the boss. Game over.",
-                            choices=['Retry', 'Quit'],
-                        )
-                        if command in ['quit', 'exit']:
-                            default_data = game.storage.get_data(text.default_save_file)
-                            game.storage.save_data(text.player_save_file, default_data)
-                            print(text.thanks_message)
-                            sys.exit()
-                        elif command in ['retry', 'start', 'play']:
-                            game = Game()
-                            game.set_state('start')
-                            game.welcome()
-            else:
-                print("You have defeated the boss. Do you want to travel to another room?")
+        game.display_room_info()
         
         # Main command processing
         command = prompt_player_choice(

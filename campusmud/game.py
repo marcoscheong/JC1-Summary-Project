@@ -10,6 +10,7 @@ from campusmud.models import Stats
 from campusmud.entities import Player, Monster
 from campusmud.maze import Room, TreasureRoom, MonsterRoom, BossRoom, Maze
 from campusmud.combat import CombatSequence
+from campusmud.text import prompt_player_choice
 
 
 class Game:
@@ -79,38 +80,6 @@ class Game:
             choices = ['Fight boss', 'Go back']
             return choices
         
-    def prompt_player_choice(self, choices):
-        """
-        Display choices and get input from player.
-        """
-        for i, opt in enumerate(choices):
-            print(f'{(i + 1)}. {opt}')
-            time.sleep(0.05)
-        
-        while True:
-            _input = input(text.input_prompt).strip()
-            
-            if not _input:
-                print("Please enter a valid choice.")
-                for i, opt in enumerate(choices):
-                    print(f'{(i + 1)}. {opt}')
-                    time.sleep(0.05)
-                continue
-            
-            if _input in choices:
-                return _input
-            
-            if _input.isdigit():
-                choice_num = int(_input)
-                if 1 <= choice_num <= len(choices):
-                    return choices[choice_num - 1]
-            
-            print("Please type out a valid option or number.")
-            for i, opt in enumerate(choices):
-                print(f'{(i + 1)}. {opt}')
-                time.sleep(0.05)
-            continue
-
     def start_game(self):
         """
         Start a new game with a fresh maze and player.
@@ -202,7 +171,7 @@ class Game:
         choices = self.get_options()
         chosen = False
         while chosen == False:
-            choice = self.prompt_player_choice(choices)
+            choice = prompt_player_choice(choices)
             if choice not in choices and choice not in ['1', '2', '3']:
                 print('Please type out a valid option')
             elif choice == 'start' or choice == '1':
@@ -305,14 +274,10 @@ def run():
                 print(text.claimed_monster_room_text)
         elif type(game.maze.current_room) == BossRoom:
             if game.maze.current_room.claimed == False:
-                print(f"You have encountered the boss: {text.boss_monster}. Do you want to fight this boss?")
-                choices = game.get_options()
-                command = game.prompt_player_choice(choices).strip().lower()
-                if command.isdigit():
-                    if int(command) > len(choices):
-                        print(text.input_error_prompt)
-                    else:
-                        command = choices[int(command) - 1].strip().lower()
+                command = prompt_player_choice(
+                    preamble=f"You have encountered the boss: {text.boss_monster}. Do you want to fight this boss?",
+                    choices=game.get_options()
+                )
                 if command in ['quit', 'exit']:
                     game.save_all_data(text.player_save_file)
                     print(text.thanks_message)
@@ -333,15 +298,10 @@ def run():
                         input('Press enter to exit.')
                         sys.exit()
                     elif result == 'defeat':
-                        print("You have been defeated by the boss. Game over.")
-                        print('Do you want to retry?')
-                        choices = ['Retry', 'Quit']
-                        command = game.prompt_player_choice(choices).strip().lower()
-                        if command.isdigit():
-                            if int(command) > len(choices):
-                                print(text.input_error_prompt)
-                            else:
-                                command = choices[int(command) - 1].strip().lower()
+                        command = prompt_player_choice(
+                            preamble="You have been defeated by the boss. Game over.",
+                            choices=['Retry', 'Quit'],
+                        )
                         if command in ['quit', 'exit']:
                             default_data = game.storage.get_data(text.default_save_file)
                             game.storage.save_data(text.player_save_file, default_data)
@@ -355,46 +315,29 @@ def run():
                 print("You have defeated the boss. Do you want to travel to another room?")
         
         # Main command processing
-        choices = game.get_options()
-        command = game.prompt_player_choice(choices).strip().lower()
-        if command.isdigit():
-            if int(command) > len(choices):
-                print('length of choices: ' + str(len(choices)))
-                print(text.input_error_prompt)
-            else:
-                command = choices[int(command) - 1].strip().lower()
-        
+        command = prompt_player_choice(
+            preamble="What would you like to do?",
+            choices=game.get_options()
+        )
         if command in ['quit', 'exit']:
             game.save_all_data(text.player_save_file)
             print(text.thanks_message)
-            sys.exit()
-        
+            sys.exit()        
         elif command == 'enter boss chamber' or command.startswith('enter boss'):
             game.get_maze().travel_to('boss chamber')
-            game.get_maze().draw_rooms()
-        
+            game.get_maze().draw_rooms()        
         elif command in ['view inventory', 'inventory', 'inv']:
             game.set_state('inventory')
-
             while game.get_state() == 'inventory':
                 os.system('clear')
                 print(game.get_player().inventory.return_inventory())
-                print(game.get_player().stats.return_stats())
-
                 choices = game.get_options()
-                command = game.prompt_player_choice(choices).strip().lower()
-
-                if command.isdigit():
-                    if int(command) > len(choices):
-                        print(text.input_error_prompt)
-                        input("\nPress enter to continue...")
-                        continue
-                    else:
-                        command = choices[int(command) - 1].strip().lower()
-
+                command = prompt_player_choice(
+                    preamble=game.get_player().stats.return_stats(),
+                    choices=game.get_options()
+                )
                 if command in ['go back', 'back']:
                     game.set_state('travel')
-
                 elif command in ['use item']:
                     item_name = input('Please enter the name of the item you want to use: ').strip().lower()
 
@@ -458,13 +401,10 @@ def run():
                         print(f"You have found {drop} (slot: {slot}, def: {text.Armour[drop]})!")
                     print(text.equip_spacing_text + '\n')
 
-                    choices = game.get_options()
-                    command = game.prompt_player_choice(choices).strip().lower()
-                    if command.isdigit():
-                        if int(command) > len(choices):
-                            print(text.input_error_prompt)
-                        else:
-                            command = choices[int(command) - 1].strip().lower()
+                    command = prompt_player_choice(
+                        preamble=text.equip_spacing_text,
+                        choices=game.get_options()
+                    )
                     if command in ['go back', 'back']:
                         game.set_state('travel')
                     elif command in ['equip item', 'equip']:
@@ -485,15 +425,11 @@ def run():
                     game.get_player().inventory.add_item(drop)
                     print('\n' + text.equip_spacing_text)
                     print('You have obtained a ' + drop + '!')
-                    print(text.equip_spacing_text + '\n')
                     game.set_state('consumable chest')
-                    choices = game.get_options()
-                    command = game.prompt_player_choice(choices).strip().lower()
-                    if command.isdigit():
-                        if int(command) > len(choices):
-                            print(text.input_error_prompt)
-                        else:
-                            command = choices[int(command) - 1].strip().lower()
+                    command = prompt_player_choice(
+                        preamble=text.equip_spacing_text,
+                        choices=game.get_options()
+                    )
                     if command in ['go back', 'back']:
                         game.set_state('travel')
                     elif command in ['consume item', 'consume']:
@@ -547,13 +483,10 @@ def run():
                     slot = text.ArmourSlots[drop.drop]
                     print(f"You have obtained {drop.drop} (slot: {slot}, def: {text.Armour[drop.drop]})!")
                 game.set_state('item chest')
-                choices = game.get_options()
-                command = game.prompt_player_choice(choices).strip().lower()
-                if command.isdigit():
-                    if int(command) > len(choices):
-                        print(text.input_error_prompt)
-                    else:
-                        command = choices[int(command) - 1].strip().lower()
+                command = prompt_player_choice(
+                    preamble="What would you like to do?",
+                    choices=game.get_options()
+                )
                 if command in ['go back', 'back']:
                     game.set_state('travel')
                 elif command in ['equip item', 'equip']:
@@ -574,15 +507,13 @@ def run():
                 game.get_player().recalculate_stats()
                 game.save_all_data(text.player_save_file)
             elif result == 'defeat':
-                print("You have been defeated by the monster. Game over.")
-                print('Do you want to retry?')
-                choices = ['Retry', 'Quit']
-                command = game.prompt_player_choice(choices).strip().lower()
-                if command.isdigit():
-                    if int(command) > len(choices):
-                        print(text.input_error_prompt)
-                    else:
-                        command = choices[int(command) - 1].strip().lower()
+                command = prompt_player_choice(
+                    preamble=(
+                        "You have been defeated by the monster. Game over.\n"
+                        "Do you want to retry?"
+                    ),
+                    choices=['Retry', 'Quit']
+                )
                 if command in ['quit', 'exit']:
                     default_data = game.storage.get_data(text.default_save_file)
                     game.storage.save_data(text.player_save_file, default_data)

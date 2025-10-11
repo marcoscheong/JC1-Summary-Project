@@ -1,3 +1,5 @@
+import time
+
 Game_name = "Labyrinth Ascension"
 Game_info = [
     "Explore Maze Rooms: Each maze run is procedurally generated (different layouts each time).",
@@ -233,3 +235,22 @@ printing_text_large_spacing = '\n══════════════ • 
 combat_spacing_text = '────── ◈ ──────'
 ability_spacing_text = '··─··'
 equip_spacing_text = "───┈───"
+
+def prompt_player_choice(
+        preamble: str,
+        choices: list[str],
+        prompt: str = "Enter your choice: "
+) -> str:
+    """Display choices and prompt the player for a valid choice.
+
+    Returns the valid choice selected by the player.
+    """
+    print(preamble)
+    for i, option in enumerate(choices):
+        print(f'{(i + 1)}. {option}')
+        time.sleep(0.05)
+    choice = input(prompt).strip()
+    while not choice.isdecimal() or not (1 <= int(choice) <= len(choices)):
+        print("Please enter a valid choice.")
+        choice = input(prompt).strip()
+    return choices[int(choice) - 1]

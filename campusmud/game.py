@@ -15,23 +15,10 @@ class Game:
     """
     def __init__(self):
         self.game_over = False
-        self.game_state = ''
         self.maze = None
         self.storage = Storage()
         self.player = None
 
-    def set_state(self, state):
-        """
-        Set the current game state.
-        """
-        self.game_state = state
-    
-    def get_state(self):
-        """
-        Get the current game state.
-        """
-        return self.game_state
-    
     def get_maze(self):
         """
         Get the maze object.
@@ -55,12 +42,6 @@ class Game:
             choices.append('View inventory')
             choices.append('Exit to menu')
             return choices
-        elif game_state == 'item chest':
-            return ['Equip item', 'Go back']
-        elif game_state == 'consumable chest':
-            return ['Consume item', 'Go back']
-        elif game_state == 'inventory':
-            return ['Use item', 'Go back']
         elif game_state == 'boss':
             return ['Fight boss', 'Go back']
     
@@ -91,7 +72,6 @@ class Game:
         text.pretty_print(text.started_text)
         input()
         self.maze.draw_rooms()
-        self.set_state('travel')
 
     def load_game(self):
         """Load a saved game from file."""
@@ -120,7 +100,6 @@ class Game:
         print(text.printing_text_large_spacing)
         input()
         self.maze.draw_rooms()
-        self.set_state('travel')
 
     def create_player(self):
         """Initialize a new player."""
@@ -185,12 +164,12 @@ class Game:
         """Handle the logic for fighting the boss."""
         command = prompt_player_choice(
             preamble=f"You have encountered the boss: {text.boss_monster}. Do you want to fight this boss?",
-            choices=self.get_options('boss')
+            choices=['Fight boss', 'Go back']
         )
         if command in ['exit']:
             self.exit_game()
         elif command in ['go back', 'back']:
-            self.set_state('travel')
+            pass
         elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
             text.clear_screen()
             monster = current_room.boss_monster
@@ -206,7 +185,7 @@ class Game:
             elif result == 'defeat':
                 command = prompt_player_choice(
                     preamble="You have been defeated by the boss. Game over.",
-                    choices=self.get_options('boss')
+                    choices=['Fight boss', 'Go back']
                 )
                 if command in ['exit', 'retry', 'start', 'play']:
                     self.exit_game()
@@ -260,7 +239,6 @@ class Game:
                 )
                 if self.get_player().inventory.use_item(item_name):
                     self.use_item(item_name)
-                    self.set_state('travel')
                 else:
                     print(text.input_error_prompt)
                     input("\nPress enter to continue...")
@@ -282,7 +260,6 @@ class Game:
             treasure_type = self.get_maze().current_room.get_type()
             drop = self.get_maze().current_room.get_drops()
             if treasure_type == 'weapon' or treasure_type == 'armour':
-                self.set_state('item chest')
                 print('\n' + text.equip_spacing_text)
                 if treasure_type == 'weapon':
                     print(f"You have found a {drop} (atk: {text.Weapon[drop]})!")
@@ -293,10 +270,10 @@ class Game:
 
                 command = prompt_player_choice(
                     preamble=text.equip_spacing_text,
-                    choices=self.get_options('item chest')
+                    choices=['Equip item', 'Go back']
                 )
                 if command in ['go back', 'back']:
-                    self.set_state('travel')
+                    pass
                 elif command in ['equip item', 'equip']:
                     if treasure_type == 'weapon':
                         self.get_player().inventory.equip_weapon(drop)
@@ -307,21 +284,18 @@ class Game:
                         self.get_player().inventory.equip_armour(slot, drop)
                         self.get_player().recalculate_stats()
                         input('\nPress enter to continue...')
-
                     self.get_maze().current_room.drop = None
                     self.get_maze().current_room.claimed = True
-                    self.set_state('travel')
             elif treasure_type == 'consumable':
                 self.get_player().inventory.add_item(drop)
                 print('\n' + text.equip_spacing_text)
                 print('You have obtained a ' + drop + '!')
-                self.set_state('consumable chest')
                 command = prompt_player_choice(
                     preamble=text.equip_spacing_text,
-                    choices=self.get_options('consumable chest')
+                    choices=['Consume item', 'Go back']
                 )
                 if command in ['go back', 'back']:
-                    self.set_state('travel')
+                    pass
                 elif command in ['consume item', 'consume']:
                     if drop in text.Consumable:
                         if self.get_player().inventory.use_item(drop):
@@ -332,7 +306,6 @@ class Game:
                         print(text.input_error_prompt)
                 self.get_maze().current_room.drop = None
                 self.get_maze().current_room.claimed = True
-                self.set_state('travel')
 
     def command_fight(self):
         """Handle the fight command."""
@@ -353,13 +326,12 @@ class Game:
             elif drop.type == 'armour':
                 slot = text.ArmourSlots[drop.drop]
                 print(f"You have obtained {drop.drop} (slot: {slot}, def: {text.Armour[drop.drop]})!")
-            self.set_state('item chest')
             command = prompt_player_choice(
                 preamble="What would you like to do?",
-                choices=self.get_options('item chest')
+                choices=['Equip item', 'Go back']
             )
             if command in ['go back', 'back']:
-                self.set_state('travel')
+                pass
             elif command in ['equip item', 'equip']:
                 if drop.drop in text.Weapon:
                     self.get_player().inventory.equip_weapon(drop.drop)
@@ -372,9 +344,6 @@ class Game:
                     self.get_player().recalculate_stats()
                     self.save_all_data(text.player_save_file)
                     input('\nPress enter to continue...')
-                self.set_state('travel')
-
-            self.set_state('travel')
             self.get_player().recalculate_stats()
             self.save_all_data(text.player_save_file)
         elif result == 'defeat':
@@ -413,9 +382,7 @@ class Game:
 
         while not self.game_over:
             text.clear_screen()
-
-            if self.game_state == 'travel':
-                self.maze.draw_rooms()
+            self.maze.draw_rooms()
 
             # Display room-specific text
             self.display_room_info()
@@ -423,6 +390,6 @@ class Game:
             # Main command processing
             command = prompt_player_choice(
                 preamble="What would you like to do?",
-                choices=self.get_options(self.game_state, self.maze.current_room)
+                choices=self.maze.current_room.room_options()
             )
             self.handle_command(command)

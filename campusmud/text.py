@@ -1,5 +1,8 @@
+import select
+import sys
 import os
 import time
+
 
 Game_name = "Labyrinth Ascension"
 Game_info = [
@@ -241,6 +244,27 @@ equip_spacing_text = "───┈───"
 def clear_screen() -> None:
     """Clear the console screen."""
     os.system('cls' if os.name == 'nt' else 'clear')
+
+
+def pretty_print(text_content):
+    """
+    Print text character-by-character for aesthetics.
+    """
+    i = 0
+    while i < len(text_content):
+        try:
+            if select.select([sys.stdin], [], [], 0)[0]:
+                sys.stdin.readline()
+                sys.stdout.write(text_content[i:]) 
+                break
+        except:
+            # Fallback for non-tty/Windows environments
+            sys.stdout.write(text_content[i:])
+            break
+        sys.stdout.write(text_content[i])
+        sys.stdout.flush()
+        time.sleep(0.032)
+        i += 1
 
 
 def prompt_player_choice(

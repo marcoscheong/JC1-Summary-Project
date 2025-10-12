@@ -1,9 +1,7 @@
 # Game module - Game controller and main loop (UI + game logic combined)
+
 import os
-import select
 import sys
-import tempfile
-import time
 
 from campusmud import text
 from campusmud.storage import Storage
@@ -102,7 +100,7 @@ class Game:
         self.maze.generate_maze()
         self.create_player()
         print(text.printing_text_large_spacing)
-        self.pretty_print(text.started_text)
+        text.pretty_print(text.started_text)
         input()
         self.maze.draw_rooms()
         self.set_state('travel')

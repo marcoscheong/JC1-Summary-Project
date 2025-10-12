@@ -540,4 +540,4 @@ class Game:
             elif command.startswith('fight'):
                 self.command_fight()
             else:
-                print(text.input_error_prompt)
+                raise ValueError("Invalid command")

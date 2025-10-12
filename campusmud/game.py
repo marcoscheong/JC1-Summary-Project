@@ -17,6 +17,7 @@ class Game:
     Main game controller with state management.
     """
     def __init__(self):
+        self.game_over = False
         self.game_state = ''
         self.maze = None
         self.storage = Storage()
@@ -44,9 +45,7 @@ class Game:
         """
         Get available options based on the provided game state and room type.
         """
-        if game_state == 'start':
-            return ['start', 'load', 'quit', 'how to play']
-        elif game_state == 'travel':
+        if game_state == 'travel':
             choices = room.room_options() if room else []
             if isinstance(room, MonsterRoom) and room.claimed == False:
                 choices.insert(0, 'Fight monster')
@@ -57,7 +56,7 @@ class Game:
             elif isinstance(room, Room):
                 pass
             choices.append('View inventory')
-            choices.append('Quit')
+            choices.append('Exit to menu')
             return choices
         elif game_state == 'item chest':
             return ['Equip item', 'Go back']
@@ -67,11 +66,14 @@ class Game:
             return ['Use item', 'Go back']
         elif game_state == 'boss':
             return ['Fight boss', 'Go back']
+    
+    def exit_game(self):
+        """Set the game to exit state."""
+        self.reset_game_data()
+        self.game_over = True
 
     def start_game(self):
-        """
-        Start a new game with a fresh maze and player.
-        """
+        """Start a new game with a fresh maze and player."""
         rooms = []
         rooms.append(Room(0))
         for i in range(1, text.maze_size):
@@ -95,9 +97,7 @@ class Game:
         self.set_state('travel')
 
     def load_game(self):
-        """
-        Load a saved game from file.
-        """
+        """Load a saved game from file."""
         rooms = []
         rooms.append(Room(0))
         for i in range(1, text.maze_size):
@@ -125,53 +125,14 @@ class Game:
         self.maze.draw_rooms()
         self.set_state('travel')
 
-    def quit_game(self):
-        """
-        Exit the game.
-        """
-        sys.exit()
-
-    def welcome(self):
-        """
-        Display welcome menu when user first starts the program.
-        """
-        print(text.welcome_prompt)
-        choices = self.get_options('start')
-        chosen = False
-        while chosen == False:
-            choice = prompt_player_choice(choices)
-            if choice not in choices and choice not in ['1', '2', '3']:
-                print('Please type out a valid option')
-            elif choice == 'start' or choice == '1':
-                chosen = True
-                self.start_game()
-            elif choice == 'load' or choice == '2':
-                chosen = True
-                if os.path.exists(text.player_save_file):
-                    self.load_game()
-                else:
-                    print(text.load_error_text)
-                    self.start_game()
-            elif choice == 'quit' or choice == '3':
-                chosen = True
-                self.quit_game()
-            elif choice == 'how to play' or choice == '4':
-                print(text.how_to_play_text)
-                print()
-                input("Press Enter to continue...")
-
     def create_player(self):
-        """
-        Initialize a new player.
-        """
+        """Initialize a new player."""
         stats = Stats(text.default_health, text.default_attack)
         self.player = Player(stats)
         self.player.create_new_storage(self.storage, text.player_save_file)
     
     def load_player(self):
-        """
-        Load player from saved file.
-        """
+        """Load player from saved file."""
         atk = self.storage.get_data(text.player_save_file).get("Player_attack", text.default_attack)
         current_health = self.storage.get_data(text.player_save_file).get("Player_current_health", text.default_health)
         max_health = self.storage.get_data(text.player_save_file).get("Player_max_health", text.default_health)
@@ -180,21 +141,20 @@ class Game:
         self.player.load_from_storage(self.storage, text.player_save_file)
 
     def get_player(self):
-        """
-        Get the player object.
-        """
+        """Get the player object."""
         return self.player
 
     def load_data(self):
-        """
-        Loader method for data.
-        """
+        """Loader method for data."""
         pass
 
+    def reset_game_data(self):
+        """Reset game data to default values."""
+        default_data = self.storage.get_data(text.default_save_file)
+        self.storage.save_data(text.player_save_file, default_data)
+
     def save_all_data(self, file): 
-        """
-        Save all current game variables to file.
-        """
+        """Save all current game variables to file."""
         claimed_rooms = []
         for room in self.maze.rooms:
             if isinstance(room, TreasureRoom) and room.claimed:
@@ -215,32 +175,23 @@ class Game:
         self.player.save_to_storage(self.storage, file)
 
     def display_room_info(self):
-        """
-        Display information about the current room based on its type.
-        """
+        """Display information about the current room based on its type."""
         current_room = self.maze.current_room
         if isinstance(current_room, TreasureRoom):
             print(text.treasure_room_text if not current_room.claimed else text.claimed_treasure_room_text)
         elif isinstance(current_room, MonsterRoom):
             print(text.monster_room_text if not current_room.claimed else text.claimed_monster_room_text)
         elif isinstance(current_room, BossRoom):
-            if not current_room.claimed:
-                self.fight_boss(current_room)
-        else:
-            print("You have defeated the boss. Do you want to travel to another room?")
+            pass
 
     def fight_boss(self, current_room):
-        """
-        Handle the logic for fighting the boss.
-        """
+        """Handle the logic for fighting the boss."""
         command = prompt_player_choice(
             preamble=f"You have encountered the boss: {text.boss_monster}. Do you want to fight this boss?",
             choices=self.get_options('boss')
         )
-        if command in ['quit', 'exit']:
-            self.save_all_data(text.player_save_file)
-            print(text.thanks_message)
-            sys.exit()
+        if command in ['exit']:
+            self.exit_game()
         elif command in ['go back', 'back']:
             self.set_state('travel')
         elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
@@ -255,26 +206,16 @@ class Game:
                 self.save_all_data(text.player_save_file)
                 print('You have defeated the boss! Congratulations on completing the game!')
                 input('Press enter to exit.')
-                sys.exit()
             elif result == 'defeat':
                 command = prompt_player_choice(
                     preamble="You have been defeated by the boss. Game over.",
                     choices=self.get_options('boss')
                 )
-                if command in ['quit', 'exit']:
-                    default_data = self.storage.get_data(text.default_save_file)
-                    self.storage.save_data(text.player_save_file, default_data)
-                    print(text.thanks_message)
-                    sys.exit()
-                elif command in ['retry', 'start', 'play']:
-                    self.__init__()
-                    self.set_state('start')
-                    self.welcome()
+                if command in ['exit', 'retry', 'start', 'play']:
+                    self.exit_game()
 
     def use_item(self, item_name):
-        """
-        Handle the logic for using an item.
-        """
+        """Handle the logic for using an item."""
         if item_name == 'health potion':
             magnitude = self.get_player().stats.max_health * 0.2
             self.get_player().health_potion(magnitude)
@@ -297,25 +238,17 @@ class Game:
             print(text.equip_spacing_text + '\n')
         input("\nPress enter to continue...")
 
-    def command_quit(self):
-        """
-        Handle the quit/exit command.
-        """
-        self.save_all_data(text.player_save_file)
-        print(text.thanks_message)
-        sys.exit()
+    def command_exit(self):
+        """Handle the quit/exit command."""
+        self.exit_game()
 
     def command_enter_boss_chamber(self):
-        """
-        Handle the enter boss chamber command.
-        """
+        """Handle the enter boss chamber command."""
         self.get_maze().travel_to('boss chamber')
         self.get_maze().draw_rooms()
 
     def command_view_inventory(self):
-        """
-        Handle the view inventory command.
-        """
+        """Handle the view inventory command."""
         self.set_state('inventory')
         while self.get_state() == 'inventory':
             text.clear_screen()
@@ -347,9 +280,7 @@ class Game:
                     input("\nPress enter to continue...")
 
     def command_go_direction(self, direction):
-        """
-        Handle the go direction command.
-        """
+        """Handle the go direction command."""
         if direction in text.directions:
             self.maze.travel_to(direction)
             self.save_all_data(text.player_save_file)
@@ -357,9 +288,7 @@ class Game:
             print(text.input_error_prompt)
 
     def command_open_chest(self):
-        """
-        Handle the open chest command.
-        """
+        """Handle the open chest command."""
         if type(self.get_maze().current_room) == TreasureRoom:
             # Open chest logic
             treasure_type = self.get_maze().current_room.get_type()
@@ -418,9 +347,7 @@ class Game:
                 self.set_state('travel')
 
     def command_fight(self):
-        """
-        Handle the fight command.
-        """
+        """Handle the fight command."""
         text.clear_screen()
         monster = Monster(Stats(text.Monsters[self.maze.current_room.monster][0], text.Monsters[self.maze.current_room.monster][1]))
         input(f"You have encountered a {self.maze.current_room.monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
@@ -468,24 +395,35 @@ class Game:
                     "You have been defeated by the monster. Game over.\n"
                     "Do you want to retry?"
                 ),
-                choices=['Retry', 'Quit']
+                choices=['Retry', 'Exit to Menu']
             )
             if command in ['quit', 'exit']:
-                default_data = self.storage.get_data(text.default_save_file)
-                self.storage.save_data(text.player_save_file, default_data)
-                print(text.thanks_message)
-                sys.exit()
+                self.command_exit()
             elif command in ['retry', 'start', 'play']:
-                self.__init__()
-                self.set_state('start')
-                self.welcome()
+                self.game_over = True
+
+    def handle_command(self, command: str) -> None:
+        """Handle a single command based on user input."""
+        if command in ['quit', 'exit']:
+            self.command_exit()
+        elif command == 'enter boss chamber' or command.startswith('enter boss'):
+            self.command_enter_boss_chamber()
+        elif command in ['view inventory', 'inventory', 'inv']:
+            self.command_view_inventory()
+        elif command.startswith('go'):
+            direction = command.split()[1]
+            self.command_go_direction(direction)
+        elif command.startswith('open'):
+            self.command_open_chest()
+        elif command.startswith('fight'):
+            self.command_fight()
+        else:
+            raise ValueError("Invalid command")
 
     def run(self):
         """Main game loop - handles user input and game state."""
-        self.set_state('start')
-        self.welcome()
 
-        while True:
+        while not self.game_over:
             text.clear_screen()
 
             if self.game_state == 'travel':
@@ -499,18 +437,4 @@ class Game:
                 preamble="What would you like to do?",
                 choices=self.get_options(self.game_state, self.maze.current_room)
             )
-            if command in ['quit', 'exit']:
-                self.command_quit()
-            elif command == 'enter boss chamber' or command.startswith('enter boss'):
-                self.command_enter_boss_chamber()
-            elif command in ['view inventory', 'inventory', 'inv']:
-                self.command_view_inventory()
-            elif command.startswith('go'):
-                direction = command.split()[1]
-                self.command_go_direction(direction)
-            elif command.startswith('open'):
-                self.command_open_chest()
-            elif command.startswith('fight'):
-                self.command_fight()
-            else:
-                raise ValueError("Invalid command")
+            self.handle_command(command)

@@ -1,3 +1,4 @@
+import os
 import time
 
 Game_name = "Labyrinth Ascension"
@@ -235,6 +236,12 @@ printing_text_large_spacing = '\n══════════════ • 
 combat_spacing_text = '────── ◈ ──────'
 ability_spacing_text = '··─··'
 equip_spacing_text = "───┈───"
+
+
+def clear_screen() -> None:
+    """Clear the console screen."""
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 
 def prompt_player_choice(
         preamble: str,

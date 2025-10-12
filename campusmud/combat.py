@@ -1,6 +1,7 @@
 # Combat module - CombatSequence and combat helper functions
-import os
+
 import random
+
 from campusmud import text
 from campusmud.models import Ability
 
@@ -87,7 +88,7 @@ class CombatSequence:
             if m_total_heal > 0: monster_abilities.append(f"Heal {m_total_heal}")
             if m_total_save > 0: monster_abilities.append(f"Save {m_total_save}")
 
-            os.system('clear')
+            text.clear_screen()
 
             print(text.combat_spacing_text)
             print(f"Player Abilities: {' | '.join(player_abilities)}")
@@ -104,7 +105,7 @@ class CombatSequence:
             # Next turn
             input("\nPress Enter to continue...")
             self.current_turn += 1
-            os.system('clear')
+            text.clear_screen()
 
             if self.player.stats.current_health <= 0:
                 print(text.defeat_text)
@@ -200,7 +201,7 @@ class CombatSequence:
             if m_total_shield > 0: boss_abilities.append(f"Shield {m_total_shield}")
             if m_total_heal > 0: boss_abilities.append(f"Heal {m_total_heal}")
 
-            os.system('clear')
+            text.clear_screen()
 
             print(text.combat_spacing_text)
             print(f"Player Abilities: {' | '.join(player_abilities)}")
@@ -216,7 +217,7 @@ class CombatSequence:
             # Next turn
             input("\nPress Enter to continue...")
             self.current_turn += 1
-            os.system('clear')
+            text.clear_screen()
 
             # Mid-turn death check
             if self.player.stats.current_health <= 0:

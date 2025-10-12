@@ -4,6 +4,7 @@ import select
 import sys
 import tempfile
 import time
+
 from campusmud import text
 from campusmud.storage import Storage
 from campusmud.models import Stats
@@ -268,10 +269,10 @@ class Game:
                 elif command in ['go back', 'back']:
                     self.set_state('travel')
                 elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
-                    os.system('clear')
+                    text.clear_screen()
                     monster = current_room.boss_monster
                     input(f"You have encountered {text.boss_monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
-                    os.system('clear')
+                    text.clear_screen()
                     combat_seq = CombatSequence(self.get_player(), monster, 3, 20)
                     result = combat_seq.start_boss_sequence()
                     if result == 'victory':
@@ -332,7 +333,7 @@ def run():
     game.welcome()
 
     while True:
-        os.system('clear')
+        text.clear_screen()
 
         if game.game_state == 'travel':
             game.maze.draw_rooms()
@@ -355,7 +356,7 @@ def run():
         elif command in ['view inventory', 'inventory', 'inv']:
             game.set_state('inventory')
             while game.get_state() == 'inventory':
-                os.system('clear')
+                text.clear_screen()
                 print(game.get_player().inventory.return_inventory())
                 choices = game.get_options()
                 command = prompt_player_choice(
@@ -450,10 +451,10 @@ def run():
                     game.set_state('travel')
             
         elif command.startswith('fight'):
-            os.system('clear')
+            text.clear_screen()
             monster = Monster(Stats(text.Monsters[game.maze.current_room.monster][0], text.Monsters[game.maze.current_room.monster][1]))
             input(f"You have encountered a {game.maze.current_room.monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
-            os.system('clear')
+            text.clear_screen()
             combat_seq = CombatSequence(game.get_player(), monster, 3, 20)
             result = combat_seq.start_sequence()
             if result == 'victory':

@@ -28,7 +28,6 @@ maze_size = 36
 player_save_file = "player_data.json"
 
 welcome_prompt = "Welcome to Labyrinth Ascension, a Single Player MUD game. Do you want to start or load your game?"
-start_choices = ['start', 'load', 'quit', 'how to play']
 started_text = 'In this world of labyrinths, you have arrived in the top-most level.\nBegin your descent to the lowest level to uncover the long lost secrets of this labyrinth. \n\nTo select an option, type out the number of your choice or the full command.\nE.g. "1", or "Go down".\nWhen you want to continue to the next scene, press the "Enter" key to procede.\n'
 treasure_room_text = 'You have entered a room containing treasure. Do you want to open the chest or travel to another room?'
 claimed_treasure_room_text = 'You have entered a room containing an empty chest. Do you want to travel to another room?'

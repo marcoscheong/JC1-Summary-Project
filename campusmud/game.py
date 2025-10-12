@@ -40,45 +40,34 @@ class Game:
         """
         return self.maze
  
-    def get_options(self):
+    def get_options(self, game_state: str, room=None) -> list[str]:
         """
-        Get available options based on current game state and room type.
+        Get available options based on the provided game state and room type.
         """
-        if self.game_state == 'start':
-            choices = text.start_choices
-            return choices
-        elif self.game_state == 'travel':
-            choices = self.maze.room_options()
-            if type(self.maze.current_room) == MonsterRoom:
-                if self.maze.current_room.claimed == False:
-                    choices.insert(0, 'Fight monster')
-            elif type(self.maze.current_room) == TreasureRoom:
-                if self.maze.current_room.claimed == False:
-                    choices.insert(0, 'Open chest')
-            elif type(self.maze.current_room) == BossRoom:
-                if self.maze.current_room.claimed == False:
-                    choices.insert(0, 'Challenge the boss')
-            elif type(self.maze.current_room) == Room:
-                return choices
+        if game_state == 'start':
+            return ['start', 'load', 'quit', 'how to play']
+        elif game_state == 'travel':
+            choices = room.room_options() if room else []
+            if isinstance(room, MonsterRoom) and room.claimed == False:
+                choices.insert(0, 'Fight monster')
+            elif isinstance(room, TreasureRoom) and room.claimed == False:
+                choices.insert(0, 'Open chest')
+            elif isinstance(room, BossRoom) and room.claimed == False:
+                choices.insert(0, 'Challenge the boss')
+            elif isinstance(room, Room):
+                pass
             choices.append('View inventory')
             choices.append('Quit')
+            return choices
+        elif game_state == 'item chest':
+            return ['Equip item', 'Go back']
+        elif game_state == 'consumable chest':
+            return ['Consume item', 'Go back']
+        elif game_state == 'inventory':
+            return ['Use item', 'Go back']
+        elif game_state == 'boss':
+            return ['Fight boss', 'Go back']
 
-            return choices
-        elif self.game_state == 'item chest':
-            choices = ['Equip item', 'Go back']
-            return choices
-        elif self.game_state == 'consumable chest':
-            choices = ['Consume item', 'Go back']
-            return choices
-        elif self.game_state == 'inventory':
-            choices = []
-            choices.append('Use item')
-            choices.append('Go back')
-            return choices
-        elif self.game_state == 'boss':
-            choices = ['Fight boss', 'Go back']
-            return choices
-        
     def start_game(self):
         """
         Start a new game with a fresh maze and player.
@@ -136,26 +125,6 @@ class Game:
         self.maze.draw_rooms()
         self.set_state('travel')
 
-    def pretty_print(self, text_content):
-        """
-        Print text character-by-character for aesthetics.
-        """
-        i = 0
-        while i < len(text_content):
-            try:
-                if select.select([sys.stdin], [], [], 0)[0]:
-                    sys.stdin.readline()
-                    sys.stdout.write(text_content[i:]) 
-                    break
-            except:
-                # Fallback for non-tty/Windows environments
-                sys.stdout.write(text_content[i:])
-                break
-            sys.stdout.write(text_content[i])
-            sys.stdout.flush()
-            time.sleep(0.032)
-            i += 1
-
     def quit_game(self):
         """
         Exit the game.
@@ -167,7 +136,7 @@ class Game:
         Display welcome menu when user first starts the program.
         """
         print(text.welcome_prompt)
-        choices = self.get_options()
+        choices = self.get_options('start')
         chosen = False
         while chosen == False:
             choice = prompt_player_choice(choices)
@@ -266,7 +235,7 @@ class Game:
         """
         command = prompt_player_choice(
             preamble=f"You have encountered the boss: {text.boss_monster}. Do you want to fight this boss?",
-            choices=self.get_options()
+            choices=self.get_options('boss')
         )
         if command in ['quit', 'exit']:
             self.save_all_data(text.player_save_file)
@@ -290,7 +259,7 @@ class Game:
             elif result == 'defeat':
                 command = prompt_player_choice(
                     preamble="You have been defeated by the boss. Game over.",
-                    choices=['Retry', 'Quit']
+                    choices=self.get_options('boss')
                 )
                 if command in ['quit', 'exit']:
                     default_data = self.storage.get_data(text.default_save_file)
@@ -351,10 +320,10 @@ class Game:
         while self.get_state() == 'inventory':
             text.clear_screen()
             print(self.get_player().inventory.return_inventory())
-            choices = self.get_options()
+            choices = self.get_options('inventory')
             command = prompt_player_choice(
                 preamble=self.get_player().stats.return_stats(),
-                choices=self.get_options()
+                choices=self.get_options('inventory')
             )
             if command in ['go back', 'back']:
                 self.set_state('travel')
@@ -407,7 +376,7 @@ class Game:
 
                 command = prompt_player_choice(
                     preamble=text.equip_spacing_text,
-                    choices=self.get_options()
+                    choices=self.get_options('item chest')
                 )
                 if command in ['go back', 'back']:
                     self.set_state('travel')
@@ -432,7 +401,7 @@ class Game:
                 self.set_state('consumable chest')
                 command = prompt_player_choice(
                     preamble=text.equip_spacing_text,
-                    choices=self.get_options()
+                    choices=self.get_options('consumable chest')
                 )
                 if command in ['go back', 'back']:
                     self.set_state('travel')
@@ -472,7 +441,7 @@ class Game:
             self.set_state('item chest')
             command = prompt_player_choice(
                 preamble="What would you like to do?",
-                choices=self.get_options()
+                choices=self.get_options('item chest')
             )
             if command in ['go back', 'back']:
                 self.set_state('travel')
@@ -528,7 +497,7 @@ class Game:
             # Main command processing
             command = prompt_player_choice(
                 preamble="What would you like to do?",
-                choices=self.get_options()
+                choices=self.get_options(self.game_state, self.maze.current_room)
             )
             if command in ['quit', 'exit']:
                 self.command_quit()

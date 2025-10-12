@@ -1,8 +1,5 @@
 # Game module - Game controller and main loop (UI + game logic combined)
 
-import os
-import sys
-
 from campusmud import text
 from campusmud.storage import Storage
 from campusmud.models import Stats

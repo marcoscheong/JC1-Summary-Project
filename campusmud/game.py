@@ -246,35 +246,26 @@ class Game:
 
     def command_view_inventory(self):
         """Handle the view inventory command."""
-        self.set_state('inventory')
-        while self.get_state() == 'inventory':
+        end_loop = False
+        while not end_loop:
             text.clear_screen()
-            print(self.get_player().inventory.return_inventory())
-            choices = self.get_options('inventory')
             command = prompt_player_choice(
                 preamble=self.get_player().stats.return_stats(),
-                choices=self.get_options('inventory')
+                choices=['Use item', 'Go back']
             )
-            if command in ['go back', 'back']:
-                self.set_state('travel')
-            elif command in ['use item']:
-                item_name = input('Please enter the name of the item you want to use: ').strip().lower()
-
-                if item_name.isdigit():
-                    print(text.input_error_prompt)
-                    input("\nPress enter to continue...")
-
-                elif item_name not in text.Consumable:
-                    print(text.input_error_prompt)
-                    input("\nPress enter to continue...")
-
-                elif self.get_player().inventory.use_item(item_name):
+            if command in ['use item']:
+                item_name = text.prompt_player_choice(
+                    preamble="Please enter the name of the item you want to use:",
+                    choices=self.get_player().inventory.list_items()
+                )
+                if self.get_player().inventory.use_item(item_name):
                     self.use_item(item_name)
                     self.set_state('travel')
-
                 else:
                     print(text.input_error_prompt)
                     input("\nPress enter to continue...")
+            else:
+                end_loop = True
 
     def command_go_direction(self, direction):
         """Handle the go direction command."""

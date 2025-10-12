@@ -153,6 +153,17 @@ class Inventory:
                 self.items[item_name] = quantity
         self.save_inventory()
 
+    def list_items(self) -> list[str]:
+        """List all items in inventory."""
+        item_list = []
+        for category, items in self.items.items():
+            if isinstance(items, dict):
+                for item, qty in items.items():
+                    item_list.append(f"{item} x{qty}")
+            else:
+                item_list.append(f"{items}")
+        return item_list
+
     def use_item(self, item_name, quantity=1):
         """
         Use a consumable item from inventory.

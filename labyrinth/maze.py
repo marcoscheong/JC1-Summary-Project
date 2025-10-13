@@ -26,7 +26,7 @@ def generate_monster(
 
 
 def generate_room(id: int) -> "Room":
-    """Generate a basic room."""
+    """Generate a room from its ID."""
     if id == 0:
         return Room(0)
     elif id == -1:
@@ -64,6 +64,22 @@ class Room:
             "down": None
         }
 
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Room':
+        if data["type"] == "room":
+            return cls(data["id"])
+        elif data["type"] == "treasure_room":
+            return TreasureRoom(data["id"], data["treasure_type"])
+        elif data["type"] == "monster_room":
+            return MonsterRoom(
+                data["id"],
+                entities.create_monster(data["monster"])
+            )
+        elif data["type"] == "boss_room":
+            return BossRoom(data["id"])
+        else:
+            raise ValueError(f"Unknown room type: {data['type']}")
+
     def connect(self, room: 'Room', direction: str) -> None:
         """Connect this room to another room in a given direction."""
         if direction in self.connections:
@@ -95,8 +111,10 @@ class Room:
     def to_dict(self) -> dict:
         """Return a dictionary representation of the room."""
         return {
+            "type": "room",
             "id": self.id,
         }
+
 
 class CompletableRoom(Room):
     """Room that can be completed (e.g., treasure or monster room)."""
@@ -112,6 +130,7 @@ class CompletableRoom(Room):
     def to_dict(self) -> dict:
         """Return a dictionary representation of the completable room."""
         base_dict = super().to_dict()
+        base_dict["type"] = "completable_room"
         base_dict.update({"completed": self.completed})
         return base_dict
 
@@ -137,6 +156,7 @@ class TreasureRoom(CompletableRoom):
     def to_dict(self) -> dict:
         """Return a dictionary representation of the treasure room."""
         base_dict = super().to_dict()
+        base_dict["type"] = "treasure_room"
         base_dict.update({"treasure_type": self.treasure_type})
         return base_dict
 
@@ -158,6 +178,7 @@ class MonsterRoom(CompletableRoom):
     def to_dict(self) -> dict:
         """Return a dictionary representation of the monster room."""
         base_dict = super().to_dict()
+        base_dict["type"] = "monster_room"
         base_dict.update(
             {"monster": self.monster.name if self.monster else None}
         )
@@ -176,6 +197,12 @@ class BossRoom(MonsterRoom):
             options.append('Challenge the boss')
         return options
 
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the boss room."""
+        base_dict = super().to_dict()
+        base_dict["type"] = "boss_room"
+        return base_dict
+
 
 class Maze:
     """Grid-based maze with rooms connected by directions."""
@@ -188,12 +215,29 @@ class Maze:
         # Exclude boss room from row count
         self.row_count = divmod(len(rooms) - 1, cols)[0] + 1
 
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Maze':
+        rooms = [
+            Room.from_dict(room_data) for room_data in data["rooms"]
+        ]
+        return cls(
+            rooms=rooms,
+            cols=data["col_count"]
+        )
+
     def get(self, x: int, y: int) -> Optional[Room]:
         """Get room at grid coordinates (x, y)."""
         if not (0 <= x < self.col_count and 0 <= y < self.row_count):
             return None
         index = y * self.col_count + x
         return self.rooms[index]
+
+    def get_by_id(self, room_id: int) -> Room:
+        """Return the room with the given ID, if it exists."""
+        for room in self.rooms:
+            if room.id == room_id:
+                return room
+        raise ValueError(f"Room with ID {room_id} not found.")
     
     def get_boss_room(self) -> BossRoom:
         """Return the boss room."""
@@ -327,7 +371,6 @@ class Maze:
         """Return a dictionary representation of the maze."""
         return {
             "rooms": [room.to_dict() for room in self.rooms],
-            "current_room_id": self.current_room.id,
             "col_count": self.col_count,
             "row_count": self.row_count
         }

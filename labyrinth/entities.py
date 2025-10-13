@@ -102,18 +102,50 @@ class Character:
 class Player(Character):
     """Player character with inventory and stat management."""
 
-    def __init__(self, name: str, max_health: int, attack: int) -> None:
+    def __init__(self,
+                 name: str,
+                 max_health: int,
+                 attack: int,
+                 base_atk: Optional[int] = None,
+                 base_health: Optional[int] = None,
+                 inventory: Optional[dict] = None,
+                 weapon: Optional[str] = None,
+                 armor: Optional[dict] = None) -> None:
         super().__init__(name, max_health, attack)
-        self.inventory: Optional[Inventory] = None
-        self.base_atk: int = attack
-        self.base_health: int = max_health
-        self.armor: dict[str, Optional[models.Armor]] = {
-            "Helmet": None,
-            "Chestplate": None,
-            "Leggings": None,
-            "Boots": None
-        }
-        self.weapon: Optional[models.Weapon] = None
+        self.base_atk: int = base_atk or attack
+        self.base_health: int = base_health or max_health
+        self.inventory = (
+            Inventory.from_dict(inventory) if inventory
+            else Inventory()
+        )
+        if armor:
+            self.armor = {
+                part: models.create_armor(armor[part]) if armor[part] else None
+                for part in ["Helmet", "Chestplate", "Leggings", "Boots"]
+            }
+        else:
+            self.armor: dict[str, Optional[models.Armor]] = {
+                "Helmet": None,
+                "Chestplate": None,
+                "Leggings": None,
+                "Boots": None
+            }
+        if weapon:
+            self.weapon = models.create_weapon(weapon) if weapon else None
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Player':
+        """Create a Player instance from a dictionary."""
+        return cls(
+            name=data["name"],
+            max_health=data["max_health"],
+            attack=data["attack"],
+            base_atk=data.get("base_atk"),
+            base_health=data.get("base_health"),
+            inventory=data.get("inventory"),
+            weapon=data.get("weapon"),
+            armor=data.get("armor")
+        )
 
     def calculate_atk(self) -> int:
         """Calculate total attack including weapon bonus."""
@@ -151,10 +183,10 @@ class Player(Character):
             self.armor["Leggings"] = armor
         elif isinstance(armor, models.Boots):
             self.armor["Boots"] = armor
+        else:
+            raise ValueError(f"Not armor: {armor}")
         print(f"{armor.name} equipped.")
         print(text.equip_spacing_text + '\n')
-        self.inventory.remove_item(armor.name)
-        self.inventory.save_inventory()
         return True
 
     def equip_weapon(self, weapon: models.Weapon) -> bool:
@@ -163,41 +195,12 @@ class Player(Character):
         print(f"{weapon.name} has been equipped.")
         print(text.equip_spacing_text + '\n')
         self.inventory.remove_item(weapon.name)
-        self.inventory.save_inventory()
         return True
 
-    def create_new_storage(self, storage: Storage, file: str) -> None:
-        """Create a new empty storage for the player."""
-        default_data = storage.get_data(config.DEFAULT_SAVE_FILE)
-        storage.save_data(file, default_data)
-        self.load_from_storage(storage, file)
-
-    def load_from_storage(self, storage: Storage, file: str) -> None:
-        """Load player data from a saved file."""
-        data = storage.get_data(file)
-        if not isinstance(data, dict):
-            raise ValueError("Invalid data format: Expected a dictionary.")
-
-        self.max_health = int(data.get("Player_max_health", self.base_health))
-        self.current_health = int(data.get("Player_current_health", self.base_health))
-        self.attack = int(data.get("Player_attack", self.base_atk))
-        self.inventory = Inventory(storage, file)
-        self.recalculate_stats()
-
-    def save_to_storage(self, storage: Storage, file: str) -> None:
-        """Save player data to a file."""
-        if self.inventory:
-            storage.save_data(file, {
-                "Player_max_health": self.max_health,
-                "Player_current_health": self.current_health,
-                "Player_attack": self.attack
-            })
-            self.inventory.save_inventory()
-    
     def show_inventory(self) -> None:
         """Display the player's inventory."""
         if self.inventory:
-            print(self.inventory.return_inventory())
+            print(self.inventory.to_string())
         else:
             print("No inventory loaded.")
     
@@ -257,82 +260,71 @@ class Monster(Character):
 class Inventory:
     """Player inventory with weapons, armour, and consumables."""
 
-    def __init__(self, storage: Storage, file: str) -> None:
-        self.storage: Storage = storage
-        self.file: str = file
-        try:
-            data = self.storage.get_data(file)
-            self.items: dict = data.get("Items", {})
-        except FileNotFoundError:
-            self.items = {}
-        
-        # Ensure canonical shape always exists
-        if "Weapon" not in self.items:
-            self.items["Weapon"] = None
-        if "Armour" not in self.items:
-            self.items["Armour"] = {}
-        if "Consumables" not in self.items:
-            self.items["Consumables"] = {}
-        
-        self.save_inventory()
+    def __init__(self, items: Optional[dict[str, dict[str, int]]] = None) -> None:
+        self.items: dict[str, dict[str, int]] = items or {
+            "Weapon": {},
+            "Armour": {},
+            "Consumables": {}
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Inventory':
+        """Create an Inventory instance from a dictionary."""
+        return cls(items=data)
+
+    def _get_inventory(self, item_name: str) -> dict[str, int]:
+        """Retrieve the correct inventory category for an item."""
+        if item_name in models.CONSUMABLES:
+            return self.items["Consumables"]
+        elif item_name in models.WEAPONS:
+            return self.items["Weapon"]
+        elif item_name in models.ARMOR:
+            return self.items["Armour"]
+        else:
+            raise ValueError(f"Unknown item: {item_name}")
 
     def add_item(self, item_name: str, quantity: int = 1) -> None:
         """Add an item to inventory."""
-        if item_name in text.Consumable.keys():
-            if item_name in self.items["Consumables"]:
-                self.items["Consumables"][item_name] += quantity
-            else:
-                self.items["Consumables"][item_name] = quantity
+        inventory = self._get_inventory(item_name)
+        # Put in inventory
+        if item_name in inventory:
+            inventory[item_name] += quantity
         else:
-            if item_name in self.items:
-                self.items[item_name] += quantity
-            else:
-                self.items[item_name] = quantity
-        self.save_inventory()
+            inventory[item_name] = quantity
 
-    def list_items(self) -> list[str]:
+    def list_items(self) -> dict[str, int]:
         """List all items in inventory."""
-        item_list: list[str] = []
-        for category, items in self.items.items():
-            if isinstance(items, dict):
-                for item, qty in items.items():
-                    item_list.append(f"{item} x{qty}")
-            else:
-                item_list.append(f"{items}")
+        item_list: dict[str, int] = {}
+        for category, item_counts in self.items.items():
+            for item_name, count in item_counts.items():
+                item_list[item_name] = count
         return item_list
 
-    def use_item(self, item_name: str, quantity: int = 1) -> bool:
-        """Use a consumable item from inventory."""
-        if item_name not in self.items["Consumables"]:
-            print(f"{item_name} not found in inventory.")
-            return False
-        if self.items["Consumables"][item_name] < quantity:
-            print(f"Not enough {item_name} to use.")
-            return False
+    def use_item(self,
+                 item_name: str,
+                 quantity: int = 1) -> Optional[models.Item]:
+        """Use a consumable item from inventory.
         
-        self.items["Consumables"][item_name] -= quantity
-        if self.items["Consumables"][item_name] <= 0:
-            del self.items["Consumables"][item_name]
-        self.save_inventory()
-        return True
-    
-    def remove_item(self, item_name: str) -> None:
-        if item_name in self.items:
-            del self.items[item_name]
-            self.save_inventory()
-        else:
+        Returns the item, or None if not found or insufficient quantity.
+        """
+        inventory = self._get_inventory(item_name)
+        # Check if item exists and has enough quantity
+        if item_name not in inventory:
             print(f"{item_name} not found in inventory.")
+            return None
+        if inventory[item_name] < quantity:
+            print(f"Not enough {item_name} to use.")
+            return None
+        inventory[item_name] -= quantity
+        if inventory[item_name] == 0:
+            del inventory[item_name]
+        return models.create_item(item_name)
 
-    def save_inventory(self) -> None:
-        """Save inventory to the JSON file."""
-        try:
-            data = self.storage.get_data(self.file)
-        except FileNotFoundError:
-            data = {}
-        data["Items"] = self.items
-        self.storage.save_data(self.file, data)
+    def remove_item(self, item_name: str, quantity: int = 1) -> None:
+        """Remove an item completely from inventory."""
+        self.use_item(item_name, quantity)
 
-    def return_inventory(self) -> str:
+    def to_string(self) -> str:
         """Return a formatted string of the inventory."""
         if not self.items:
             return "Inventory is empty."

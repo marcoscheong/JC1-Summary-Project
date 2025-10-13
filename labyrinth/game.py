@@ -59,12 +59,18 @@ def generate_drop(type: str, level: int) -> models.Item:
 class Game:
     """Main game controller with state management."""
 
-    def __init__(self) -> None:
+    def __init__(self,
+                 maze_: Optional[maze.Maze] = None,
+                 current_room_id: Optional[int] = None,
+                 player: Optional[entities.Player] = None) -> None:
         self.game_over: bool = False
-        self.maze = maze.generate_maze()
+        self.maze = maze_ or maze.generate_maze()
         self.storage: Storage = Storage()
-        self.player = entities.create_player()
-        self.current_room = self.maze.get_start_room()
+        self.player = player or entities.create_player()
+        self.current_room = (
+            self.maze.get_by_id(current_room_id) if current_room_id
+            else self.maze.get_start_room()
+        )
 
     def get_options(self, room: Optional[Room] = None) -> list[str]:
         """Get available options based on the provided game state and room type."""
@@ -78,7 +84,7 @@ class Game:
         self.game_over = True
 
     def start_game(self) -> None:
-        """Start a new game with a fresh maze and player."""
+        """Start the game."""
         print(text.printing_text_large_spacing)
         text.pretty_print(text.started_text)
         input()
@@ -88,6 +94,23 @@ class Game:
         """Save the current game state to player file."""
         save_game_data(self)
         print("Game saved.")
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Game':
+        """Create a Game instance from a dictionary."""
+        game = cls(
+            maze_=Maze.from_dict(data["maze"]),
+            current_room_id=data["current_room_id"],
+            player=entities.Player.from_dict(data["player"]),
+        )
+        return game
+
+    @classmethod
+    def load_from_data(cls) -> 'Game':
+        """Load a game from saved data."""
+        data = load_game_data()
+        game = cls.from_dict(data)
+        return game
 
     def load_game(self) -> None:
         """Load a saved game from file."""
@@ -254,7 +277,7 @@ class Game:
                     )
                 elif isinstance(dropped_item, models.Armor):
                     print(
-                        f"You have found {dropped_item.name} (slot: {type(dropped_item).__name__}, def: {dropped_item.defense_bonus})!"
+                        f"You have found {dropped_item.name} (slot: {type(dropped_item).__name__}, def: {dropped_item.defence_bonus})!"
                     )
                 print(text.equip_spacing_text + '\n')
 
@@ -374,7 +397,7 @@ class Game:
 
     def run(self) -> None:
         """Main game loop - handles user input and game state."""
-
+        self.start_game()
         while not self.game_over:
             text.clear_screen()
             self.maze.draw_rooms(self.current_room)

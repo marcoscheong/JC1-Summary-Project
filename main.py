@@ -30,11 +30,9 @@ if __name__ == "__main__":
             game: Game = Game()
             game.run()
         elif choice == 'load':
-            game = Game()
-            game.load_game()
+            game = Game.load_from_data()
             game.run()
         elif choice == 'how to play':
             print(text.how_to_play_text)
-        elif choice == 'quit':
-            print(text.thanks_message)
-            sys.exit()
+    print(text.thanks_message)
+    sys.exit()

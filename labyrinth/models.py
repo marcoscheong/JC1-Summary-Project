@@ -13,6 +13,18 @@ WEAPONS = list(game_data["items"]["weapons"].keys())
 ARMOR = list(game_data["items"]["armor"].keys())
 
 
+def create_item(name: str) -> "Item":
+    """Create an item by name."""
+    if name in CONSUMABLES:
+        return create_consumable(name)
+    elif name in ARMOR:
+        return create_armor(name)
+    elif name in WEAPONS:
+        return create_weapon(name)
+    else:
+        raise ValueError(f"Item '{name}' not found.")
+
+
 def create_consumable(name: str) -> "Potion":
     """Create a consumable item by name."""
     if name not in game_data["items"]["consumables"]:

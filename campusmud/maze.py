@@ -19,17 +19,14 @@ Monsters = {
 
 
 class Room:
-    """
-    Basic room with connections to other rooms.
-    """
+    """Basic room with connections to other rooms."""
+
     def __init__(self, id: int) -> None:
         self.id: int = id
         self.connects: Dict[str, Optional[Room]] = {'up': None, 'left': None, 'right': None, 'down': None}
 
     def connection(self, room: 'Room', direction: str) -> None:
-        """
-        Connect this room to another room in a given direction.
-        """
+        """Connect this room to another room in a given direction."""
         if direction in self.connects:
             self.connects[direction] = room
 
@@ -39,9 +36,7 @@ class TreasureRoom(Room):
     Room containing treasure drops.
     """
     def __init__(self, _id: int) -> None:
-        """
-        Initialize room with treasure based on room ID (difficulty).
-        """
+        """Initialize room with treasure based on room ID (difficulty)."""
         super().__init__(_id)
         self.claimed: bool = False
         if _id < 5:
@@ -61,15 +56,11 @@ class TreasureRoom(Room):
             self.drop = drop.generateDrop()
 
     def get_drops(self) -> str:
-        """
-        Return the items in the treasure room.
-        """
+        """Return the items in the treasure room."""
         return self.drop.drop
 
     def get_type(self):
-        """
-        Return the type of item in the treasure room.
-        """
+        """Return the type of item in the treasure room."""
         return self.drop.type
 
 
@@ -78,9 +69,7 @@ class MonsterRoom(Room):
     Room containing monsters to fight.
     """
     def __init__(self, id: int, availableMonsters: List[str]) -> None:
-        """
-        Initialize room with monster generation settings.
-        """
+        """Initialize room with monster generation settings."""
         super().__init__(id)
         self.monster: str = ''
         # Convert dict_keys view to list to avoid issues
@@ -88,8 +77,7 @@ class MonsterRoom(Room):
         self.claimed: bool = False
 
     def generateMonster(self) -> None:
-        """
-        Generate a random monster based on room ID (difficulty).
+        """Generate a random monster based on room ID (difficulty).
         Higher ID increases chance of stronger monsters.
         """
         if len(self.availableMonsters) == 0:
@@ -102,9 +90,7 @@ class MonsterRoom(Room):
         self.monster = self.availableMonsters[random.randint(0, max_index)]
 
     def generateDrops(self) -> None:
-        """
-        Generate drops that the monster will drop when defeated.
-        """
+        """Generate drops that the monster will drop when defeated."""
         i: int = random.randint(0, 1)
         if i == 0:
             if self.id < 5:

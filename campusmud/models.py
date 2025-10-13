@@ -11,14 +11,81 @@ Armour = game_data["items"]["armor"]
 Weapon = game_data["items"]["weapons"]
 
 
-def create_consumable(name: str) -> dict:
-    """
-    Create a consumable item by name.
-    """
-    if name in Consumable:
-        return {"name": name, **Consumable[name]}
-    else:
+def create_consumable(name: str) -> "Potion":
+    """Create a consumable item by name."""
+    if name not in game_data["items"]["consumables"]:
         raise ValueError(f"Consumable '{name}' not found.")
+    bonus = game_data["items"]["consumables"][name]["bonus"]
+    if name == "health potion":
+        return HealthPotion(name, bonus)
+    elif name == "attack potion":
+        return AttackPotion(name, bonus)
+    elif name == "healing potion":
+        return HealingPotion(name, bonus)
+    else:
+        raise ValueError(f"Unknown consumable type: {name}")
+
+
+def create_armor(name: str) -> "Armor":
+    """Create an armor item by name."""
+    if name not in game_data["items"]["armor"]:
+        raise ValueError(f"Armor '{name}' not found.")
+    defense_bonus = game_data["items"]["armor"][name]["defense_bonus"]
+    return Armor(name, defense_bonus)
+
+
+def create_weapon(name: str) -> "Weapon":
+    """Create a weapon item by name."""
+    if name not in game_data["items"]["weapons"]:
+        raise ValueError(f"Weapon '{name}' not found.")
+    attack_bonus = game_data["items"]["weapons"][name]["attack_bonus"]
+    return Weapon(name, attack_bonus)
+
+
+class Item:
+    """Base class for items."""
+
+    def __init__(self, name: str) -> None:
+        self.name: str = name
+
+
+class Potion(Item):
+    """Represents a consumable potion item.
+    
+    Potions provide a bonus effect to one or more attributes.
+    """
+
+    def __init__(self, name: str, bonus: int) -> None:
+        super().__init__(name)
+        self.bonus: int = bonus
+
+
+class HealthPotion(Potion):
+    """Represents a health potion that restores health."""
+
+
+class AttackPotion(Potion):
+    """Represents an attack potion that boosts attack power."""
+
+
+class HealingPotion(Potion):
+    """Represents a healing potion that heals over time."""
+
+
+class Armor(Item):
+    """Represents an armor item that provides a defense bonus."""
+
+    def __init__(self, name: str, defense_bonus: int) -> None:
+        super().__init__(name)
+        self.defense_bonus: int = defense_bonus
+
+
+class WeaponItem(Item):
+    """Represents a weapon item that provides an attack bonus."""
+
+    def __init__(self, name: str, attack_bonus: int) -> None:
+        super().__init__(name)
+        self.attack_bonus: int = attack_bonus
 
 
 class Drop:
@@ -76,9 +143,7 @@ class Drop:
 
 
 class Ability:
-    """
-    Represents a player action during combat (attack, shield, heal, save).
-    """
+    """Represents a player action during combat (attack, shield, heal, save)."""
     def __init__(self, name: str) -> None:
         self.name: str = name
         self.attack: int = 0

@@ -28,48 +28,54 @@
   },
   "items": {
     "consumables": {
-      "health potion": 5,
-      "attack potion": 5,
-      "healing potion": 10
+      "health potion": {
+        "bonus": 5
+      },
+      "attack potion": {
+        "bonus": 5
+      },
+      "healing potion": {
+        "bonus": 10
+      }
     },
     "armor": {
-      "Leather Boots": 8,
-      "Leather Leggings": 10,
-      "Leather Helmet": 8,
-      "Leather Chestplate": 16,
-      "Chainmail Boots": 16,
-      "Chainmail Leggings": 20,
-      "Chainmail Helmet": 16,
-      "Chainmail Chestplate": 32,
-      "Iron Boots": 32,
-      "Iron Leggings": 40,
-      "Iron Helmet": 32,
-      "Iron Chestplate": 64,
-      "Diamond Boots": 64,
-      "Diamond Leggings": 80,
-      "Diamond Helmet": 64,
-      "Diamond Chestplate": 128,
-      "Draconic Boots": 128,
-      "Draconic Leggings": 160,
-      "Draconic Helmet": 128,
-      "Draconic Chestplate": 256
+      "Leather Boots": {"defence_bonus": 8},
+      "Leather Leggings": {"defence_bonus": 10},
+      "Leather Helmet": {"defence_bonus": 8},
+      "Leather Chestplate": {"defence_bonus": 16},
+      "Chainmail Boots": {"defence_bonus": 16},
+      "Chainmail Leggings": {"defence_bonus": 20},
+      "Chainmail Helmet": {"defence_bonus": 16},
+      "Chainmail Chestplate": {"defence_bonus": 32},
+      "Iron Boots": {"defence_bonus": 32},
+      "Iron Leggings": {"defence_bonus": 40},
+      "Iron Helmet": {"defence_bonus": 32},
+      "Iron Chestplate": {"defence_bonus": 64},
+      "Diamond Boots": {"defence_bonus": 64},
+      "Diamond Leggings": {"defence_bonus": 80},
+      "Diamond Helmet": {"defence_bonus": 64},
+      "Diamond Chestplate": {"defence_bonus": 128},
+      "Draconic Boots": {"defence_bonus": 128},
+      "Draconic Leggings": {"defence_bonus": 160},
+      "Draconic Helmet": {"defence_bonus": 128},
+      "Draconic Chestplate": {"defence_bonus": 256}
     },
     "weapons": {
-      "Fist": 1,
-      "Wooden Sword": 7,
-      "Beginner Daggers": 7,
-      "Beginner Wand": 7,
-      "Stone Sword": 10,
-      "Intermediate Daggers": 15,
-      "Intermediate Wand": 15,
-      "Iron Sword": 20,
-      "Steel Sword": 35,
-      "Knucklebuster": 55,
-      "Silver Sword": 70,
-      "Diamond Sword": 100,
-      "Mythril Sword": 125,
-      "Draconic Blade": 150,
-      "Excalibur": 250
+      "Fist": {"attack_bonus": 1},
+      "Wooden Sword": {"attack_bonus": 7},
+      "Beginner Daggers": {"attack_bonus": 7},
+      "Beginner Wand": {"attack_bonus": 7},
+      "Stone Sword": {"attack_bonus": 10},
+      "Intermediate Daggers": {"attack_bonus": 15},
+      "Intermediate Wand": {"attack_bonus": 15},
+      "Iron Sword": {"attack_bonus": 20},
+      "Steel Sword": {"attack_bonus": 35},
+      "Knucklebuster": {"attack_bonus": 55},
+      "Silver Sword": {"attack_bonus": 70},
+      "Diamond Sword": {"attack_bonus": 100},
+      "Mythril Sword": {"attack_bonus": 125},
+      "Draconic Blade": {"attack_bonus": 150},
+      "Excalibur": {"attack_bonus": 250}
     }
   }
 }

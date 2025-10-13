@@ -28,10 +28,6 @@ class CombatSequence:
         self.saved_p: int = 0  # saved player elixir from each turn
         self.saved_m: int = 0  # saved monster elixir from each turn
 
-    def _fmt(self, x: int | float) -> int | float:
-        """Format numbers to 1 decimal if needed, no trailing .0."""
-        return int(x) if isinstance(x, (int, float)) and float(x).is_integer() else round(x, 1)
-
     def start_sequence(self, is_boss: bool = False) -> str:
         """
         Run combat sequence for normal monsters.

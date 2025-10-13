@@ -251,42 +251,33 @@ class CombatSequence:
                 if ability.elixir <= available_elixir:
                     available_abilities.append(ability)
 
-            print(text.combat_sequence_prompt)
-            for i, ability in enumerate(available_abilities):
-                print(f"{i + 1}. {ability.name}")
-
-            choice = input(text.input_prompt).strip().lower()
-
-            if choice.isdigit():
-                choice = int(choice)
-                if 0 < choice <= len(available_abilities):
-                    choice = available_abilities[choice - 1].name.strip().lower()
+            choice = text.prompt_player_choice(
+                preamble="Your available moves: ",
+                choices=[a.name for a in available_abilities],
+                prompt=text.input_prompt
+            )           
+            ability = Ability(ability_dict[choice].name)
+            magnitude: int = 0
+            while True:
+                magnitude_input = input(text.magnitude_prompt)
+                if magnitude_input.isdigit():
+                    magnitude = int(magnitude_input)
+                    if magnitude <= available_elixir:
+                        break
+                print(text.input_error_prompt)
             
-            if choice in [a.name for a in available_abilities]:
-                ability = Ability(ability_dict[choice].name)
-                magnitude: int = 0
-                while True:
-                    magnitude_input = input(text.magnitude_prompt)
-                    if magnitude_input.isdigit():
-                        magnitude = int(magnitude_input)
-                        if magnitude <= available_elixir:
-                            break
-                    print(text.input_error_prompt)
-                
-                if choice == "attack":
-                    ability.attack = magnitude
-                elif choice == "shield":
-                    ability.shield = magnitude
-                elif choice == "heal":
-                    ability.heal = magnitude
-                elif choice == "save":
-                    ability.saved_elixir = magnitude
-                
-                ability.magnitude = magnitude
-                ability_sequence.append(ability)
-                available_elixir -= magnitude
-            else:
-                print(text.ability_addition_error)
+            if choice == "attack":
+                ability.attack = magnitude
+            elif choice == "shield":
+                ability.shield = magnitude
+            elif choice == "heal":
+                ability.heal = magnitude
+            elif choice == "save":
+                ability.saved_elixir = magnitude
+            
+            ability.magnitude = magnitude
+            ability_sequence.append(ability)
+            available_elixir -= magnitude
         
         return ability_sequence
 

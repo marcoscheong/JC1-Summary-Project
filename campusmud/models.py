@@ -30,8 +30,18 @@ def create_armor(name: str) -> "Armor":
     """Create an armor item by name."""
     if name not in game_data["items"]["armor"]:
         raise ValueError(f"Armor '{name}' not found.")
+    armor_type = game_data["items"]["armor"][name]["type"]
     defense_bonus = game_data["items"]["armor"][name]["defense_bonus"]
-    return Armor(name, defense_bonus)
+    if armor_type == "boots":
+        return Boots(name, defense_bonus)
+    elif armor_type == "chestplate":
+        return Chestplate(name, defense_bonus)
+    elif armor_type == "helmet":
+        return Helmet(name, defense_bonus)
+    elif armor_type == "leggings":
+        return Leggings(name, defense_bonus)
+    else:
+        raise ValueError(f"Unknown armor type: {armor_type}")
 
 
 def create_weapon(name: str) -> "Weapon":
@@ -80,66 +90,28 @@ class Armor(Item):
         self.defense_bonus: int = defense_bonus
 
 
+class Boots(Armor):
+    """Represents boots armor."""
+
+
+class Chestplate(Armor):
+    """Represents a chestplate armor."""
+
+
+class Helmet(Armor):
+    """Represents a helmet armor."""
+
+
+class Leggings(Armor):
+    """Represents leggings armor."""
+
+
 class Weapon(Item):
     """Represents a weapon item that provides an attack bonus."""
 
     def __init__(self, name: str, attack_bonus: int) -> None:
         super().__init__(name)
         self.attack_bonus: int = attack_bonus
-
-
-class Drop:
-    """
-    Represents loot dropped from monsters (weapon, armour, or consumable).
-    """
-    def __init__(self, weaponWeights: List[int], armourWeights: List[int]) -> None:
-        self.weaponWeights: List[int] = weaponWeights
-        self.armourWeights: List[int] = armourWeights
-        self.name: str = ''
-    
-    def generateDrop(self) -> 'Drop':
-        """
-        Randomly generate a weapon, armour, or consumable drop.
-        """
-        r: int = random.randint(0, 2)
-        drop: str = ''  # Initialize variable to avoid unbound error
-        if r == 0:
-            drop = random.choices(list(Weapon.keys()), self.weaponWeights)[0]
-            self.type: str = 'weapon'
-        elif r == 1:
-            drop = random.choices(list(Armour.keys()), self.armourWeights)[0]
-            self.type = 'armour'
-        elif r == 2:
-            number: int = random.randint(1, 3)
-            if number == 1:
-                drop = 'attack potion'
-                self.type = 'consumable'
-            elif number == 2:
-                drop = 'health potion'
-                self.type = 'consumable'
-            else:
-                drop = 'healing potion'
-                self.type = 'consumable'
-        self.drop: str = drop
-        return self
-    
-    def generateArmourDrop(self) -> 'Drop':
-        """
-        Generate only an armour drop.
-        """
-        drop: str = random.choices(list(Armour.keys()), self.armourWeights)[0]
-        self.type: str = 'armour'
-        self.drop = drop
-        return self
-        
-    def generateWeaponDrop(self) -> 'Drop':
-        """
-        Generate only a weapon drop.
-        """
-        drop: str = random.choices(list(Weapon.keys()), self.weaponWeights)[0]
-        self.type: str = 'weapon'
-        self.drop = drop
-        return self
 
 
 class Ability:

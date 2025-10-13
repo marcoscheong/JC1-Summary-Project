@@ -123,11 +123,6 @@ move_pool = ['attack', 'shield', 'heal', 'save']
 
 monster_ability_weights = [20, 4, 3, 6]
 
-
-
-default_health = 10
-default_attack = 10
-
 weaponweights5  = [50, 40, 35, 30, 25, 20, 15, 10, 8, 5, 3, 2, 1, 1, 1]
 weaponweights10 = [40, 35, 30, 28, 25, 20, 15, 12, 10, 8, 5, 3, 2, 1, 1]
 weaponweights15 = [30, 28, 25, 22, 20, 18, 15, 12, 10, 8, 5, 3, 2, 2, 1]

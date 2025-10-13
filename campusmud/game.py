@@ -1,14 +1,48 @@
 # Game module - Game controller and main loop (UI + game logic combined)
 
+import random
 from typing import Optional
 
-from campusmud import config, entities, text
+from campusmud import config, entities, models, text
 from campusmud.storage import Storage
 from campusmud.maze import Room, TreasureRoom, MonsterRoom, BossRoom, Maze
 from campusmud.combat import CombatSequence
 from campusmud.text import prompt_player_choice
 
 BOSS_NAME = "Origin of Chaos"
+
+
+def next_multiple_of_5(n: int) -> int:
+    """Return the next multiple of 5 greater than or equal to n."""
+    while n % 5 != 0:
+        n += 1
+    return n
+
+
+def generate_drop(type: str, level: int) -> models.Item:
+    """Generate a drop based on type and level."""
+    # Calculate drop level as next multiple of 5
+    drop_level = next_multiple_of_5(level)
+    if type == "weapon":
+        item_name = random.choices(
+            population=entities.WEAPONS,
+            weights=config.WEIGHTS["weapon_drop"][str(drop_level)]
+        )[0]
+        return models.create_weapon(item_name)
+    elif type == "armor":
+        item_name = random.choices(
+            population=entities.ARMOR,
+            weights=config.WEIGHTS["armor_drop"][str(drop_level)]
+        )[0]
+        return models.create_armor(item_name)
+    elif type == "consumable":
+        item_name = random.choices(
+            population=entities.CONSUMABLES,
+            weights=[1 / 3] * 3  # Assuming equal probability for consumables
+        )[0]
+        return models.create_consumable(item_name)
+    else:
+        raise ValueError(f"Invalid drop type: {type}")
 
 
 class Game:
@@ -62,7 +96,7 @@ class Game:
                 room.generateDrops()
                 rooms.append(room)
             elif i % 2 == 1:
-                rooms.append(TreasureRoom(i + 1))
+                rooms.append(TreasureRoom(_id=i + 1, treasure_type="weapon"))
             else:
                 rooms.append(Room(i + 1))
         rooms.append(BossRoom(text.maze_size + 1))
@@ -85,7 +119,7 @@ class Game:
                 room.generateDrops()
                 rooms.append(room)
             elif i % 2 == 1:
-                rooms.append(TreasureRoom(i + 1))
+                rooms.append(TreasureRoom(i + 1, treasure_type="weapon"))
             else:
                 rooms.append(Room(i + 1))
         rooms.append(BossRoom(text.maze_size + 1))
@@ -239,17 +273,21 @@ class Game:
 
     def command_open_chest(self) -> None:
         """Handle the open chest command."""
-        if isinstance(self.get_maze().current_room, TreasureRoom):
+        current_room = self.get_maze().current_room
+        if isinstance(current_room, TreasureRoom):
             # Open chest logic
-            treasure_type: str = self.get_maze().current_room.get_type()
-            drop: str = self.get_maze().current_room.get_drops()
+            treasure_type: str = current_room.get_type()
+            dropped_item = generate_drop(treasure_type, current_room.id)
             if treasure_type in ['weapon', 'armour']:
                 print('\n' + text.equip_spacing_text)
-                if treasure_type == 'weapon':
-                    print(f"You have found a {drop} (atk: {text.Weapon[drop]})!")
-                elif treasure_type == 'armour':
-                    slot: str = text.ArmourSlots[drop]
-                    print(f"You have found {drop} (slot: {slot}, def: {text.Armour[drop]})!")
+                if isinstance(dropped_item, models.Weapon):
+                    print(
+                        f"You have found a {dropped_item.name} (atk: {dropped_item.attack_bonus})!"
+                    )
+                elif isinstance(dropped_item, models.Armor):
+                    print(
+                        f"You have found {dropped_item.name} (slot: {type(dropped_item).__name__}, def: {dropped_item.defense_bonus})!"
+                    )
                 print(text.equip_spacing_text + '\n')
 
                 command: str = prompt_player_choice(
@@ -259,16 +297,8 @@ class Game:
                 if command in ['go back', 'back']:
                     pass
                 elif command in ['equip item', 'equip']:
-                    if treasure_type == 'weapon':
-                        self.player.equip_weapon(drop)
-                        self.player.recalculate_stats()
-                        input('\nPress enter to continue...')
-                    elif treasure_type == 'armor':
-                        slot = text.ArmorSlots[drop]
-                        self.player.equip_armor(slot, drop)
-                        self.player.recalculate_stats()
-                        input('\nPress enter to continue...')
-                    self.get_maze().current_room.drop = None
+                    self.player.equip(dropped_item)
+                    input('\nPress enter to continue...')
                     self.get_maze().current_room.claimed = True
             elif treasure_type == 'consumable':
                 self.player.inventory.add_item(drop)

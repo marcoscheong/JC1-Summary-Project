@@ -35,33 +35,15 @@ class TreasureRoom(Room):
     """
     Room containing treasure drops.
     """
-    def __init__(self, _id: int) -> None:
+    def __init__(self, _id: int, treasure_type: str) -> None:
         """Initialize room with treasure based on room ID (difficulty)."""
         super().__init__(_id)
+        self.treasure_type: str = treasure_type  # 'weapon', 'armor', or 'consumable'
         self.claimed: bool = False
-        if _id < 5:
-            drop = Drop(text.weaponweights5, text.armourweights5)
-            self.drop = drop.generateDrop()
-        elif _id < 10:
-            drop = Drop(text.weaponweights10, text.armourweights10)
-            self.drop = drop.generateDrop()
-        elif _id < 15:
-            drop = Drop(text.weaponweights15, text.armourweights15)
-            self.drop = drop.generateDrop()
-        elif _id < 20: 
-            drop = Drop(text.weaponweights20, text.armourweights20)
-            self.drop = drop.generateDrop()
-        else:
-            drop = Drop(text.weaponweights25, text.armourweights25)
-            self.drop = drop.generateDrop()
-
-    def get_drops(self) -> str:
-        """Return the items in the treasure room."""
-        return self.drop.drop
 
     def get_type(self):
         """Return the type of item in the treasure room."""
-        return self.drop.type
+        return self.treasure_type
 
 
 class MonsterRoom(Room):

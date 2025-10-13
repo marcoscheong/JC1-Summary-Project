@@ -6,9 +6,15 @@ from campusmud import config, models, text
 from campusmud.data import load_game_data
 from campusmud.storage import Storage
 
-MOVES = ['attack', 'shield', 'heal', 'save']
-
 game_data = load_game_data()
+
+# Enums
+MOVES = ['attack', 'shield', 'heal', 'save']
+CONSUMABLES = list(game_data["items"]["consumables"].keys())
+WEAPONS = list(game_data["items"]["weapons"].keys())
+ARMOR = list(game_data["items"]["armor"].keys())
+
+
 
 
 def create_monster(name: str) -> "Monster":
@@ -72,7 +78,12 @@ class Player(Character):
         self.inventory: Optional[Inventory] = None
         self.base_atk: int = attack
         self.base_health: int = max_health
-        self.armor: Optional[models.Armor] = None
+        self.armor = {
+            "Helmet": None,
+            "Chestplate": None,
+            "Leggings": None,
+            "Boots": None
+        }
         self.weapon: Optional[models.Weapon] = None
 
     def calculate_atk(self) -> int:
@@ -87,21 +98,38 @@ class Player(Character):
             return self.armor.defense_bonus
         return 0
 
+    def equip(self, item: models.Item) -> bool:
+        """Equip an item (weapon or armor)."""
+        if isinstance(item, models.Weapon):
+            return self.equip_weapon(item)
+        elif isinstance(item, models.Armor):
+            return self.equip_armor(item)
+        else:
+            print("Cannot equip this item type.")
+            return False
+
+    def equip_armor(self, armor: models.Armor) -> bool:
+        """Equip armor to a specific slot."""
+        if isinstance(armor, models.Helmet):
+            self.armor["Helmet"] = armor
+        elif isinstance(armor, models.Chestplate):
+            self.armor["Chestplate"] = armor
+        elif isinstance(armor, models.Leggings):
+            self.armor["Leggings"] = armor
+        elif isinstance(armor, models.Boots):
+            self.armor["Boots"] = armor
+        print(f"{armor.name} equipped.")
+        print(text.equip_spacing_text + '\n')
+        self.inventory.remove_item(armor.name)
+        self.inventory.save_inventory()
+        return True
+
     def equip_weapon(self, weapon: models.Weapon) -> bool:
         self.weapon = weapon
         print('\n' + text.equip_spacing_text)
         print(f"{weapon.name} has been equipped.")
         print(text.equip_spacing_text + '\n')
         self.inventory.remove_item(weapon.name)
-        self.inventory.save_inventory()
-        return True
-
-    def equip_armor(self, slot: str, armor: models.Armor) -> bool:
-        """Equip armor to a specific slot."""
-        self.armor = armor
-        print(f"{armour.name} equipped in {slot}.")
-        print(text.equip_spacing_text + '\n')
-        self.inventory.remove_item(armor.name)
         self.inventory.save_inventory()
         return True
 

@@ -196,8 +196,12 @@ class Game:
 
     def command_enter_boss_chamber(self) -> None:
         """Handle the enter boss chamber command."""
-        self.command_go_direction('boss chamber')
-        self.maze.draw_rooms(self.current_room)
+        current_room = self.current_room
+        boss_direction = current_room.get_boss_direction()
+        if not boss_direction:
+            print("You cannot access the Boss Chamber from here.")
+        else:
+            self.command_go_direction(boss_direction)
 
     def command_view_inventory(self) -> None:
         """Handle the view inventory command."""
@@ -227,24 +231,15 @@ class Game:
     def command_go_direction(self, direction: str) -> None:
         """Handle the go direction command."""
         current_room = self.current_room
-        # Handle special boss room access
-        if direction == 'boss chamber' or direction == 'boss':
-            # Find if current room connects to boss room
-            current_room = self.current_room
-            boss_direction = current_room.get_boss_direction()
-            if not boss_direction:
-                print("You cannot access the Boss Chamber from here.")
-            else:
-                self.command_go_direction(boss_direction)
-        
-        # Regular movement
         go_room = current_room.get_room(direction)
-        if go_room is not None:
-            self.current_room = go_room
-            if isinstance(go_room, BossRoom):
-                print("You enter the foreboding Boss Chamber...")
-            else:
-                print(text.successful_room_travel + str(go_room.id))
+        if go_room is None:
+            print("You cannot go that way.")
+            return
+        self.current_room = go_room
+        if isinstance(go_room, BossRoom):
+            print("You enter the foreboding Boss Chamber...")
+        else:
+            print(text.successful_room_travel + str(go_room.id))
 
     def command_equip(self, item: Optional[models.Item] = None) -> None:
         """Equip an item."""

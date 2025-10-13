@@ -55,12 +55,6 @@ class Game:
         self.storage: Storage = Storage()
         self.player: Optional[entities.Player] = None
 
-    def get_maze(self) -> Optional[Maze]:
-        """
-        Get the maze object.
-        """
-        return self.maze
-
     def get_options(self, game_state: str, room: Optional[Room] = None) -> list[str]:
         """
         Get available options based on the provided game state and room type.
@@ -238,8 +232,8 @@ class Game:
 
     def command_enter_boss_chamber(self) -> None:
         """Handle the enter boss chamber command."""
-        self.get_maze().travel_to('boss chamber')
-        self.get_maze().draw_rooms()
+        self.maze.travel_to('boss chamber')
+        self.maze.draw_rooms()
 
     def command_view_inventory(self) -> None:
         """Handle the view inventory command."""
@@ -273,7 +267,7 @@ class Game:
 
     def command_open_chest(self) -> None:
         """Handle the open chest command."""
-        current_room = self.get_maze().current_room
+        current_room = self.maze.current_room
         if isinstance(current_room, TreasureRoom):
             # Open chest logic
             treasure_type: str = current_room.get_type()
@@ -299,7 +293,7 @@ class Game:
                 elif command in ['equip item', 'equip']:
                     self.player.equip(dropped_item)
                     input('\nPress enter to continue...')
-                    self.get_maze().current_room.claimed = True
+                    self.maze.current_room.claimed = True
             elif treasure_type == 'consumable':
                 self.player.inventory.add_item(drop)
                 print('\n' + text.equip_spacing_text)
@@ -318,8 +312,8 @@ class Game:
                             print(text.input_error_prompt)
                     else:
                         print(text.input_error_prompt)
-                self.get_maze().current_room.drop = None
-                self.get_maze().current_room.claimed = True
+                self.maze.current_room.drop = None
+                self.maze.current_room.claimed = True
 
     def command_fight(self) -> None:
         """Handle the fight command."""

@@ -102,7 +102,8 @@ class CombatSequence:
                 f"{'Boss' if is_boss else 'Monster'}: {text.format_number(self.monster.current_health)}")
 
             # Next turn
-            input("\nPress Enter to continue...")
+            text.linebreak()
+            text.prompt_continue()
             self.current_turn += 1
             text.clear_screen()
 
@@ -214,7 +215,8 @@ class CombatSequence:
             print(f"Health Status -> Player: {text.format_number(self.player.current_health)} | Boss: {text.format_number(self.monster.current_health)}")
 
             # Next turn
-            input("\nPress Enter to continue...")
+            text.linebreak()
+            text.prompt_continue()
             self.current_turn += 1
             text.clear_screen()
 

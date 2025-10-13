@@ -201,7 +201,7 @@ class Game:
                 current_room.claimed = True
                 self.save_all_data(config.PLAYER_SAVE_FILE)
                 print('You have defeated the boss! Congratulations on completing the game!')
-                input('Press enter to exit.')
+                text.prompt_continue("Press enter to exit.")
             elif result == 'defeat':
                 command = prompt_player_choice(
                     preamble="You have been defeated by the boss. Game over.",
@@ -224,7 +224,8 @@ class Game:
             print('\n' + text.equip_spacing_text)
             print(f'Your attack has increased by {magnitude}!')
             print(text.equip_spacing_text + '\n')
-        input("\nPress enter to continue...")
+        text.linebreak()
+        text.prompt_continue()
 
     def command_exit(self) -> None:
         """Handle the quit/exit command."""
@@ -253,7 +254,8 @@ class Game:
                     self.use_item(item_name)
                 else:
                     print(text.input_error_prompt)
-                    input("\nPress enter to continue...")
+                    text.linebreak()
+                    text.prompt_continue()
             else:
                 end_loop = True
 
@@ -292,7 +294,8 @@ class Game:
                     pass
                 elif command in ['equip item', 'equip']:
                     self.player.equip(dropped_item)
-                    input('\nPress enter to continue...')
+                    text.linebreak()
+                    text.prompt_continue()
                     self.maze.current_room.claimed = True
             elif treasure_type == 'consumable':
                 self.player.inventory.add_item(drop)
@@ -345,13 +348,15 @@ class Game:
                     self.player.inventory.equip_weapon(drop.drop)
                     self.player.recalculate_stats()
                     self.save_all_data(config.PLAYER_SAVE_FILE)
-                    input('\nPress enter to continue...')
+                    text.linebreak()
+                    text.prompt_continue()
                 elif drop.drop in text.Armour:
                     slot = text.ArmourSlots[drop.drop]
                     self.player.inventory.equip_armour(slot, drop.drop)
                     self.player.recalculate_stats()
                     self.save_all_data(config.PLAYER_SAVE_FILE)
-                    input('\nPress enter to continue...')
+                    text.linebreak()
+                    text.prompt_continue()
             self.player.recalculate_stats()
             self.save_all_data(config.PLAYER_SAVE_FILE)
         elif result == 'defeat':

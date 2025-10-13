@@ -195,6 +195,11 @@ def pretty_print(text_content):
         i += 1
 
 
+def linebreak() -> None:
+    """Print a line break for better readability."""
+    print()
+
+
 def prompt_player_choice(
         preamble: str,
         choices: list[str],
@@ -213,3 +218,8 @@ def prompt_player_choice(
         print("Please enter a valid choice.")
         choice = input(prompt).strip()
     return choices[int(choice) - 1]
+
+
+def prompt_continue(prompt: str = "Press Enter to continue...") -> None:
+    """Prompt the player to press Enter to continue."""
+    input(prompt)

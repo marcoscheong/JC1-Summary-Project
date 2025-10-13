@@ -167,7 +167,7 @@ class Game:
             monster: entities.Monster = current_room.boss_monster
             input(f"You have encountered {BOSS_NAME}.\n Atk: {monster.attack}, HP: {monster.max_health}\nPress enter to continue...")
             text.clear_screen()
-            combat_seq: CombatSequence = CombatSequence(self.get_player(), monster, 3, 20)
+            combat_seq: CombatSequence = CombatSequence(self.player, monster, 3, 20)
             result: str = combat_seq.start_boss_sequence()
             if result == 'victory':
                 current_room.claimed = True
@@ -213,15 +213,15 @@ class Game:
         while not end_loop:
             text.clear_screen()
             command: str = prompt_player_choice(
-                preamble=self.get_player().return_stats(),
+                preamble=self.player.return_stats(),
                 choices=['Use item', 'Go back']
             )
             if command in ['use item']:
                 item_name: str = text.prompt_player_choice(
                     preamble="Please enter the name of the item you want to use:",
-                    choices=self.get_player().inventory.list_items()
+                    choices=self.player.inventory.list_items()
                 )
-                if self.get_player().inventory.use_item(item_name):
+                if self.player.inventory.use_item(item_name):
                     self.use_item(item_name)
                 else:
                     print(text.input_error_prompt)
@@ -260,18 +260,18 @@ class Game:
                     pass
                 elif command in ['equip item', 'equip']:
                     if treasure_type == 'weapon':
-                        self.get_player().inventory.equip_weapon(drop)
-                        self.get_player().recalculate_stats()
+                        self.player.equip_weapon(drop)
+                        self.player.recalculate_stats()
                         input('\nPress enter to continue...')
-                    elif treasure_type == 'armour':
-                        slot = text.ArmourSlots[drop]
-                        self.get_player().inventory.equip_armour(slot, drop)
-                        self.get_player().recalculate_stats()
+                    elif treasure_type == 'armor':
+                        slot = text.ArmorSlots[drop]
+                        self.player.equip_armor(slot, drop)
+                        self.player.recalculate_stats()
                         input('\nPress enter to continue...')
                     self.get_maze().current_room.drop = None
                     self.get_maze().current_room.claimed = True
             elif treasure_type == 'consumable':
-                self.get_player().inventory.add_item(drop)
+                self.player.inventory.add_item(drop)
                 print('\n' + text.equip_spacing_text)
                 print('You have obtained a ' + drop + '!')
                 command = prompt_player_choice(
@@ -282,7 +282,7 @@ class Game:
                     pass
                 elif command in ['consume item', 'consume']:
                     if drop in Consumable:
-                        if self.get_player().inventory.use_item(drop):
+                        if self.player.inventory.use_item(drop):
                             self.use_item(drop)
                         else:
                             print(text.input_error_prompt)
@@ -297,7 +297,7 @@ class Game:
         monster: entities.Monster = entities.create_monster(self.maze.current_room.monster)
         input(f"You have encountered a {self.maze.current_room.monster}.\n Atk: {monster.attack}, HP: {monster.max_health}\nPress enter to continue...")
         text.clear_screen()
-        combat_seq: CombatSequence = CombatSequence(self.get_player(), monster, 3, 20)
+        combat_seq: CombatSequence = CombatSequence(self.player, monster, 3, 20)
         result: str = combat_seq.start_sequence()
         if result == 'victory':
             current_room: Room = self.maze.current_room
@@ -318,17 +318,17 @@ class Game:
                 pass
             elif command in ['equip item', 'equip']:
                 if drop.drop in text.Weapon:
-                    self.get_player().inventory.equip_weapon(drop.drop)
-                    self.get_player().recalculate_stats()
+                    self.player.inventory.equip_weapon(drop.drop)
+                    self.player.recalculate_stats()
                     self.save_all_data(config.PLAYER_SAVE_FILE)
                     input('\nPress enter to continue...')
                 elif drop.drop in text.Armour:
                     slot = text.ArmourSlots[drop.drop]
-                    self.get_player().inventory.equip_armour(slot, drop.drop)
-                    self.get_player().recalculate_stats()
+                    self.player.inventory.equip_armour(slot, drop.drop)
+                    self.player.recalculate_stats()
                     self.save_all_data(config.PLAYER_SAVE_FILE)
                     input('\nPress enter to continue...')
-            self.get_player().recalculate_stats()
+            self.player.recalculate_stats()
             self.save_all_data(config.PLAYER_SAVE_FILE)
         elif result == 'defeat':
             command = prompt_player_choice(

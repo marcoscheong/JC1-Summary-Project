@@ -87,6 +87,24 @@ class Player(Character):
             return self.armor.defense_bonus
         return 0
 
+    def equip_weapon(self, weapon: models.Weapon) -> bool:
+        self.weapon = weapon
+        print('\n' + text.equip_spacing_text)
+        print(f"{weapon.name} has been equipped.")
+        print(text.equip_spacing_text + '\n')
+        self.inventory.remove_item(weapon.name)
+        self.inventory.save_inventory()
+        return True
+
+    def equip_armor(self, slot: str, armor: models.Armor) -> bool:
+        """Equip armor to a specific slot."""
+        self.armor = armor
+        print(f"{armour.name} equipped in {slot}.")
+        print(text.equip_spacing_text + '\n')
+        self.inventory.remove_item(armor.name)
+        self.inventory.save_inventory()
+        return True
+
     def create_new_storage(self, storage: Storage, file: str) -> None:
         """Create a new empty storage for the player."""
         default_data = storage.get_data(config.DEFAULT_SAVE_FILE)
@@ -164,8 +182,6 @@ class Monster(Character):
     def __init__(self, max_health: int, attack: int) -> None:
         super().__init__(max_health, attack)
 
-    def calculate_atk
-
 
 class Inventory:
     """Player inventory with weapons, armour, and consumables."""
@@ -229,33 +245,6 @@ class Inventory:
         self.save_inventory()
         return True
     
-    def equip_weapon(self, weapon_name: str) -> bool:
-        if weapon_name in text.Weapon.keys():
-            self.items["Weapon"] = weapon_name
-            print('\n' + text.equip_spacing_text)
-            print(f"{weapon_name} has been equipped.")
-            print(text.equip_spacing_text + '\n')
-            self.save_inventory()
-            return True
-        else:
-            print(f"{weapon_name} not found.")
-            return False
-    
-    def equip_armour(self, slot: str, armour_name: str) -> bool:
-        """Equip armour to a specific slot."""
-        if armour_name in text.Armour:
-            if "Armour" not in self.items:
-                self.items["Armour"] = {}
-            self.items["Armour"][slot] = armour_name
-            print('\n' + text.equip_spacing_text)
-            print(f"{armour_name} equipped in {slot}.")
-            print(text.equip_spacing_text + '\n')
-            self.save_inventory()
-            return True
-        else:
-            print(f"{armour_name} not found.")
-            return False
-
     def remove_item(self, item_name: str) -> None:
         if item_name in self.items:
             del self.items[item_name]

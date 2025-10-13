@@ -220,7 +220,7 @@ class CombatSequence:
 
             text.clear_screen()
 
-            print(text.combat_spacing_text)
+            print(text.combat_divider)
             print(f"Player Abilities: {' | '.join(player_abilities)}")
             print(f"Monster Abilities: {' | '.join(monster_abilities)}\n")
 

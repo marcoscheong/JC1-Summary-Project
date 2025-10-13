@@ -33,9 +33,9 @@ room_types = ['treasure', 'monster']
 welcome_prompt = "Welcome to Labyrinth Ascension, a Single Player MUD game. Do you want to start or load your game?"
 started_text = 'In this world of labyrinths, you have arrived in the top-most level.\nBegin your descent to the lowest level to uncover the long lost secrets of this labyrinth. \n\nTo select an option, type out the number of your choice or the full command.\nE.g. "1", or "Go down".\nWhen you want to continue to the next scene, press the "Enter" key to procede.\n'
 treasure_room_text = 'You have entered a room containing treasure. Do you want to open the chest or travel to another room?'
-claimed_treasure_room_text = 'You have entered a room containing an empty chest. Do you want to travel to another room?'
+completed_treasure_room_text = 'You have entered a room containing an empty chest. Do you want to travel to another room?'
 monster_room_text = 'You have encountered a monster. Do you want to fight this monster?'
-claimed_monster_room_text = 'You have entered a room containing an empty monster lair. Do you want to travel to another room?'
+completed_monster_room_text = 'You have entered a room containing an empty monster lair. Do you want to travel to another room?'
 loaded_text = "Game loaded successfully!"
 load_error_text = "No saved game found. Starting a new game instead."
 how_to_play_text = (
@@ -116,31 +116,25 @@ player_rooms = {
     "BOSS": " ⬢ ",
 }
 
-move_pool = ['attack', 'shield', 'heal', 'save']
-
-monster_ability_weights = [20, 4, 3, 6]
-
-weaponweights5  = [50, 40, 35, 30, 25, 20, 15, 10, 8, 5, 3, 2, 1, 1, 1]
-weaponweights10 = [40, 35, 30, 28, 25, 20, 15, 12, 10, 8, 5, 3, 2, 1, 1]
-weaponweights15 = [30, 28, 25, 22, 20, 18, 15, 12, 10, 8, 5, 3, 2, 2, 1]
-weaponweights20 = [20, 18, 15, 12, 10, 10, 12, 15, 18, 20, 25, 30, 35, 25, 15]
-weaponweights25 = [5, 5, 5, 5, 8, 10, 12, 15, 20, 25, 30, 40, 50, 40, 35]
-
-armourweights5 =  [50, 50, 50, 50, 40, 40, 40, 40, 25, 25, 25, 25, 15, 15, 15, 15, 10, 10, 10, 10]
-armourweights10 = [40, 40, 40, 40, 35, 35, 35, 35, 25, 25, 25, 25, 15, 15, 15, 15, 10, 10, 10, 10]
-armourweights15 = [35, 35, 35, 35, 30, 30, 30, 30, 25, 25, 25, 25, 20, 20, 20, 20, 15, 15, 15, 15]
-armourweights20 = [30, 30, 30, 30, 28, 28, 28, 28, 25, 25, 25, 25, 23, 23, 23, 23, 20, 20, 20, 20]
-armourweights25 = [20, 20, 20, 20, 22, 22, 22, 22, 25, 25, 25, 25, 28, 28, 28, 28, 30, 30, 30, 30]
-
-boss_monster = "Origin of Chaos"
-
 victory_text = "You have defeated the monster!"
 defeat_text = "You have been defeated by the monster..."
 
 printing_text_large_spacing = '\n══════════════ • ══════════════ \n'
-combat_spacing_text = '────── ◈ ──────'
-ability_spacing_text = '··─··'
-equip_spacing_text = "───┈───"
+combat_divider = '────── ◈ ──────'
+equip_divider = "───┈───"
+
+
+def pull_quote(body: list[str] | str, divider: str) -> None:
+    """Display a block of text with horizontal bars above and below it."""
+    linebreak()
+    print(divider)
+    if isinstance(body, list):
+        for line in body:
+            print(line)
+    else:
+        print(body)
+    print(divider)
+    linebreak()
 
 
 def clear_screen() -> None:

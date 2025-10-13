@@ -195,14 +195,22 @@ class Game:
             monster: entities.Monster = current_room.boss_monster
             input(f"You have encountered {BOSS_NAME}.\n Atk: {monster.attack}, HP: {monster.max_health}\nPress enter to continue...")
             text.clear_screen()
-            combat_seq: CombatSequence = CombatSequence(self.player, monster, 3, 20)
-            result: str = combat_seq.start_boss_sequence()
-            if result == 'victory':
+            combat_seq: CombatSequence = CombatSequence(
+                player=self.player,
+                monster=monster,
+                base_elixir=3,
+                max_turns=20
+            )
+            victor = combat_seq.run_combat(
+                elixir_steal=True,
+                shared_fate=0.25
+            )
+            if isinstance(victor, entities.Player):
                 current_room.claimed = True
                 self.save_all_data(config.PLAYER_SAVE_FILE)
                 print('You have defeated the boss! Congratulations on completing the game!')
                 text.prompt_continue("Press enter to exit.")
-            elif result == 'defeat':
+            elif isinstance(victor, entities.Monster):
                 command = prompt_player_choice(
                     preamble="You have been defeated by the boss. Game over.",
                     choices=['Fight boss', 'Go back']
@@ -325,8 +333,9 @@ class Game:
         input(f"You have encountered a {self.maze.current_room.monster}.\n Atk: {monster.attack}, HP: {monster.max_health}\nPress enter to continue...")
         text.clear_screen()
         combat_seq: CombatSequence = CombatSequence(self.player, monster, 3, 20)
-        result: str = combat_seq.start_sequence()
-        if result == 'victory':
+        victor = combat_seq.run_combat()
+        if isinstance(victor, entities.Player):
+            print(text.victory_text)
             current_room: Room = self.maze.current_room
             current_room.monster = None
             current_room.claimed = True
@@ -359,7 +368,8 @@ class Game:
                     text.prompt_continue()
             self.player.recalculate_stats()
             self.save_all_data(config.PLAYER_SAVE_FILE)
-        elif result == 'defeat':
+        elif isinstance(victor, entities.Monster):
+            print(text.defeat_text)
             command = prompt_player_choice(
                 preamble=(
                     "You have been defeated by the monster. Game over.\n"

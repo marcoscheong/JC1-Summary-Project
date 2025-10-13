@@ -32,6 +32,7 @@ def create_monster(name: str) -> "Monster":
         )
     monster_data = game_data["monsters"][name]
     return Monster(
+        name=name,
         max_health=monster_data["max_health"],
         attack=monster_data["attack"]
     )
@@ -39,6 +40,7 @@ def create_monster(name: str) -> "Monster":
 def create_player() -> "Player":
     """Factory function to create a Player instance with default stats."""
     return Player(
+        name="Player",
         max_health=game_data["player"]["max_health"],
         attack=game_data["player"]["attack"],
     )
@@ -48,7 +50,8 @@ class Character:
     """
     Base class for all characters (player and monsters).
     """
-    def __init__(self, max_health: int, attack: int) -> None:
+    def __init__(self, name: str, max_health: int, attack: int) -> None:
+        self.name: str = name
         self.max_health: int = max_health
         self.attack: int = attack
         self.current_health: int = max_health
@@ -56,19 +59,29 @@ class Character:
             name for name in MOVES
         ]
 
-    def take_damage(self, damage: int) -> str:
-        """Reduce health by damage amount. Returns 'died' if health reaches zero.
-        """
-        if (self.current_health - damage) <= 0:
+    def is_dead(self) -> bool:
+        """Check if the character is dead."""
+        return self.current_health <= 0
+
+    def calculate_atk(self) -> int:
+        """Calculate total attack including weapon bonus."""
+        return self.attack
+
+    def calculate_def(self) -> int:
+        """Calculate total defense including armor bonus."""
+        return 0
+
+    def take_damage(self, damage: int) -> None:
+        """Reduce health by damage amount."""
+        self.current_health -= damage
+        if self.current_health <= 0:
             self.current_health = 0
-            return 'died'
-        else:
-            self.current_health -= damage
-            return 'alive'
 
     def heal(self, healAmount: int) -> None:
         """Increase current health up to max_health."""
-        self.current_health = min(self.current_health + healAmount, self.max_health)
+        self.current_health += healAmount
+        if self.current_health > self.max_health:
+            self.current_health = self.max_health
 
     def return_stats(self) -> str:
         """Return a formatted string of the player's stats."""
@@ -82,8 +95,8 @@ class Character:
 class Player(Character):
     """Player character with inventory and stat management."""
 
-    def __init__(self, max_health: int, attack: int) -> None:
-        super().__init__(max_health, attack)
+    def __init__(self, name: str, max_health: int, attack: int) -> None:
+        super().__init__(name, max_health, attack)
         self.inventory: Optional[Inventory] = None
         self.base_atk: int = attack
         self.base_health: int = max_health
@@ -104,7 +117,10 @@ class Player(Character):
     def calculate_def(self) -> int:
         """Calculate total defense including armor bonus."""
         if self.armor:
-            return self.armor.defense_bonus
+            total_defence_bonus = sum(
+                part.defence_bonus for part in self.armor.values()
+            )
+            return total_defence_bonus
         return 0
 
     def equip(self, item: models.Item) -> bool:
@@ -215,10 +231,8 @@ class Player(Character):
 
 
 class Monster(Character):
-
-    def __init__(self, max_health: int, attack: int) -> None:
-        super().__init__(max_health, attack)
-
+    """Monster character with basic stats."""
+    
 
 class Inventory:
     """Player inventory with weapons, armour, and consumables."""

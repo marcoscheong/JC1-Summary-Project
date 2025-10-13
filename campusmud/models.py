@@ -1,8 +1,5 @@
 # Data models - pure data classes for game stats and drops
 
-import random
-from typing import List
-
 from campusmud.data import load_game_data
 
 game_data = load_game_data()

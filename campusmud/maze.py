@@ -3,19 +3,8 @@
 import random
 from typing import Optional, Dict, List
 
-from campusmud import text
-from campusmud.data import load_game_data
-from campusmud.models import Drop
+from campusmud import entities, text
 from campusmud.entities import Monster
-
-BOSS_NAME = "Origin of Chaos"
-
-game_data = load_game_data()
-
-Monsters = {
-    name: [data["max_health"], data["attack"]]
-    for name, data in game_data["monsters"].items()
-}
 
 
 class Room:
@@ -125,8 +114,7 @@ class BossRoom(Room):
     def __init__(self, id: int) -> None:
         super().__init__(id)
         self.claimed: bool = False
-        self.boss_monster_name: str = BOSS_NAME
-        self.boss_monster: Monster = Monster(Monsters[BOSS_NAME][0], Monsters[BOSS_NAME][1])
+        self.boss_monster: Monster = entities.create_boss()
 
 
 class Maze:

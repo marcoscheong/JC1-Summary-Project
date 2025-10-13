@@ -8,6 +8,9 @@ from campusmud.storage import Storage
 
 game_data = load_game_data()
 
+# Constants
+BOSS_NAME = "Origin of Chaos"
+
 # Enums
 MOVES = ['attack', 'shield', 'heal', 'save']
 CONSUMABLES = list(game_data["items"]["consumables"].keys())
@@ -15,12 +18,18 @@ WEAPONS = list(game_data["items"]["weapons"].keys())
 ARMOR = list(game_data["items"]["armor"].keys())
 
 
-
+def create_boss() -> "Monster":
+    """Factory function to create the boss monster."""
+    return create_monster(BOSS_NAME)
 
 def create_monster(name: str) -> "Monster":
     """Factory function to create a Monster instance by name."""
     if name not in game_data["monsters"]:
         raise ValueError(f"Monster '{name}' not found in game data.")
+    if name == BOSS_NAME:
+        raise ValueError(
+            f"Use create_boss() to create the boss monster '{BOSS_NAME}'."
+        )
     monster_data = game_data["monsters"][name]
     return Monster(
         max_health=monster_data["max_health"],

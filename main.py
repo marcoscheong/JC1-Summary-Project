@@ -9,10 +9,10 @@ import campusmud.text as text
 class SplashScreen:
     """Splash screen for the Campus MUD game."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def prompt_main_menu(self):
+    def prompt_main_menu(self) -> str:
         """Display the main menu and return the player's choice."""
         choice = text.prompt_player_choice(
             preamble=text.welcome_prompt,
@@ -22,12 +22,12 @@ class SplashScreen:
 
 
 if __name__ == "__main__":
-    splash = SplashScreen()
-    choice = None
+    splash: SplashScreen = SplashScreen()
+    choice: str | None = None
     while choice != 'quit':
         choice = splash.prompt_main_menu()
         if choice == 'start':
-            game = Game()
+            game: Game = Game()
             game.run()
         elif choice == 'load':
             game = Game()

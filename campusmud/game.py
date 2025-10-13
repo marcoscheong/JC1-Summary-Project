@@ -1,5 +1,7 @@
 # Game module - Game controller and main loop (UI + game logic combined)
 
+from typing import Optional
+
 from campusmud import text
 from campusmud.storage import Storage
 from campusmud.models import Stats
@@ -13,46 +15,45 @@ class Game:
     """
     Main game controller with state management.
     """
-    def __init__(self):
-        self.game_over = False
-        self.maze = None
-        self.storage = Storage()
-        self.player = None
+    def __init__(self) -> None:
+        self.game_over: bool = False
+        self.maze: Optional[Maze] = None
+        self.storage: Storage = Storage()
+        self.player: Optional[Player] = None
 
-    def get_maze(self):
+    def get_maze(self) -> Optional[Maze]:
         """
         Get the maze object.
         """
         return self.maze
- 
-    def get_options(self, game_state: str, room=None) -> list[str]:
+
+    def get_options(self, game_state: str, room: Optional[Room] = None) -> list[str]:
         """
         Get available options based on the provided game state and room type.
         """
         if game_state == 'travel':
-            choices = room.room_options() if room else []
-            if isinstance(room, MonsterRoom) and room.claimed == False:
+            choices: list[str] = room.room_options() if room else []
+            if isinstance(room, MonsterRoom) and not room.claimed:
                 choices.insert(0, 'Fight monster')
-            elif isinstance(room, TreasureRoom) and room.claimed == False:
+            elif isinstance(room, TreasureRoom) and not room.claimed:
                 choices.insert(0, 'Open chest')
-            elif isinstance(room, BossRoom) and room.claimed == False:
+            elif isinstance(room, BossRoom) and not room.claimed:
                 choices.insert(0, 'Challenge the boss')
-            elif isinstance(room, Room):
-                pass
             choices.append('View inventory')
             choices.append('Exit to menu')
             return choices
         elif game_state == 'boss':
             return ['Fight boss', 'Go back']
-    
-    def exit_game(self):
+        return []
+
+    def exit_game(self) -> None:
         """Set the game to exit state."""
         self.reset_game_data()
         self.game_over = True
 
-    def start_game(self):
+    def start_game(self) -> None:
         """Start a new game with a fresh maze and player."""
-        rooms = []
+        rooms: list[Room] = []
         rooms.append(Room(0))
         for i in range(1, text.maze_size):
             if i % 2 == 0:
@@ -73,9 +74,9 @@ class Game:
         input()
         self.maze.draw_rooms()
 
-    def load_game(self):
+    def load_game(self) -> None:
         """Load a saved game from file."""
-        rooms = []
+        rooms: list[Room] = []
         rooms.append(Room(0))
         for i in range(1, text.maze_size):
             if i % 2 == 0:
@@ -89,7 +90,7 @@ class Game:
                 rooms.append(Room(i + 1))
         rooms.append(BossRoom(text.maze_size + 1))
         for room in rooms:
-            if type(room) == TreasureRoom or type(room) == MonsterRoom or type(room) == BossRoom:
+            if isinstance(room, (TreasureRoom, MonsterRoom, BossRoom)):
                 if room.id in self.storage.get_data(text.player_save_file).get("Claimed_rooms", []):
                     room.claimed = True
         self.maze = Maze(rooms, rooms[0])
@@ -101,58 +102,50 @@ class Game:
         input()
         self.maze.draw_rooms()
 
-    def create_player(self):
+    def create_player(self) -> None:
         """Initialize a new player."""
-        stats = Stats(text.default_health, text.default_attack)
+        stats: Stats = Stats(text.default_health, text.default_attack)
         self.player = Player(stats)
         self.player.create_new_storage(self.storage, text.player_save_file)
-    
-    def load_player(self):
+
+    def load_player(self) -> None:
         """Load player from saved file."""
-        atk = self.storage.get_data(text.player_save_file).get("Player_attack", text.default_attack)
-        current_health = self.storage.get_data(text.player_save_file).get("Player_current_health", text.default_health)
-        max_health = self.storage.get_data(text.player_save_file).get("Player_max_health", text.default_health)
-        stats = Stats(max_health, atk)
+        atk: int = self.storage.get_data(text.player_save_file).get("Player_attack", text.default_attack)
+        current_health: int = self.storage.get_data(text.player_save_file).get("Player_current_health", text.default_health)
+        max_health: int = self.storage.get_data(text.player_save_file).get("Player_max_health", text.default_health)
+        stats: Stats = Stats(max_health, atk)
         self.player = Player(stats)
         self.player.load_from_storage(self.storage, text.player_save_file)
 
-    def get_player(self):
+    def get_player(self) -> Optional[Player]:
         """Get the player object."""
         return self.player
 
-    def load_data(self):
+    def load_data(self) -> None:
         """Loader method for data."""
         pass
 
-    def reset_game_data(self):
+    def reset_game_data(self) -> None:
         """Reset game data to default values."""
-        default_data = self.storage.get_data(text.default_save_file)
+        default_data: dict = self.storage.get_data(text.default_save_file)
         self.storage.save_data(text.player_save_file, default_data)
 
-    def save_all_data(self, file): 
+    def save_all_data(self, file: str) -> None:
         """Save all current game variables to file."""
-        claimed_rooms = []
+        claimed_rooms: list[int] = []
         for room in self.maze.rooms:
-            if isinstance(room, TreasureRoom) and room.claimed:
-                if room.id not in self.storage.get_data(file).get("Claimed_rooms", []):
-                    claimed_rooms.append(room.id)
-            elif isinstance(room, MonsterRoom) and room.claimed:
-                if room.id not in self.storage.get_data(file).get("Claimed_rooms", []):
-                    claimed_rooms.append(room.id)
-            elif isinstance(room, BossRoom) and room.claimed:
+            if isinstance(room, (TreasureRoom, MonsterRoom, BossRoom)) and room.claimed:
                 if room.id not in self.storage.get_data(file).get("Claimed_rooms", []):
                     claimed_rooms.append(room.id)
         self.storage.save_data(file, {
             "Room_id": self.maze.current_room.id,
-        })
-        self.storage.save_data(file, {
             "Claimed_rooms": claimed_rooms
         })
         self.player.save_to_storage(self.storage, file)
 
-    def display_room_info(self):
+    def display_room_info(self) -> None:
         """Display information about the current room based on its type."""
-        current_room = self.maze.current_room
+        current_room: Room = self.maze.current_room
         if isinstance(current_room, TreasureRoom):
             print(text.treasure_room_text if not current_room.claimed else text.claimed_treasure_room_text)
         elif isinstance(current_room, MonsterRoom):
@@ -160,9 +153,9 @@ class Game:
         elif isinstance(current_room, BossRoom):
             pass
 
-    def fight_boss(self, current_room):
+    def fight_boss(self, current_room: BossRoom) -> None:
         """Handle the logic for fighting the boss."""
-        command = prompt_player_choice(
+        command: str = prompt_player_choice(
             preamble=f"You have encountered the boss: {text.boss_monster}. Do you want to fight this boss?",
             choices=['Fight boss', 'Go back']
         )
@@ -172,11 +165,11 @@ class Game:
             pass
         elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
             text.clear_screen()
-            monster = current_room.boss_monster
+            monster: Monster = current_room.boss_monster
             input(f"You have encountered {text.boss_monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
             text.clear_screen()
-            combat_seq = CombatSequence(self.get_player(), monster, 3, 20)
-            result = combat_seq.start_boss_sequence()
+            combat_seq: CombatSequence = CombatSequence(self.get_player(), monster, 3, 20)
+            result: str = combat_seq.start_boss_sequence()
             if result == 'victory':
                 current_room.claimed = True
                 self.save_all_data(text.player_save_file)
@@ -190,23 +183,23 @@ class Game:
                 if command in ['exit', 'retry', 'start', 'play']:
                     self.exit_game()
 
-    def use_item(self, item_name):
+    def use_item(self, item_name: str) -> None:
         """Handle the logic for using an item."""
         if item_name == 'health potion':
-            magnitude = self.get_player().stats.max_health * 0.2
+            magnitude: float = self.get_player().stats.max_health * 0.2
             self.get_player().health_potion(magnitude)
             self.get_player().recalculate_stats()
             print('\n' + text.equip_spacing_text)
             print(f"Your max health has increased by {magnitude}!")
             print(text.equip_spacing_text + '\n')
         elif item_name == 'healing potion':
-            magnitude = self.get_player().stats.max_health * 0.2
+            magnitude: float = self.get_player().stats.max_health * 0.2
             self.get_player().stats.heal(magnitude)
             print('\n' + text.equip_spacing_text)
             print(f'You have healed {magnitude} health!')
             print(text.equip_spacing_text + '\n')
         elif item_name == 'attack potion':
-            magnitude = self.get_player().stats.attack * 0.2
+            magnitude: float = self.get_player().stats.attack * 0.2
             self.get_player().atk_potion(magnitude)
             self.get_player().recalculate_stats()
             print('\n' + text.equip_spacing_text)
@@ -214,26 +207,26 @@ class Game:
             print(text.equip_spacing_text + '\n')
         input("\nPress enter to continue...")
 
-    def command_exit(self):
+    def command_exit(self) -> None:
         """Handle the quit/exit command."""
         self.exit_game()
 
-    def command_enter_boss_chamber(self):
+    def command_enter_boss_chamber(self) -> None:
         """Handle the enter boss chamber command."""
         self.get_maze().travel_to('boss chamber')
         self.get_maze().draw_rooms()
 
-    def command_view_inventory(self):
+    def command_view_inventory(self) -> None:
         """Handle the view inventory command."""
-        end_loop = False
+        end_loop: bool = False
         while not end_loop:
             text.clear_screen()
-            command = prompt_player_choice(
+            command: str = prompt_player_choice(
                 preamble=self.get_player().stats.return_stats(),
                 choices=['Use item', 'Go back']
             )
             if command in ['use item']:
-                item_name = text.prompt_player_choice(
+                item_name: str = text.prompt_player_choice(
                     preamble="Please enter the name of the item you want to use:",
                     choices=self.get_player().inventory.list_items()
                 )
@@ -245,7 +238,7 @@ class Game:
             else:
                 end_loop = True
 
-    def command_go_direction(self, direction):
+    def command_go_direction(self, direction: str) -> None:
         """Handle the go direction command."""
         if direction in text.directions:
             self.maze.travel_to(direction)
@@ -253,22 +246,22 @@ class Game:
         else:
             print(text.input_error_prompt)
 
-    def command_open_chest(self):
+    def command_open_chest(self) -> None:
         """Handle the open chest command."""
-        if type(self.get_maze().current_room) == TreasureRoom:
+        if isinstance(self.get_maze().current_room, TreasureRoom):
             # Open chest logic
-            treasure_type = self.get_maze().current_room.get_type()
-            drop = self.get_maze().current_room.get_drops()
-            if treasure_type == 'weapon' or treasure_type == 'armour':
+            treasure_type: str = self.get_maze().current_room.get_type()
+            drop: str = self.get_maze().current_room.get_drops()
+            if treasure_type in ['weapon', 'armour']:
                 print('\n' + text.equip_spacing_text)
                 if treasure_type == 'weapon':
                     print(f"You have found a {drop} (atk: {text.Weapon[drop]})!")
                 elif treasure_type == 'armour':
-                    slot = text.ArmourSlots[drop]
+                    slot: str = text.ArmourSlots[drop]
                     print(f"You have found {drop} (slot: {slot}, def: {text.Armour[drop]})!")
                 print(text.equip_spacing_text + '\n')
 
-                command = prompt_player_choice(
+                command: str = prompt_player_choice(
                     preamble=text.equip_spacing_text,
                     choices=['Equip item', 'Go back']
                 )
@@ -307,24 +300,24 @@ class Game:
                 self.get_maze().current_room.drop = None
                 self.get_maze().current_room.claimed = True
 
-    def command_fight(self):
+    def command_fight(self) -> None:
         """Handle the fight command."""
         text.clear_screen()
-        monster = Monster(Stats(text.Monsters[self.maze.current_room.monster][0], text.Monsters[self.maze.current_room.monster][1]))
+        monster: Monster = Monster(Stats(text.Monsters[self.maze.current_room.monster][0], text.Monsters[self.maze.current_room.monster][1]))
         input(f"You have encountered a {self.maze.current_room.monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
         text.clear_screen()
-        combat_seq = CombatSequence(self.get_player(), monster, 3, 20)
-        result = combat_seq.start_sequence()
+        combat_seq: CombatSequence = CombatSequence(self.get_player(), monster, 3, 20)
+        result: str = combat_seq.start_sequence()
         if result == 'victory':
-            current_room = self.maze.current_room
+            current_room: Room = self.maze.current_room
             current_room.monster = None
             current_room.claimed = True
 
-            drop = current_room.drop
+            drop: str = current_room.drop
             if drop.type == 'weapon':
                 print(f"You have obtained a {drop.drop}({text.Weapon[drop.drop]})!")
             elif drop.type == 'armour':
-                slot = text.ArmourSlots[drop.drop]
+                slot: str = text.ArmourSlots[drop.drop]
                 print(f"You have obtained {drop.drop} (slot: {slot}, def: {text.Armour[drop.drop]})!")
             command = prompt_player_choice(
                 preamble="What would you like to do?",
@@ -368,7 +361,7 @@ class Game:
         elif command in ['view inventory', 'inventory', 'inv']:
             self.command_view_inventory()
         elif command.startswith('go'):
-            direction = command.split()[1]
+            direction: str = command.split()[1]
             self.command_go_direction(direction)
         elif command.startswith('open'):
             self.command_open_chest()
@@ -377,7 +370,7 @@ class Game:
         else:
             raise ValueError("Invalid command")
 
-    def run(self):
+    def run(self) -> None:
         """Main game loop - handles user input and game state."""
 
         while not self.game_over:
@@ -388,7 +381,7 @@ class Game:
             self.display_room_info()
 
             # Main command processing
-            command = prompt_player_choice(
+            command: str = prompt_player_choice(
                 preamble="What would you like to do?",
                 choices=self.maze.current_room.room_options()
             )

@@ -1,7 +1,8 @@
 import main
 
-def test_main():
-    main
+def test_main() -> None:
+    # Placeholder for testing main module
+    pass
 
 test_main()
 

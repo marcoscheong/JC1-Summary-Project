@@ -4,30 +4,37 @@ import random
 
 from campusmud import text
 from campusmud.models import Ability
+from campusmud.entities import Player, Monster
 
 
 class CombatSequence:
     """
     Manages turn-based combat between player and monster.
     """
-    def __init__(self, player, monster, base_elixir, max_turns):
-        self.base_elixir = base_elixir
-        self.current_turn = 1
-        self.max_turns = max_turns
+    def __init__(
+        self,
+        player: Player,
+        monster: Monster,
+        base_elixir: int,
+        max_turns: int
+    ) -> None:
+        self.base_elixir: int = base_elixir
+        self.current_turn: int = 1
+        self.max_turns: int = max_turns
 
-        self.player = player
-        self.monster = monster
+        self.player: Player = player
+        self.monster: Monster = monster
 
-        self.saved_p = 0  # saved player elixir from each turn
-        self.saved_m = 0  # saved monster elixir from each turn
+        self.saved_p: int = 0  # saved player elixir from each turn
+        self.saved_m: int = 0  # saved monster elixir from each turn
 
-    def _fmt(self, x):
+    def _fmt(self, x: int | float) -> int | float:
         """
         Format numbers to 1 decimal if needed, no trailing .0.
         """
         return int(x) if isinstance(x, (int, float)) and float(x).is_integer() else round(x, 1)
 
-    def start_sequence(self, is_boss=False):
+    def start_sequence(self, is_boss: bool = False) -> str:
         """
         Run combat sequence for normal monsters.
         """
@@ -122,7 +129,7 @@ class CombatSequence:
             print(text.defeat_text)
             return 'defeat'
 
-    def start_boss_sequence(self):
+    def start_boss_sequence(self) -> str:
         """
         Run combat sequence for boss with elixir steal and shared fate mechanics.
         """
@@ -235,15 +242,15 @@ class CombatSequence:
             print(text.defeat_text)
             return 'defeat'
 
-    def player_ability_sequence(self, elixir):
+    def player_ability_sequence(self, elixir: int) -> list[Ability]:
         """
         Get player to choose actions and their magnitudes.
         """
-        ability_sequence = []
-        available_elixir = elixir
+        ability_sequence: list[Ability] = []
+        available_elixir: int = elixir
         ability_dict = {a.name: a for a in self.player.abilities}
         
-        cheapest_cost = text.cheapest_ability_cost
+        cheapest_cost: int = text.cheapest_ability_cost
 
         while available_elixir >= cheapest_cost:
             print('Elixir: ' + str(available_elixir) + '\n')
@@ -267,30 +274,25 @@ class CombatSequence:
             
             if choice in [a.name for a in available_abilities]:
                 ability = Ability(ability_dict[choice].name)
-                magnitude = 100  # placeholder
-                while magnitude > available_elixir:
-                    magnitude = input(text.magnitude_prompt)
-                    if not magnitude.isdigit():
-                        print(text.input_error_prompt)
-                        magnitude = 100
-                    elif magnitude.isdigit():
-                        magnitude = int(magnitude)
-                        if magnitude > available_elixir:
-                            print(text.input_error_prompt)
+                magnitude: int = 0
+                while True:
+                    magnitude_input = input(text.magnitude_prompt)
+                    if magnitude_input.isdigit():
+                        magnitude = int(magnitude_input)
+                        if magnitude <= available_elixir:
+                            break
+                    print(text.input_error_prompt)
                 
                 if choice == "attack":
                     ability.attack = magnitude
-                    ability.magnitude = magnitude
                 elif choice == "shield":
                     ability.shield = magnitude
-                    ability.magnitude = magnitude
                 elif choice == "heal":
                     ability.heal = magnitude
-                    ability.magnitude = magnitude
                 elif choice == "save":
                     ability.saved_elixir = magnitude
-                    ability.magnitude = magnitude
                 
+                ability.magnitude = magnitude
                 ability_sequence.append(ability)
                 available_elixir -= magnitude
             else:
@@ -298,7 +300,7 @@ class CombatSequence:
         
         return ability_sequence
 
-    def monster_ability_sequence(self, elixir):
+    def monster_ability_sequence(self, elixir: int) -> list[Ability]:
         """
         Generate random monster behavior for choosing actions and magnitudes.
         """
@@ -329,25 +331,23 @@ class CombatSequence:
         
         return ability_sequence
 
-    def returnMonsterDrop(self):
+    def returnMonsterDrop(self) -> str:
         """
         Return what the monster drops when killed.
         """
-        return self.monster.drop
+        return getattr(self.monster, 'drop', 'No drop')
 
-    def end_sequence(self):
+    def end_sequence(self) -> str:
         """
         End the combat once either player or enemy dies.
         """
         if self.player.stats.current_health == 0:
-            print(text.defeat_text)
             return 'defeat'
         elif self.monster.stats.current_health == 0:
-            print(text.victory_text)
             return 'victory'
-        input('Press enter to continue...')
+        return 'ongoing'
 
-    def health_bar(self, current, maximum, bar_length=20):
+    def health_bar(self, current: int, maximum: int, bar_length: int = 20) -> str:
         """
         Return a string representing a health bar.
         """

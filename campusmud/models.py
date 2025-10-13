@@ -109,15 +109,3 @@ class Weapon(Item):
     def __init__(self, name: str, attack_bonus: int) -> None:
         super().__init__(name)
         self.attack_bonus: int = attack_bonus
-
-
-class Ability:
-    """Represents a player action during combat (attack, shield, heal, save)."""
-    def __init__(self, name: str) -> None:
-        self.name: str = name
-        self.attack: int = 0
-        self.shield: int = 0
-        self.heal: int = 0
-        self.elixir: int = 1
-        self.saved_elixir: int = 0
-        self.magnitude: int = 0

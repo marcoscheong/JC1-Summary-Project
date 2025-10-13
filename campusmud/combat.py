@@ -3,10 +3,21 @@
 import random
 
 from campusmud import text
-from campusmud.models import Ability
 from campusmud.entities import Player, Monster
 
 BOSS_NAME = "Origin of Chaos"
+
+
+class Ability:
+    """Represents a player action during combat (attack, shield, heal, save)."""
+    def __init__(self, name: str) -> None:
+        self.name: str = name
+        self.attack: int = 0
+        self.shield: int = 0
+        self.heal: int = 0
+        self.elixir: int = 1
+        self.saved_elixir: int = 0
+        self.magnitude: int = 0
 
 
 class CombatSequence:

@@ -229,7 +229,7 @@ class Maze:
             key += "E"
         return key
 
-    def draw_rooms(self) -> None:
+    def draw_rooms(self, current_room: Room) -> None:
         """Display the maze layout as ASCII art showing all rooms in a grid."""
         row_chunks: List[List[str]] = []
         rooms_per_row: int = 3
@@ -242,7 +242,7 @@ class Maze:
             
             row_arts: List[str] = []
             for room in row_rooms:
-                if room.id == self.current_room.id:
+                if room.id == current_room.id:
                     room_art: str = text.player_rooms[self.get_room_key(room)]
                 else:
                     room_art: str = text.rooms[self.get_room_key(room)]
@@ -279,13 +279,13 @@ class Maze:
         # Print boss area separately
         boss_room: Room = self.rooms[-1]
         print("=" * 15)
-        if boss_room.id == self.current_room.id:
+        if boss_room.id == current_room.id:
             print("BOSS CHAMBER (YOU ARE HERE)")
         else:
             print("BOSS CHAMBER")
         print("=" * 15)
         
-        if boss_room.id == self.current_room.id:
+        if boss_room.id == current_room.id:
             boss_art: str = text.player_rooms.get(self.get_room_key(boss_room), "[ BOSS ROOM ]")
         else:
             boss_art: str = text.rooms.get(self.get_room_key(boss_room), "[ BOSS ROOM ]")

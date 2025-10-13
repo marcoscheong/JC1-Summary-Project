@@ -72,7 +72,7 @@ class Game:
         print(text.printing_text_large_spacing)
         text.pretty_print(text.started_text)
         input()
-        self.maze.draw_rooms()
+        self.maze.draw_rooms(self.current_room)
 
     def load_game(self) -> None:
         """Load a saved game from file."""
@@ -99,7 +99,7 @@ class Game:
         print(text.loaded_text)
         print(text.printing_text_large_spacing)
         input()
-        self.maze.draw_rooms()
+        self.maze.draw_rooms(self.current_room)
 
     def create_player(self) -> None:
         """Create a new player."""
@@ -213,7 +213,7 @@ class Game:
     def command_enter_boss_chamber(self) -> None:
         """Handle the enter boss chamber command."""
         self.command_go_direction('boss chamber')
-        self.maze.draw_rooms()
+        self.maze.draw_rooms(self.current_room)
 
     def command_view_inventory(self) -> None:
         """Handle the view inventory command."""
@@ -389,7 +389,7 @@ class Game:
 
         while not self.game_over:
             text.clear_screen()
-            self.maze.draw_rooms()
+            self.maze.draw_rooms(self.current_room)
 
             # Display room-specific text
             self.display_room_info()

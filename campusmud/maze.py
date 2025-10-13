@@ -5,7 +5,7 @@ from typing import Optional, Dict, List
 
 from campusmud import text
 from campusmud.data import load_game_data
-from campusmud.models import Stats, Drop
+from campusmud.models import Drop
 from campusmud.entities import Monster
 
 BOSS_NAME = "Origin of Chaos"
@@ -158,7 +158,7 @@ class BossRoom(Room):
         super().__init__(id)
         self.claimed: bool = False
         self.boss_monster_name: str = BOSS_NAME
-        self.boss_monster: Monster = Monster(Stats(Monsters[BOSS_NAME][0], Monsters[BOSS_NAME][1]))
+        self.boss_monster: Monster = Monster(Monsters[BOSS_NAME][0], Monsters[BOSS_NAME][1])
 
 
 class Maze:

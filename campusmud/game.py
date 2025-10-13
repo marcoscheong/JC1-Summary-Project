@@ -5,7 +5,6 @@ from typing import Optional
 from campusmud import config, text
 from campusmud.data import load_game_data
 from campusmud.storage import Storage
-from campusmud.models import Stats
 from campusmud.entities import Player, Monster
 from campusmud.maze import Room, TreasureRoom, MonsterRoom, BossRoom, Maze
 from campusmud.combat import CombatSequence
@@ -116,9 +115,8 @@ class Game:
         self.maze.draw_rooms()
 
     def create_player(self) -> None:
-        """Initialize a new player."""
-        stats: Stats = Stats(text.default_health, text.default_attack)
-        self.player = Player(stats)
+        """Create a new player."""
+        self.player = Player(max_health=text.default_health, attack=text.default_attack)
         self.player.create_new_storage(self.storage, config.PLAYER_SAVE_FILE)
 
     def load_player(self) -> None:
@@ -126,8 +124,8 @@ class Game:
         atk: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_attack", text.default_attack)
         current_health: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_current_health", text.default_health)
         max_health: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_max_health", text.default_health)
-        stats: Stats = Stats(max_health, atk)
-        self.player = Player(stats)
+        self.player = Player(max_health=max_health, attack=atk)
+        self.player.current_health = current_health
         self.player.load_from_storage(self.storage, config.PLAYER_SAVE_FILE)
 
     def get_player(self) -> Optional[Player]:
@@ -179,7 +177,7 @@ class Game:
         elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
             text.clear_screen()
             monster: Monster = current_room.boss_monster
-            input(f"You have encountered {BOSS_NAME}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
+            input(f"You have encountered {BOSS_NAME}.\n Atk: {monster.attack}, HP: {monster.max_health}\nPress enter to continue...")
             text.clear_screen()
             combat_seq: CombatSequence = CombatSequence(self.get_player(), monster, 3, 20)
             result: str = combat_seq.start_boss_sequence()
@@ -199,22 +197,14 @@ class Game:
     def use_item(self, item_name: str) -> None:
         """Handle the logic for using an item."""
         if item_name == 'health potion':
-            magnitude: float = self.get_player().stats.max_health * 0.2
-            self.get_player().health_potion(magnitude)
-            self.get_player().recalculate_stats()
+            magnitude: float = self.player.max_health * 0.2
+            self.player.current_health = min(self.player.current_health + magnitude, self.player.max_health)
             print('\n' + text.equip_spacing_text)
-            print(f"Your max health has increased by {magnitude}!")
-            print(text.equip_spacing_text + '\n')
-        elif item_name == 'healing potion':
-            magnitude: float = self.get_player().stats.max_health * 0.2
-            self.get_player().stats.heal(magnitude)
-            print('\n' + text.equip_spacing_text)
-            print(f'You have healed {magnitude} health!')
+            print(f"You have healed {magnitude} health!")
             print(text.equip_spacing_text + '\n')
         elif item_name == 'attack potion':
-            magnitude: float = self.get_player().stats.attack * 0.2
-            self.get_player().atk_potion(magnitude)
-            self.get_player().recalculate_stats()
+            magnitude: float = self.player.attack * 0.2
+            self.player.attack += magnitude
             print('\n' + text.equip_spacing_text)
             print(f'Your attack has increased by {magnitude}!')
             print(text.equip_spacing_text + '\n')
@@ -235,7 +225,7 @@ class Game:
         while not end_loop:
             text.clear_screen()
             command: str = prompt_player_choice(
-                preamble=self.get_player().stats.return_stats(),
+                preamble=self.get_player().return_stats(),
                 choices=['Use item', 'Go back']
             )
             if command in ['use item']:
@@ -316,8 +306,8 @@ class Game:
     def command_fight(self) -> None:
         """Handle the fight command."""
         text.clear_screen()
-        monster: Monster = Monster(Stats(Monsters[self.maze.current_room.monster][0], Monsters[self.maze.current_room.monster][1]))
-        input(f"You have encountered a {self.maze.current_room.monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
+        monster: Monster = Monster(Monsters[self.maze.current_room.monster][0], Monsters[self.maze.current_room.monster][1])
+        input(f"You have encountered a {self.maze.current_room.monster}.\n Atk: {monster.attack}, HP: {monster.max_health}\nPress enter to continue...")
         text.clear_screen()
         combat_seq: CombatSequence = CombatSequence(self.get_player(), monster, 3, 20)
         result: str = combat_seq.start_sequence()

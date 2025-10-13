@@ -4,26 +4,55 @@ from typing import Optional
 
 from campusmud import config, text
 from campusmud.storage import Storage
-from campusmud.models import Stats, Ability
+from campusmud.models import Ability
 
 
 class Character:
     """
     Base class for all characters (player and monsters).
     """
-    def __init__(self, stats: Stats) -> None:
-        self.stats: Stats = stats
+    def __init__(self, max_health: int, attack: int) -> None:
+        self.max_health: int = max_health
+        self.attack: int = attack
+        self.current_health: int = max_health
         self.abilities: list[Ability] = []
         for a in text.move_pool:
             self.abilities.append(Ability(a))
+
+    def take_damage(self, damage: int) -> str:
+        """
+        Reduce health by damage amount. Returns 'died' if health reaches zero.
+        """
+        if (self.current_health - damage) <= 0:
+            self.current_health = 0
+            return 'died'
+        else:
+            self.current_health -= damage
+            return 'alive'
+
+    def heal(self, healAmount: int) -> None:
+        """
+        Increase current health up to max_health.
+        """
+        self.current_health = min(self.current_health + healAmount, self.max_health)
+
+    def return_stats(self) -> str:
+        """
+        Return a formatted string of the player's stats.
+        """
+        lines: list[str] = ["╔═ Player Stats ═════════════╗"]
+        lines.append(f"  Health      » {self.current_health}/{self.max_health}")
+        lines.append(f"  Attack      » {self.attack}")
+        lines.append("╚═══════════════════════════╝")
+        return "\n".join(lines)
 
 
 class Player(Character):
     """
     Player character with inventory and stat management.
     """
-    def __init__(self, stats: Stats) -> None:
-        super().__init__(stats)
+    def __init__(self, max_health: int, attack: int) -> None:
+        super().__init__(max_health, attack)
         self.inventory: Optional[Inventory] = None
         self.base_atk: int = text.default_attack
         self.base_health: int = text.default_health
@@ -41,9 +70,12 @@ class Player(Character):
         Load player data from a saved file.
         """
         data = storage.get_data(file)
-        self.stats.max_health = data["Player_max_health"]
-        self.stats.current_health = data["Player_current_health"]
-        self.stats.attack = data["Player_attack"]
+        if not isinstance(data, dict):
+            raise ValueError("Invalid data format: Expected a dictionary.")
+
+        self.max_health = int(data.get("Player_max_health", self.base_health))
+        self.current_health = int(data.get("Player_current_health", self.base_health))
+        self.attack = int(data.get("Player_attack", self.base_atk))
         self.inventory = Inventory(storage, file)
         self.recalculate_stats()
 
@@ -53,9 +85,9 @@ class Player(Character):
         """
         if self.inventory:
             storage.save_data(file, {
-                "Player_max_health": self.stats.max_health,
-                "Player_current_health": self.stats.current_health,
-                "Player_attack": self.stats.attack
+                "Player_max_health": self.max_health,
+                "Player_current_health": self.current_health,
+                "Player_attack": self.attack
             })
             self.inventory.save_inventory()
     
@@ -85,9 +117,9 @@ class Player(Character):
         Recalculate stats based on equipped items and base stats.
         """
         # Reset attack and health back to base
-        self.stats.attack = self.base_atk
-        old_max_health = self.stats.max_health
-        old_current_health = self.stats.current_health
+        self.attack = self.base_atk
+        old_max_health = self.max_health
+        old_current_health = self.current_health
 
         if self.inventory:
             weapon = self.inventory.items.get("Weapon", None)
@@ -96,27 +128,27 @@ class Player(Character):
             armour = self.inventory.items.get("Armour", {})
             defence_bonus = sum(text.Armour.get(part, 0) for part in armour.values() if part)
 
-            self.stats.attack = self.base_atk + attack_bonus
-            self.stats.max_health = self.base_health + defence_bonus
+            self.attack = self.base_atk + attack_bonus
+            self.max_health = self.base_health + defence_bonus
 
             if old_max_health > 0:
                 health_ratio = old_current_health / old_max_health
             else:
                 health_ratio = 1.0
 
-            self.stats.current_health = round(self.stats.max_health * health_ratio, 1)
+            self.current_health = int(round(self.max_health * health_ratio))
 
             # Ensure it never goes above max
-            if self.stats.current_health > self.stats.max_health:
-                self.stats.current_health = self.stats.max_health
+            if self.current_health > self.max_health:
+                self.current_health = self.max_health
 
 
 class Monster(Character):
     """
     Monster character - inherits from Character.
     """
-    def __init__(self, stats: Stats) -> None:
-        super().__init__(stats)
+    def __init__(self, max_health: int, attack: int) -> None:
+        super().__init__(max_health, attack)
 
 
 class Inventory:

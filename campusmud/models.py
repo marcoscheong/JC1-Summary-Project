@@ -6,43 +6,6 @@ from typing import List
 from campusmud import text
 
 
-class Stats:
-    """
-    Holds character stats (health, attack) with damage and heal methods.
-    """
-    def __init__(self, max_health: int, attack: int) -> None:
-        self.max_health: int = max_health
-        self.attack: int = attack
-        self.current_health: int = max_health
-    
-    def take_damage(self, damage: int) -> str:
-        """
-        Reduce health by damage amount. Returns 'died' if health reaches zero.
-        """
-        if (self.current_health - damage) <= 0:
-            self.current_health = 0
-            return 'died'
-        else:
-            self.current_health -= damage
-            return 'alive'  # Ensure all paths return a string
-
-    def heal(self, healAmount: int) -> None:
-        """
-        Increase current health up to max_health.
-        """
-        self.current_health = min(self.current_health + healAmount, self.max_health)
-    
-    def return_stats(self) -> str:
-        """
-        Return a formatted string of the player's stats.
-        """
-        lines: List[str] = ["╔═ Player Stats ═════════════╗"]
-        lines.append(f"  Health      » {self.current_health}/{self.max_health}")
-        lines.append(f"  Attack      » {self.attack}")
-        lines.append("╚═══════════════════════════╝")
-        return "\n".join(lines)
-
-
 class Drop:
     """
     Represents loot dropped from monsters (weapon, armour, or consumable).

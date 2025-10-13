@@ -10,9 +10,7 @@ BOSS_NAME = "Origin of Chaos"
 
 
 class CombatSequence:
-    """
-    Manages turn-based combat between player and monster.
-    """
+    """Manages turn-based combat between player and monster."""
     def __init__(
         self,
         player: Player,
@@ -31,9 +29,7 @@ class CombatSequence:
         self.saved_m: int = 0  # saved monster elixir from each turn
 
     def _fmt(self, x: int | float) -> int | float:
-        """
-        Format numbers to 1 decimal if needed, no trailing .0.
-        """
+        """Format numbers to 1 decimal if needed, no trailing .0."""
         return int(x) if isinstance(x, (int, float)) and float(x).is_integer() else round(x, 1)
 
     def start_sequence(self, is_boss: bool = False) -> str:
@@ -103,13 +99,13 @@ class CombatSequence:
             print(f"Player Abilities: {' | '.join(player_abilities)}")
             print(f"Monster Abilities: {' | '.join(monster_abilities)}\n")
 
-            if dmg_to_player > 0: print(f"Damage to Player: {self._fmt(dmg_to_player)}")
-            if dmg_to_monster > 0: print(f"Damage to Monster: {self._fmt(dmg_to_monster)}")
-            if p_total_heal > 0: print(f"Player Healed: {self._fmt(p_total_heal)}")
-            if m_total_heal > 0: print(f"Monster Healed: {self._fmt(m_total_heal)}")
+            if dmg_to_player > 0: print(f"Damage to Player: {text.format_number(dmg_to_player)}")
+            if dmg_to_monster > 0: print(f"Damage to Monster: {text.format_number(dmg_to_monster)}")
+            if p_total_heal > 0: print(f"Player Healed: {text.format_number(p_total_heal)}")
+            if m_total_heal > 0: print(f"Monster Healed: {text.format_number(m_total_heal)}")
             print(f"Saved Elixir  -> Player: {self.saved_p} | Monster: {self.saved_m}")
-            print(f"Health Status -> Player: {self._fmt(self.player.current_health)} | "
-                f"{'Boss' if is_boss else 'Monster'}: {self._fmt(self.monster.current_health)}")
+            print(f"Health Status -> Player: {text.format_number(self.player.current_health)} | "
+                f"{'Boss' if is_boss else 'Monster'}: {text.format_number(self.monster.current_health)}")
 
             # Next turn
             input("\nPress Enter to continue...")
@@ -216,12 +212,12 @@ class CombatSequence:
             print(f"Player Abilities: {' | '.join(player_abilities)}")
             print(f"Boss Abilities: {' | '.join(boss_abilities)}\n")
 
-            print(f"Damage to Boss: {self._fmt(dmg_to_monster_total)}")
-            print(f"Damage to Player: {self._fmt(dmg_to_player_total)}")
-            print(f"Player Healed: {self._fmt(p_total_heal)}")
-            print(f"Boss Healed: {self._fmt(m_total_heal)}")
+            print(f"Damage to Boss: {text.format_number(dmg_to_monster_total)}")
+            print(f"Damage to Player: {text.format_number(dmg_to_player_total)}")
+            print(f"Player Healed: {text.format_number(p_total_heal)}")
+            print(f"Boss Healed: {text.format_number(m_total_heal)}")
             print(f"Saved Elixir  -> Player: {self.saved_p} | Boss: {self.saved_m}")
-            print(f"Health Status -> Player: {self._fmt(self.player.current_health)} | Boss: {self._fmt(self.monster.current_health)}")
+            print(f"Health Status -> Player: {text.format_number(self.player.current_health)} | Boss: {text.format_number(self.monster.current_health)}")
 
             # Next turn
             input("\nPress Enter to continue...")

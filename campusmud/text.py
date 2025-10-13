@@ -151,6 +151,11 @@ def clear_screen() -> None:
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
+def format_number(x: int | float, places: int = 1) -> int | float:
+    """Format numbers to 1 decimal if needed, no trailing .0."""
+    return int(x) if isinstance(x, (int, float)) and float(x).is_integer() else round(x, places)
+
+
 def pretty_print(text_content):
     """
     Print text character-by-character for aesthetics.

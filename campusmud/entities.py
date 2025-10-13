@@ -2,10 +2,11 @@
 
 from typing import Optional
 
-from campusmud import config, text
+from campusmud import config, models, text
 from campusmud.data import load_game_data
 from campusmud.storage import Storage
-from campusmud.models import Ability
+
+MOVES = ['attack', 'shield', 'heal', 'save']
 
 game_data = load_game_data()
 
@@ -36,13 +37,12 @@ class Character:
         self.max_health: int = max_health
         self.attack: int = attack
         self.current_health: int = max_health
-        self.abilities: list[Ability] = []
-        for a in text.move_pool:
-            self.abilities.append(Ability(a))
+        self.abilities = [
+            models.Ability(name) for name in MOVES
+        ]
 
     def take_damage(self, damage: int) -> str:
-        """
-        Reduce health by damage amount. Returns 'died' if health reaches zero.
+        """Reduce health by damage amount. Returns 'died' if health reaches zero.
         """
         if (self.current_health - damage) <= 0:
             self.current_health = 0
@@ -52,15 +52,11 @@ class Character:
             return 'alive'
 
     def heal(self, healAmount: int) -> None:
-        """
-        Increase current health up to max_health.
-        """
+        """Increase current health up to max_health."""
         self.current_health = min(self.current_health + healAmount, self.max_health)
 
     def return_stats(self) -> str:
-        """
-        Return a formatted string of the player's stats.
-        """
+        """Return a formatted string of the player's stats."""
         lines: list[str] = ["╔═ Player Stats ═════════════╗"]
         lines.append(f"  Health      » {self.current_health}/{self.max_health}")
         lines.append(f"  Attack      » {self.attack}")
@@ -76,6 +72,20 @@ class Player(Character):
         self.inventory: Optional[Inventory] = None
         self.base_atk: int = attack
         self.base_health: int = max_health
+        self.armor: Optional[models.Armor] = None
+        self.weapon: Optional[models.Weapon] = None
+
+    def calculate_atk(self) -> int:
+        """Calculate total attack including weapon bonus."""
+        if self.weapon:
+            return self.base_atk + self.weapon.attack_bonus
+        return self.base_atk
+
+    def calculate_def(self) -> int:
+        """Calculate total defense including armor bonus."""
+        if self.armor:
+            return self.armor.defense_bonus
+        return 0
 
     def create_new_storage(self, storage: Storage, file: str) -> None:
         """Create a new empty storage for the player."""
@@ -153,6 +163,8 @@ class Monster(Character):
 
     def __init__(self, max_health: int, attack: int) -> None:
         super().__init__(max_health, attack)
+
+    def calculate_atk
 
 
 class Inventory:

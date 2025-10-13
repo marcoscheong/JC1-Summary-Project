@@ -49,8 +49,8 @@ class CombatSequence:
 
             print(f"\n===== Turn {self.current_turn} =====\n")
             print(
-                f"Player Health:  {self.health_bar(self.player.stats.current_health, self.player.stats.max_health)}\n"
-                f"Monster Health: {self.health_bar(self.monster.stats.current_health, self.monster.stats.max_health)}"
+                f"Player Health:  {self.health_bar(self.player.current_health, self.player.max_health)}\n"
+                f"Monster Health: {self.health_bar(self.monster.current_health, self.monster.max_health)}"
             )
 
             print(f"Player Elixir: {p_elixir} | {'Boss' if is_boss else 'Monster'} Elixir: {m_elixir}\n")
@@ -71,16 +71,16 @@ class CombatSequence:
             m_total_save = sum(a.saved_elixir for a in monster_seq)
 
             # Compute damage after shields
-            dmg_to_monster = max(0, (p_total_attack - m_total_shield) * (self.player.stats.attack / 10))
-            dmg_to_player = max(0, (m_total_attack - p_total_shield) * (self.monster.stats.attack / 10))
-            m_total_heal = max(0, m_total_heal) * self.monster.stats.attack / 10
-            p_total_heal = max(0, p_total_heal) * self.player.stats.attack / 10
+            dmg_to_monster = max(0, (p_total_attack - m_total_shield) * (self.player.calculate_atk() / 10))
+            dmg_to_player = max(0, (m_total_attack - p_total_shield) * (self.monster.attack / 10))
+            m_total_heal = max(0, m_total_heal) * self.monster.attack / 10
+            p_total_heal = max(0, p_total_heal) * self.player.calculate_atk() / 10
 
             # Apply effects
-            self.monster.stats.take_damage(dmg_to_monster)
-            self.player.stats.take_damage(dmg_to_player)
-            self.player.stats.heal(p_total_heal)
-            self.monster.stats.heal(m_total_heal)
+            self.monster.take_damage(dmg_to_monster)
+            self.player.take_damage(dmg_to_player)
+            self.player.heal(p_total_heal)
+            self.monster.heal(m_total_heal)
             self.saved_p = p_total_save
             self.saved_m = m_total_save
 
@@ -108,23 +108,23 @@ class CombatSequence:
             if p_total_heal > 0: print(f"Player Healed: {self._fmt(p_total_heal)}")
             if m_total_heal > 0: print(f"Monster Healed: {self._fmt(m_total_heal)}")
             print(f"Saved Elixir  -> Player: {self.saved_p} | Monster: {self.saved_m}")
-            print(f"Health Status -> Player: {self._fmt(self.player.stats.current_health)} | "
-                f"{'Boss' if is_boss else 'Monster'}: {self._fmt(self.monster.stats.current_health)}")
+            print(f"Health Status -> Player: {self._fmt(self.player.current_health)} | "
+                f"{'Boss' if is_boss else 'Monster'}: {self._fmt(self.monster.current_health)}")
 
             # Next turn
             input("\nPress Enter to continue...")
             self.current_turn += 1
             text.clear_screen()
 
-            if self.player.stats.current_health <= 0:
+            if self.player.current_health <= 0:
                 print(text.defeat_text)
                 return 'defeat'
-            if self.monster.stats.current_health <= 0:
+            if self.monster.current_health <= 0:
                 print(text.victory_text)
                 return 'victory'
 
         # End of sequence winner
-        if self.player.stats.current_health > self.monster.stats.current_health:
+        if self.player.current_health > self.monster.current_health:
             print(text.victory_text)
             return 'victory'
         else:
@@ -154,8 +154,8 @@ class CombatSequence:
                 print(f"{BOSS_NAME} steals {steal_amount} elixir from you!")
 
             print(
-                f"Player Health: {self.health_bar(self.player.stats.current_health, self.player.stats.max_health)}\n"
-                f"Boss Health:   {self.health_bar(self.monster.stats.current_health, self.monster.stats.max_health)}"
+                f"Player Health: {self.health_bar(self.player.current_health, self.player.max_health)}\n"
+                f"Boss Health:   {self.health_bar(self.monster.current_health, self.monster.max_health)}"
             )
 
             print(f"Player Elixir: {p_elixir} | Boss Elixir: {m_elixir}\n")
@@ -177,26 +177,26 @@ class CombatSequence:
             
             # Compute damage with shared fate
             shared_fate_percent = 0.25
-            dmg_to_monster = max(0, (p_total_attack - m_total_shield) * (self.player.stats.attack / 10))
-            dmg_to_player = max(0, (m_total_attack - p_total_shield) * (self.monster.stats.attack / 10))
+            dmg_to_monster = max(0, (p_total_attack - m_total_shield) * (self.player.calculate_atk() / 10))
+            dmg_to_player = max(0, (m_total_attack - p_total_shield) * (self.monster.attack / 10))
 
             dmg_to_monster_total = dmg_to_monster * (1 + shared_fate_percent)
             dmg_to_player_total = dmg_to_player * (1 + shared_fate_percent)
 
             # Apply effects
-            self.monster.stats.take_damage(dmg_to_monster_total)
-            self.player.stats.take_damage(dmg_to_player_total)
-            self.player.stats.heal(p_total_heal)
-            self.monster.stats.heal(m_total_heal)
+            self.monster.take_damage(dmg_to_monster_total)
+            self.player.take_damage(dmg_to_player_total)
+            self.player.heal(p_total_heal)
+            self.monster.heal(m_total_heal)
             self.saved_p = p_total_save
             self.saved_m = m_total_save
 
             # Special shared fate every 3rd turn
             if self.current_turn % 3 == 0:
-                self.player.stats.take_damage(dmg_to_monster)
-                self.monster.stats.take_damage(dmg_to_player)
-                self.monster.stats.heal(p_total_heal)
-                self.player.stats.heal(m_total_heal)
+                self.player.take_damage(dmg_to_monster)
+                self.monster.take_damage(dmg_to_player)
+                self.monster.heal(p_total_heal)
+                self.player.heal(m_total_heal)
                 print("Shared Fate Triggered! Effects mirrored this turn.")
 
             # Display turn summary
@@ -221,7 +221,7 @@ class CombatSequence:
             print(f"Player Healed: {self._fmt(p_total_heal)}")
             print(f"Boss Healed: {self._fmt(m_total_heal)}")
             print(f"Saved Elixir  -> Player: {self.saved_p} | Boss: {self.saved_m}")
-            print(f"Health Status -> Player: {self._fmt(self.player.stats.current_health)} | Boss: {self._fmt(self.monster.stats.current_health)}")
+            print(f"Health Status -> Player: {self._fmt(self.player.current_health)} | Boss: {self._fmt(self.monster.current_health)}")
 
             # Next turn
             input("\nPress Enter to continue...")
@@ -229,15 +229,15 @@ class CombatSequence:
             text.clear_screen()
 
             # Mid-turn death check
-            if self.player.stats.current_health <= 0:
+            if self.player.current_health <= 0:
                 print(text.defeat_text)
                 return 'defeat'
-            if self.monster.stats.current_health <= 0:
+            if self.monster.current_health <= 0:
                 print(text.victory_text)
                 return 'victory'
 
         # End-of-sequence winner
-        if self.player.stats.current_health > self.monster.stats.current_health:
+        if self.player.current_health > self.monster.current_health:
             print(text.victory_text)
             return 'victory'
         else:
@@ -245,9 +245,7 @@ class CombatSequence:
             return 'defeat'
 
     def player_ability_sequence(self, elixir: int) -> list[Ability]:
-        """
-        Get player to choose actions and their magnitudes.
-        """
+        """Get player to choose actions and their magnitudes."""
         ability_sequence: list[Ability] = []
         available_elixir: int = elixir
         ability_dict = {a.name: a for a in self.player.abilities}
@@ -343,9 +341,9 @@ class CombatSequence:
         """
         End the combat once either player or enemy dies.
         """
-        if self.player.stats.current_health == 0:
+        if self.player.current_health == 0:
             return 'defeat'
-        elif self.monster.stats.current_health == 0:
+        elif self.monster.current_health == 0:
             return 'victory'
         return 'ongoing'
 

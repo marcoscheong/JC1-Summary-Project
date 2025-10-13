@@ -3,7 +3,22 @@
 import random
 from typing import List
 
-from campusmud import text
+from campusmud.data import load_game_data
+
+game_data = load_game_data()
+Consumable = game_data["items"]["consumables"]
+Armour = game_data["items"]["armor"]
+Weapon = game_data["items"]["weapons"]
+
+
+def create_consumable(name: str) -> dict:
+    """
+    Create a consumable item by name.
+    """
+    if name in Consumable:
+        return {"name": name, **Consumable[name]}
+    else:
+        raise ValueError(f"Consumable '{name}' not found.")
 
 
 class Drop:
@@ -22,10 +37,10 @@ class Drop:
         r: int = random.randint(0, 2)
         drop: str = ''  # Initialize variable to avoid unbound error
         if r == 0:
-            drop = random.choices(list(text.Weapon.keys()), self.weaponWeights)[0]
+            drop = random.choices(list(Weapon.keys()), self.weaponWeights)[0]
             self.type: str = 'weapon'
         elif r == 1:
-            drop = random.choices(list(text.Armour.keys()), self.armourWeights)[0]
+            drop = random.choices(list(Armour.keys()), self.armourWeights)[0]
             self.type = 'armour'
         elif r == 2:
             number: int = random.randint(1, 3)
@@ -45,7 +60,7 @@ class Drop:
         """
         Generate only an armour drop.
         """
-        drop: str = random.choices(list(text.Armour.keys()), self.armourWeights)[0]
+        drop: str = random.choices(list(Armour.keys()), self.armourWeights)[0]
         self.type: str = 'armour'
         self.drop = drop
         return self
@@ -54,7 +69,7 @@ class Drop:
         """
         Generate only a weapon drop.
         """
-        drop: str = random.choices(list(text.Weapon.keys()), self.weaponWeights)[0]
+        drop: str = random.choices(list(Weapon.keys()), self.weaponWeights)[0]
         self.type: str = 'weapon'
         self.drop = drop
         return self

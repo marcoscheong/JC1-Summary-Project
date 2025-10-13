@@ -2,25 +2,13 @@
 
 from typing import Optional
 
-from campusmud import config, text
-from campusmud.data import load_game_data
+from campusmud import config, entities, text
 from campusmud.storage import Storage
-from campusmud.entities import Player, Monster
 from campusmud.maze import Room, TreasureRoom, MonsterRoom, BossRoom, Maze
 from campusmud.combat import CombatSequence
 from campusmud.text import prompt_player_choice
 
 BOSS_NAME = "Origin of Chaos"
-
-game_data = load_game_data()
-
-Monsters = {
-    name: [data["max_health"], data["attack"]]
-    for name, data in game_data["monsters"].items()
-}
-Consumable = game_data["items"]["consumables"]
-Armour = game_data["items"]["armor"]
-Weapon = game_data["items"]["weapons"]
 
 
 class Game:
@@ -31,7 +19,7 @@ class Game:
         self.game_over: bool = False
         self.maze: Optional[Maze] = None
         self.storage: Storage = Storage()
-        self.player: Optional[Player] = None
+        self.player: Optional[entities.Player] = None
 
     def get_maze(self) -> Optional[Maze]:
         """
@@ -116,7 +104,7 @@ class Game:
 
     def create_player(self) -> None:
         """Create a new player."""
-        self.player = Player(max_health=text.default_health, attack=text.default_attack)
+        self.player = entities.create_player()
         self.player.create_new_storage(self.storage, config.PLAYER_SAVE_FILE)
 
     def load_player(self) -> None:
@@ -124,11 +112,11 @@ class Game:
         atk: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_attack", text.default_attack)
         current_health: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_current_health", text.default_health)
         max_health: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_max_health", text.default_health)
-        self.player = Player(max_health=max_health, attack=atk)
+        self.player = entities.create_player()
         self.player.current_health = current_health
         self.player.load_from_storage(self.storage, config.PLAYER_SAVE_FILE)
 
-    def get_player(self) -> Optional[Player]:
+    def get_player(self) -> Optional[entities.Player]:
         """Get the player object."""
         return self.player
 
@@ -176,7 +164,7 @@ class Game:
             pass
         elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
             text.clear_screen()
-            monster: Monster = current_room.boss_monster
+            monster: entities.Monster = current_room.boss_monster
             input(f"You have encountered {BOSS_NAME}.\n Atk: {monster.attack}, HP: {monster.max_health}\nPress enter to continue...")
             text.clear_screen()
             combat_seq: CombatSequence = CombatSequence(self.get_player(), monster, 3, 20)
@@ -306,7 +294,7 @@ class Game:
     def command_fight(self) -> None:
         """Handle the fight command."""
         text.clear_screen()
-        monster: Monster = Monster(Monsters[self.maze.current_room.monster][0], Monsters[self.maze.current_room.monster][1])
+        monster: entities.Monster = entities.create_monster(self.maze.current_room.monster)
         input(f"You have encountered a {self.maze.current_room.monster}.\n Atk: {monster.attack}, HP: {monster.max_health}\nPress enter to continue...")
         text.clear_screen()
         combat_seq: CombatSequence = CombatSequence(self.get_player(), monster, 3, 20)

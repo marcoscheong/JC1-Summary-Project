@@ -3,8 +3,29 @@
 from typing import Optional
 
 from campusmud import config, text
+from campusmud.data import load_game_data
 from campusmud.storage import Storage
 from campusmud.models import Ability
+
+game_data = load_game_data()
+
+
+def create_monster(name: str) -> "Monster":
+    """Factory function to create a Monster instance by name."""
+    if name not in game_data["monsters"]:
+        raise ValueError(f"Monster '{name}' not found in game data.")
+    monster_data = game_data["monsters"][name]
+    return Monster(
+        max_health=monster_data["max_health"],
+        attack=monster_data["attack"]
+    )
+
+def create_player() -> "Player":
+    """Factory function to create a Player instance with default stats."""
+    return Player(
+        max_health=game_data["player"]["max_health"],
+        attack=game_data["player"]["attack"],
+    )
 
 
 class Character:
@@ -48,27 +69,22 @@ class Character:
 
 
 class Player(Character):
-    """
-    Player character with inventory and stat management.
-    """
+    """Player character with inventory and stat management."""
+
     def __init__(self, max_health: int, attack: int) -> None:
         super().__init__(max_health, attack)
         self.inventory: Optional[Inventory] = None
-        self.base_atk: int = text.default_attack
-        self.base_health: int = text.default_health
+        self.base_atk: int = attack
+        self.base_health: int = max_health
 
     def create_new_storage(self, storage: Storage, file: str) -> None:
-        """
-        Create a new empty storage for the player.
-        """
+        """Create a new empty storage for the player."""
         default_data = storage.get_data(config.DEFAULT_SAVE_FILE)
         storage.save_data(file, default_data)
         self.load_from_storage(storage, file)
 
     def load_from_storage(self, storage: Storage, file: str) -> None:
-        """
-        Load player data from a saved file.
-        """
+        """Load player data from a saved file."""
         data = storage.get_data(file)
         if not isinstance(data, dict):
             raise ValueError("Invalid data format: Expected a dictionary.")
@@ -80,9 +96,7 @@ class Player(Character):
         self.recalculate_stats()
 
     def save_to_storage(self, storage: Storage, file: str) -> None:
-        """
-        Save player data to a file.
-        """
+        """Save player data to a file."""
         if self.inventory:
             storage.save_data(file, {
                 "Player_max_health": self.max_health,
@@ -92,30 +106,22 @@ class Player(Character):
             self.inventory.save_inventory()
     
     def show_inventory(self) -> None:
-        """
-        Display the player's inventory.
-        """
+        """Display the player's inventory."""
         if self.inventory:
             print(self.inventory.return_inventory())
         else:
             print("No inventory loaded.")
     
     def atk_potion(self, amt: int) -> None:
-        """
-        Increase player's base attack.
-        """
+        """Increase player's base attack."""
         self.base_atk += amt
     
     def health_potion(self, amt: int) -> None:
-        """
-        Increase player's base health.
-        """
+        """Increase player's base health."""
         self.base_health += amt
 
     def recalculate_stats(self) -> None:
-        """
-        Recalculate stats based on equipped items and base stats.
-        """
+        """Recalculate stats based on equipped items and base stats."""
         # Reset attack and health back to base
         self.attack = self.base_atk
         old_max_health = self.max_health
@@ -144,17 +150,14 @@ class Player(Character):
 
 
 class Monster(Character):
-    """
-    Monster character - inherits from Character.
-    """
+
     def __init__(self, max_health: int, attack: int) -> None:
         super().__init__(max_health, attack)
 
 
 class Inventory:
-    """
-    Player inventory with weapons, armour, and consumables.
-    """
+    """Player inventory with weapons, armour, and consumables."""
+
     def __init__(self, storage: Storage, file: str) -> None:
         self.storage: Storage = storage
         self.file: str = file
@@ -175,9 +178,7 @@ class Inventory:
         self.save_inventory()
 
     def add_item(self, item_name: str, quantity: int = 1) -> None:
-        """
-        Add an item to inventory.
-        """
+        """Add an item to inventory."""
         if item_name in text.Consumable.keys():
             if item_name in self.items["Consumables"]:
                 self.items["Consumables"][item_name] += quantity
@@ -202,9 +203,7 @@ class Inventory:
         return item_list
 
     def use_item(self, item_name: str, quantity: int = 1) -> bool:
-        """
-        Use a consumable item from inventory.
-        """
+        """Use a consumable item from inventory."""
         if item_name not in self.items["Consumables"]:
             print(f"{item_name} not found in inventory.")
             return False
@@ -219,9 +218,6 @@ class Inventory:
         return True
     
     def equip_weapon(self, weapon_name: str) -> bool:
-        """
-        Equip a weapon.
-        """
         if weapon_name in text.Weapon.keys():
             self.items["Weapon"] = weapon_name
             print('\n' + text.equip_spacing_text)
@@ -234,9 +230,7 @@ class Inventory:
             return False
     
     def equip_armour(self, slot: str, armour_name: str) -> bool:
-        """
-        Equip armour to a specific slot.
-        """
+        """Equip armour to a specific slot."""
         if armour_name in text.Armour:
             if "Armour" not in self.items:
                 self.items["Armour"] = {}
@@ -251,9 +245,6 @@ class Inventory:
             return False
 
     def remove_item(self, item_name: str) -> None:
-        """
-        Remove an item completely from inventory.
-        """
         if item_name in self.items:
             del self.items[item_name]
             self.save_inventory()
@@ -261,9 +252,7 @@ class Inventory:
             print(f"{item_name} not found in inventory.")
 
     def save_inventory(self) -> None:
-        """
-        Save inventory to the JSON file.
-        """
+        """Save inventory to the JSON file."""
         try:
             data = self.storage.get_data(self.file)
         except FileNotFoundError:
@@ -272,9 +261,7 @@ class Inventory:
         self.storage.save_data(self.file, data)
 
     def return_inventory(self) -> str:
-        """
-        Return a formatted string of the inventory.
-        """
+        """Return a formatted string of the inventory."""
         if not self.items:
             return "Inventory is empty."
 

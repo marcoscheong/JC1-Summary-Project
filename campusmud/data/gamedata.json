@@ -1,4 +1,8 @@
 {
+  "player": {
+    "max_health": 100,
+    "attack": 10
+  },
   "monsters": {
     "Slime": {"max_health": 5, "attack": 1},
     "Pig": {"max_health": 8, "attack": 2},

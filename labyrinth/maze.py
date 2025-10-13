@@ -258,11 +258,12 @@ class Maze:
         assert regular_rooms, "Maze must have at least one regular room."
         for i, room in enumerate(regular_rooms):
             row, col = divmod(i, self.col_count)
-            room = self.get(col, row)
-            left_room = self.get(col - 1, row)
-            right_room = self.get(col + 1, row)
-            up_room = self.get(col, row - 1)
-            down_room = self.get(col, row + 1)
+            room = self.get(row, col)
+            assert room is not None, f"Room not found at ({row}, {col})."
+            left_room = self.get(row, col - 1)
+            right_room = self.get(row, col + 1)
+            up_room = self.get(row - 1, col)
+            down_room = self.get(row + 1, col)
             if left_room is not None:
                 room.connect(left_room, 'left')
             if right_room is not None:

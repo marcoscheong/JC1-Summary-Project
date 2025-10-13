@@ -22,12 +22,6 @@ class Action:
         self.name = name
         self.cost = cost
         self.elixir = elixir
-        # self.attack: int = 0
-        # self.shield: int = 0
-        # self.heal: int = 0
-        # self.elixir: int = 1
-        # self.saved_elixir: int = 0
-        # self.magnitude: int = 0
 
 
 class Attack(Action):

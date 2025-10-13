@@ -204,16 +204,10 @@ class Player(Character):
             self.armor["Boots"] = armor
         else:
             raise ValueError(f"Not armor: {armor}")
-        print(f"{armor.name} equipped.")
-        print(text.equip_spacing_text + '\n')
         return True
 
     def equip_weapon(self, weapon: models.Weapon) -> bool:
         self.weapon = weapon
-        print('\n' + text.equip_spacing_text)
-        print(f"{weapon.name} has been equipped.")
-        print(text.equip_spacing_text + '\n')
-        self.inventory.remove_item(weapon.name)
         return True
 
     def show_inventory(self) -> None:

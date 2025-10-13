@@ -162,18 +162,21 @@ class Game:
             )
             self.command_pickup(dropped_item)
 
-    def use_item(self, item_name: str) -> None:
+    def consume_item(self, item_name: str) -> None:
         """Handle the logic for using an item."""
+        assert item_name in models.CONSUMABLES, f"{item_name} is not a consumable."
         if item_name == 'health potion':
             healAmount = self.player.heal(self.player.max_health * 0.2)
-            print('\n' + text.equip_spacing_text)
-            print(f"You have healed {healAmount} health!")
-            print(text.equip_spacing_text + '\n')
+            text.pull_quote(
+                f"You have healed {healAmount} health!",
+                divider=text.equip_divider
+            )
         elif item_name == 'attack potion':
             strengthenAmount = self.player.strengthen(self.player.attack * 0.2)
-            print('\n' + text.equip_spacing_text)
-            print(f'Your attack has increased by {strengthenAmount}!')
-            print(text.equip_spacing_text + '\n')
+            text.pull_quote(
+                f"Your attack has increased by {strengthenAmount}!",
+                divider=text.equip_divider
+            )
         text.linebreak()
         text.prompt_continue()
 
@@ -201,11 +204,13 @@ class Game:
             )
             if command in ['use item']:
                 item_name: str = text.prompt_player_choice(
-                    preamble="Please enter the name of the item you want to use:",
-                    choices=self.player.inventory.list_items()
+                    preamble="Which item do you want to use?",
+                    choices=list(
+                        self.player.inventory.list_items("Consumables")
+                    )
                 )
                 if self.player.inventory.use_item(item_name):
-                    self.use_item(item_name)
+                    self.consume_item(item_name)
                 else:
                     print(text.input_error_prompt)
                     text.linebreak()
@@ -235,9 +240,72 @@ class Game:
             else:
                 print(text.successful_room_travel + str(go_room.id))
 
+    def command_equip(self, item: Optional[models.Item] = None) -> None:
+        """Equip an item."""
+        if item is None:
+            item_name: str = text.prompt_player_choice(
+                preamble="Which item do you want to equip?",
+                choices=list(
+                    self.player.inventory.list_items("Weapons")
+                ) + list(
+                    self.player.inventory.list_items("Armor")
+                )
+            )
+            item = self.player.inventory.use_item(item_name)
+            assert item is not None, f"{item_name} was not in inventory."
+        if isinstance(item, (models.Weapon, models.Armor)):
+            if self.player.equip(item):
+                text.pull_quote(f"{item.name} equipped.", divider=text.equip_divider)
+            else:
+                print(f"Failed to equip {item.to_string()}.")
+        else:
+            print(f"{item.name} cannot be equipped.")
+            self.player.inventory.add_item(item.name)
+        text.linebreak()
+        text.prompt_continue()
+
+    def command_pickup(self, dropped_item: models.Item) -> None:
+        """Handle the pickup command."""
+        current_room = self.current_room
+        assert isinstance(current_room, (TreasureRoom, MonsterRoom)), f"{current_room} is not a treasure room or monster room."
+        text.pull_quote(
+            f"You have found a {dropped_item.to_string()}",
+            divider=text.equip_divider
+        )
+        if isinstance(dropped_item, (models.Weapon, models.Armor)):
+            command: str = prompt_player_choice(
+                preamble="What do you want to do?",
+                choices=['Equip item', 'Leave it']
+            )
+            if command in ['leave']:
+                return None
+            elif command in ['equip item', 'equip']:
+                self.command_equip(dropped_item)
+                current_room.complete()
+        elif isinstance(dropped_item, models.Potion):
+            command = prompt_player_choice(
+                preamble="What do you want to do?",
+                choices=['Consume item', 'Take it', 'Leave it']
+            )
+            if command in ['leave']:
+                return None
+            elif command in ['consume item', 'consume']:
+                self.consume_item(dropped_item.name)
+                current_room.complete()
+            elif command in ['take it', 'take']:
+                self.player.inventory.add_item(dropped_item.name)
+                current_room.complete()
+
     def command_open_chest(self) -> None:
         """Handle the open chest command."""
         current_room = self.current_room
+        assert isinstance(current_room, TreasureRoom), f"{current_room} is not a treasure room."
+        # Open chest logic
+        treasure_type: str = current_room.get_type()
+        dropped_item = generate_drop(treasure_type, current_room.id)
+        self.command_pickup(dropped_item)
+        current_room.complete()
+
     def command_fight(self) -> bool | None:
         """Fight the monster in the current room."""
         current_room = self.current_room
@@ -246,7 +314,7 @@ class Game:
         assert monster is not None, f"{current_room} has no monster to fight."
         text.clear_screen()
         text.prompt_continue(
-            f"You have encountered a {monster.name}.\n Atk: {monster.attack}, HP: {monster.max_health}\n"
+            f"You have encountered a {monster.to_string()}.\n"
             "Press enter to continue..."
         )
         text.clear_screen()

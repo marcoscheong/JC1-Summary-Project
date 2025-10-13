@@ -92,6 +92,11 @@ class Room:
                 )
         return options
 
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the room."""
+        return {
+            "id": self.id,
+        }
 
 class CompletableRoom(Room):
     """Room that can be completed (e.g., treasure or monster room)."""
@@ -103,6 +108,12 @@ class CompletableRoom(Room):
     def complete(self) -> None:
         """Mark the room as completed."""
         self.completed = True
+
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the completable room."""
+        base_dict = super().to_dict()
+        base_dict.update({"completed": self.completed})
+        return base_dict
 
 
 class TreasureRoom(CompletableRoom):
@@ -123,6 +134,12 @@ class TreasureRoom(CompletableRoom):
         """Return the type of item in the treasure room."""
         return self.treasure_type
 
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the treasure room."""
+        base_dict = super().to_dict()
+        base_dict.update({"treasure_type": self.treasure_type})
+        return base_dict
+
 
 class MonsterRoom(CompletableRoom):
     """Room containing monsters to fight."""
@@ -137,6 +154,14 @@ class MonsterRoom(CompletableRoom):
         if not self.completed:
             options.append('Fight monster')
         return options
+
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the monster room."""
+        base_dict = super().to_dict()
+        base_dict.update(
+            {"monster": self.monster.name if self.monster else None}
+        )
+        return base_dict
 
 
 class BossRoom(MonsterRoom):
@@ -159,7 +184,6 @@ class Maze:
         """Create a maze from a list of Room objects."""
         self.rooms = rooms
         self.starting_room = rooms[0]
-        self.current_room = self.starting_room
         self.col_count = cols
         # Exclude boss room from row count
         self.row_count = divmod(len(rooms) - 1, cols)[0] + 1
@@ -298,3 +322,12 @@ class Maze:
         boss_lines: List[str] = boss_art.strip("\n").splitlines()
         for line in boss_lines:
             print(line.center(14) + '\n')
+
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the maze."""
+        return {
+            "rooms": [room.to_dict() for room in self.rooms],
+            "current_room_id": self.current_room.id,
+            "col_count": self.col_count,
+            "row_count": self.row_count
+        }

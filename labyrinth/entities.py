@@ -89,6 +89,15 @@ class Character:
         lines.append("╚═══════════════════════════╝")
         return "\n".join(lines)
 
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the character."""
+        return {
+            "name": self.name,
+            "max_health": self.max_health,
+            "attack": self.attack,
+            "current_health": self.current_health
+        }
+
 
 class Player(Character):
     """Player character with inventory and stat management."""
@@ -228,6 +237,18 @@ class Player(Character):
             if self.current_health > self.max_health:
                 self.current_health = self.max_health
 
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the player."""
+        base_dict = super().to_dict()
+        base_dict.update({
+            "inventory": self.inventory.to_dict() if self.inventory else {},
+            "base_atk": self.base_atk,
+            "base_health": self.base_health,
+            "armor": {k: v.name if v else None for k, v in self.armor.items()},
+            "weapon": self.weapon.name if self.weapon else None
+        })
+        return base_dict
+
 
 class Monster(Character):
     """Monster character with basic stats."""
@@ -341,3 +362,7 @@ class Inventory:
         lines.append("╚═══════════════════════════╝")
 
         return "\n".join(lines)
+
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the inventory."""
+        return self.items.copy()

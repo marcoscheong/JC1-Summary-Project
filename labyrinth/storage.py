@@ -6,6 +6,25 @@ import tempfile
 from typing import Any, Dict, Union
 
 
+def save_to_json(file: str, obj: dict) -> None:
+    """Save a dictionary or list to a JSON file using atomic write (tempfile + rename).
+    """
+    with open(file, 'w', encoding='utf-8') as f:
+        json.dump(obj, f, indent=2)
+
+
+def load_from_json(file: str) -> dict:
+    """Load data from a JSON file. Returns empty dict if file doesn't exist or is invalid.
+    """
+    if not os.path.exists(file):
+        return {}
+    with open(file, 'r', encoding='utf-8') as f:
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return {}
+
+
 class Storage:
     """
     Handles loading and saving JSON data files with atomic write protection.

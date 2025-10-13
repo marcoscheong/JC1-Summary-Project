@@ -3,13 +3,24 @@
 import random
 from typing import Optional
 
-from labyrinth import config, entities, maze, models, text
+from labyrinth import config, entities, maze, models, storage, text
 from labyrinth.storage import Storage
 from labyrinth.maze import Room, TreasureRoom, MonsterRoom, BossRoom, Maze
 from labyrinth.combat import CombatSequence
 from labyrinth.text import prompt_player_choice
 
 BOSS_NAME = "Origin of Chaos"
+
+
+def save_game_data(game: 'Game') -> None:
+    """Save the current game state to a file."""
+    data = game.to_dict()
+    storage.save_to_json(config.PLAYER_SAVE_FILE, data)
+
+
+def load_game_data() -> dict:
+    """Load game state from a file."""
+    return storage.load_from_json(config.PLAYER_SAVE_FILE)
 
 
 def next_multiple_of_5(n: int) -> int:
@@ -64,7 +75,6 @@ class Game:
 
     def exit_game(self) -> None:
         """Set the game to exit state."""
-        self.reset_game_data()
         self.game_over = True
 
     def start_game(self) -> None:
@@ -73,6 +83,11 @@ class Game:
         text.pretty_print(text.started_text)
         input()
         self.maze.draw_rooms(self.current_room)
+
+    def save_game(self) -> None:
+        """Save the current game state to player file."""
+        save_game_data(self)
+        print("Game saved.")
 
     def load_game(self) -> None:
         """Load a saved game from file."""
@@ -94,7 +109,6 @@ class Game:
                     room.complete()
         self.maze = Maze(rooms, rooms[0])
         self.maze.connect_rooms()
-        self.load_player()
         print()
         print(text.loaded_text)
         print(text.printing_text_large_spacing)
@@ -105,41 +119,6 @@ class Game:
         """Create a new player."""
         self.player = entities.create_player()
         self.player.create_new_storage(self.storage, config.PLAYER_SAVE_FILE)
-
-    def load_player(self) -> None:
-        """Load player from saved file."""
-        atk: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_attack", text.default_attack)
-        current_health: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_current_health", text.default_health)
-        max_health: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_max_health", text.default_health)
-        self.player = entities.create_player()
-        self.player.current_health = current_health
-        self.player.load_from_storage(self.storage, config.PLAYER_SAVE_FILE)
-
-    def get_player(self) -> Optional[entities.Player]:
-        """Get the player object."""
-        return self.player
-
-    def load_data(self) -> None:
-        """Loader method for data."""
-        pass
-
-    def reset_game_data(self) -> None:
-        """Reset game data to default values."""
-        default_data: dict = self.storage.get_data(config.DEFAULT_SAVE_FILE)
-        self.storage.save_data(config.PLAYER_SAVE_FILE, default_data)
-
-    def save_all_data(self, file: str) -> None:
-        """Save all current game variables to file."""
-        claimed_rooms: list[int] = []
-        for room in self.maze.rooms:
-            if isinstance(room, (TreasureRoom, MonsterRoom, BossRoom)) and room.completed:
-                if room.id not in self.storage.get_data(file).get("Claimed_rooms", []):
-                    claimed_rooms.append(room.id)
-        self.storage.save_data(file, {
-            "Room_id": self.current_room.id,
-            "Claimed_rooms": claimed_rooms
-        })
-        self.player.save_to_storage(self.storage, file)
 
     def display_room_info(self) -> None:
         """Display information about the current room based on its type."""
@@ -178,7 +157,7 @@ class Game:
             )
             if isinstance(victor, entities.Player):
                 current_room.complete()
-                self.save_all_data(config.PLAYER_SAVE_FILE)
+                self.save_game()
                 print('You have defeated the boss! Congratulations on completing the game!')
                 text.prompt_continue("Press enter to exit.")
             elif isinstance(victor, entities.Monster):
@@ -340,18 +319,18 @@ class Game:
                 if drop.drop in text.Weapon:
                     self.player.inventory.equip_weapon(drop.drop)
                     self.player.recalculate_stats()
-                    self.save_all_data(config.PLAYER_SAVE_FILE)
+                    self.save_game()
                     text.linebreak()
                     text.prompt_continue()
                 elif drop.drop in text.Armour:
                     slot = text.ArmourSlots[drop.drop]
                     self.player.inventory.equip_armour(slot, drop.drop)
                     self.player.recalculate_stats()
-                    self.save_all_data(config.PLAYER_SAVE_FILE)
+                    self.save_game()
                     text.linebreak()
                     text.prompt_continue()
             self.player.recalculate_stats()
-            self.save_all_data(config.PLAYER_SAVE_FILE)
+            self.save_game()
         elif isinstance(victor, entities.Monster):
             print(text.defeat_text)
             command = prompt_player_choice(
@@ -383,6 +362,15 @@ class Game:
             self.command_fight()
         else:
             raise ValueError("Invalid command")
+
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the game state."""
+        return {
+            "player": self.player.to_dict(),
+            "maze": self.maze.to_dict(),
+            "current_room_id": self.current_room.id,
+            "game_over": self.game_over
+        }
 
     def run(self) -> None:
         """Main game loop - handles user input and game state."""

@@ -29,9 +29,7 @@ class CombatSequence:
         self.saved_m: int = 0  # saved monster elixir from each turn
 
     def start_sequence(self, is_boss: bool = False) -> str:
-        """
-        Run combat sequence for normal monsters.
-        """
+        """Run combat sequence for normal monsters."""
         while self.current_turn <= self.max_turns:
             elixir = (self.base_elixir * self.current_turn) // 2
             p_elixir = elixir + self.saved_p
@@ -41,8 +39,8 @@ class CombatSequence:
 
             print(f"\n===== Turn {self.current_turn} =====\n")
             print(
-                f"Player Health:  {self.health_bar(self.player.current_health, self.player.max_health)}\n"
-                f"Monster Health: {self.health_bar(self.monster.current_health, self.monster.max_health)}"
+                f"Player Health:  {text.health_bar(self.player.current_health, self.player.max_health)}\n"
+                f"Monster Health: {text.health_bar(self.monster.current_health, self.monster.max_health)}"
             )
 
             print(f"Player Elixir: {p_elixir} | {'Boss' if is_boss else 'Monster'} Elixir: {m_elixir}\n")
@@ -146,8 +144,8 @@ class CombatSequence:
                 print(f"{BOSS_NAME} steals {steal_amount} elixir from you!")
 
             print(
-                f"Player Health: {self.health_bar(self.player.current_health, self.player.max_health)}\n"
-                f"Boss Health:   {self.health_bar(self.monster.current_health, self.monster.max_health)}"
+                f"Player Health: {text.health_bar(self.player.current_health, self.player.max_health)}\n"
+                f"Boss Health:   {text.health_bar(self.monster.current_health, self.monster.max_health)}"
             )
 
             print(f"Player Elixir: {p_elixir} | Boss Elixir: {m_elixir}\n")
@@ -340,9 +338,7 @@ class CombatSequence:
         return 'ongoing'
 
     def health_bar(self, current: int, maximum: int, bar_length: int = 20) -> str:
-        """
-        Return a string representing a health bar.
-        """
+        """Return a string representing a health bar."""
         if maximum <= 0:
             ratio = 0
         else:

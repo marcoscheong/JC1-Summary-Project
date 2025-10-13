@@ -156,6 +156,24 @@ def format_number(x: int | float, places: int = 1) -> int | float:
     return int(x) if isinstance(x, (int, float)) and float(x).is_integer() else round(x, places)
 
 
+def health_bar(current: int,
+               maximum: int,
+               bar_length: int = 20,
+               char_filled: str = '█',
+               char_empty: str = '-') -> str:
+        """Return a string representing a health bar."""
+        if maximum <= 0:
+            ratio = 0
+        else:
+            ratio = current / maximum
+        filled_length = int(bar_length * ratio)
+        bar = (
+            (char_filled * filled_length)
+            + (char_empty * (bar_length - filled_length))
+        )
+        return f"[{bar}] {current}/{maximum}"
+
+
 def pretty_print(text_content):
     """
     Print text character-by-character for aesthetics.

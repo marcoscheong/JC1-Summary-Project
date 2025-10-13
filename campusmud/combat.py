@@ -336,13 +336,3 @@ class CombatSequence:
         elif self.monster.current_health == 0:
             return 'victory'
         return 'ongoing'
-
-    def health_bar(self, current: int, maximum: int, bar_length: int = 20) -> str:
-        """Return a string representing a health bar."""
-        if maximum <= 0:
-            ratio = 0
-        else:
-            ratio = current / maximum
-        filled_length = int(bar_length * ratio)
-        bar = '█' * filled_length + '-' * (bar_length - filled_length)
-        return f"[{bar}] {current}/{maximum}"

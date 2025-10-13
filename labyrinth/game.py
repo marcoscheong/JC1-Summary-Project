@@ -25,19 +25,19 @@ def generate_drop(type: str, level: int) -> models.Item:
     drop_level = next_multiple_of_5(level)
     if type == "weapon":
         item_name = random.choices(
-            population=entities.WEAPONS,
+            population=models.WEAPONS,
             weights=config.WEIGHTS["weapon_drop"][str(drop_level)]
         )[0]
         return models.create_weapon(item_name)
     elif type == "armor":
         item_name = random.choices(
-            population=entities.ARMOR,
+            population=models.ARMOR,
             weights=config.WEIGHTS["armor_drop"][str(drop_level)]
         )[0]
         return models.create_armor(item_name)
     elif type == "consumable":
         item_name = random.choices(
-            population=entities.CONSUMABLES,
+            population=models.CONSUMABLES,
             weights=[1 / 3] * 3  # Assuming equal probability for consumables
         )[0]
         return models.create_consumable(item_name)

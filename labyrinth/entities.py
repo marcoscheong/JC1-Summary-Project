@@ -12,10 +12,8 @@ game_data = load_game_data()
 BOSS_NAME = "Origin of Chaos"
 
 # Enums
+MONSTERS = list(game_data["monsters"].keys())
 MOVES = list(game_data["moves"])
-CONSUMABLES = list(game_data["items"]["consumables"].keys())
-WEAPONS = list(game_data["items"]["weapons"].keys())
-ARMOR = list(game_data["items"]["armor"].keys())
 
 
 def create_boss() -> "Monster":

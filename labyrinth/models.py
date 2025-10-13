@@ -7,6 +7,11 @@ Consumable = game_data["items"]["consumables"]
 Armour = game_data["items"]["armor"]
 Weapon = game_data["items"]["weapons"]
 
+# Enums
+CONSUMABLES = list(game_data["items"]["consumables"].keys())
+WEAPONS = list(game_data["items"]["weapons"].keys())
+ARMOR = list(game_data["items"]["armor"].keys())
+
 
 def create_consumable(name: str) -> "Potion":
     """Create a consumable item by name."""
@@ -82,9 +87,9 @@ class HealingPotion(Potion):
 class Armor(Item):
     """Represents an armor item that provides a defense bonus."""
 
-    def __init__(self, name: str, defense_bonus: int) -> None:
+    def __init__(self, name: str, defence_bonus: int) -> None:
         super().__init__(name)
-        self.defense_bonus: int = defense_bonus
+        self.defence_bonus: int = defence_bonus
 
 
 class Boots(Armor):

@@ -168,6 +168,11 @@ class MonsterRoom(CompletableRoom):
         """Initialize room with monster generation settings."""
         super().__init__(id)
         self.monster = monster
+    
+    def complete(self) -> None:
+        """Mark the room as completed and remove the monster."""
+        super().complete()
+        self.monster = None
 
     def get_options(self) -> list[str]:
         options = super().get_options()

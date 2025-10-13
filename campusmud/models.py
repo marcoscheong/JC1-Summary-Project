@@ -80,7 +80,7 @@ class Armor(Item):
         self.defense_bonus: int = defense_bonus
 
 
-class WeaponItem(Item):
+class Weapon(Item):
     """Represents a weapon item that provides an attack bonus."""
 
     def __init__(self, name: str, attack_bonus: int) -> None:

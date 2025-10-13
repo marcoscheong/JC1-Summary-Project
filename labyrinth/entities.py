@@ -305,10 +305,14 @@ class Inventory:
         else:
             inventory[item_name] = quantity
 
-    def list_items(self) -> dict[str, int]:
+    def list_items(self, category: str = "") -> dict[str, int]:
         """List all items in inventory."""
+        if category:
+            assert category in self.items, f"Unknown category: {category}"
         item_list: dict[str, int] = {}
-        for category, item_counts in self.items.items():
+        for item_category, item_counts in self.items.items():
+            if category and category != item_category:
+                continue
             for item_name, count in item_counts.items():
                 item_list[item_name] = count
         return item_list

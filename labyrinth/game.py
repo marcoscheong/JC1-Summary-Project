@@ -194,16 +194,14 @@ class Game:
     def use_item(self, item_name: str) -> None:
         """Handle the logic for using an item."""
         if item_name == 'health potion':
-            magnitude: float = self.player.max_health * 0.2
-            self.player.current_health = min(self.player.current_health + magnitude, self.player.max_health)
+            healAmount = self.player.heal(self.player.max_health * 0.2)
             print('\n' + text.equip_spacing_text)
-            print(f"You have healed {magnitude} health!")
+            print(f"You have healed {healAmount} health!")
             print(text.equip_spacing_text + '\n')
         elif item_name == 'attack potion':
-            magnitude: float = self.player.attack * 0.2
-            self.player.attack += magnitude
+            strengthenAmount = self.player.strengthen(self.player.attack * 0.2)
             print('\n' + text.equip_spacing_text)
-            print(f'Your attack has increased by {magnitude}!')
+            print(f'Your attack has increased by {strengthenAmount}!')
             print(text.equip_spacing_text + '\n')
         text.linebreak()
         text.prompt_continue()

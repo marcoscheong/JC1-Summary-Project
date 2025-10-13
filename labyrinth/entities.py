@@ -75,11 +75,27 @@ class Character:
         if self.current_health <= 0:
             self.current_health = 0
 
-    def heal(self, healAmount: int) -> None:
-        """Increase current health up to max_health."""
-        self.current_health += healAmount
-        if self.current_health > self.max_health:
+    def heal(self, healAmount: int | float) -> int:
+        """Increase current health up to max_health.
+        
+        Returns the amount of health actually healed.
+        """
+        healAmount = round(healAmount)
+        if self.current_health + healAmount > self.max_health:
+            healAmount = self.max_health - self.current_health
             self.current_health = self.max_health
+        else:
+            self.current_health += healAmount
+        return healAmount
+
+    def strengthen(self, amt: int | float) -> int:
+        """Increase the character's attack.
+        
+        Returns the amount of attack actually increased.
+        """
+        amt = round(amt)
+        self.attack += amt
+        return amt
 
     def return_stats(self) -> str:
         """Return a formatted string of the player's stats."""

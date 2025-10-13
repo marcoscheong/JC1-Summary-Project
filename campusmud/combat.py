@@ -321,16 +321,8 @@ class CombatSequence:
         
         return ability_sequence
 
-    def returnMonsterDrop(self) -> str:
-        """
-        Return what the monster drops when killed.
-        """
-        return getattr(self.monster, 'drop', 'No drop')
-
     def end_sequence(self) -> str:
-        """
-        End the combat once either player or enemy dies.
-        """
+        """End the combat once either player or enemy dies."""
         if self.player.current_health == 0:
             return 'defeat'
         elif self.monster.current_health == 0:

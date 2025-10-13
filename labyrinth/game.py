@@ -3,11 +3,11 @@
 import random
 from typing import Optional
 
-from campusmud import config, entities, models, text
-from campusmud.storage import Storage
-from campusmud.maze import Room, TreasureRoom, MonsterRoom, BossRoom, Maze
-from campusmud.combat import CombatSequence
-from campusmud.text import prompt_player_choice
+from labyrinth import config, entities, models, text
+from labyrinth.storage import Storage
+from labyrinth.maze import Room, TreasureRoom, MonsterRoom, BossRoom, Maze
+from labyrinth.combat import CombatSequence
+from labyrinth.text import prompt_player_choice
 
 BOSS_NAME = "Origin of Chaos"
 

@@ -2,9 +2,9 @@
 
 import random
 
-from campusmud import config, entities, text
-from campusmud.data import load_game_data
-from campusmud.entities import Player, Monster
+from labyrinth import config, entities, text
+from labyrinth.data import load_game_data
+from labyrinth.entities import Player, Monster
 
 
 game_data = load_game_data()

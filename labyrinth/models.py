@@ -1,6 +1,6 @@
 # Data models - pure data classes for game stats and drops
 
-from campusmud.data import load_game_data
+from labyrinth.data import load_game_data
 
 game_data = load_game_data()
 Consumable = game_data["items"]["consumables"]

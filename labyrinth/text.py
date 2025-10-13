@@ -2,7 +2,7 @@ import select
 import sys
 import os
 import time
-from campusmud.data import load_game_data
+from labyrinth.data import load_game_data
 
 game_data = load_game_data()
 

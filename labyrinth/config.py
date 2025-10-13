@@ -1,7 +1,7 @@
 """Configuration constants for Campus MUD game."""
 
 # Game configuration
-from campusmud.data import load_game_data
+from labyrinth.data import load_game_data
 
 
 MAZE_SIZE: int = 5

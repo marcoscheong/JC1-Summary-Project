@@ -3,8 +3,8 @@
 import random
 from typing import Optional, Dict, List
 
-from campusmud import entities, text
-from campusmud.entities import Monster
+from labyrinth import entities, text
+from labyrinth.entities import Monster
 
 
 class Room:

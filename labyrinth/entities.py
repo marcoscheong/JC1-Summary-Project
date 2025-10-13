@@ -2,9 +2,9 @@
 
 from typing import Optional
 
-from campusmud import config, models, text
-from campusmud.data import load_game_data
-from campusmud.storage import Storage
+from labyrinth import config, models, text
+from labyrinth.data import load_game_data
+from labyrinth.storage import Storage
 
 game_data = load_game_data()
 

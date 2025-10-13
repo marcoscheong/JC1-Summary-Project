@@ -2,8 +2,8 @@
 
 import sys
 
-from campusmud.game import Game
-import campusmud.text as text
+from labyrinth.game import Game
+import labyrinth.text as text
 
 
 class SplashScreen:

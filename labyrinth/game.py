@@ -121,9 +121,15 @@ class Game:
         """Display information about the current room based on its type."""
         current_room: Room = self.current_room
         if isinstance(current_room, TreasureRoom):
-            print(text.treasure_room_text if not current_room.completed else text.completed_treasure_room_text)
+            print(
+                text.treasure_room_text if not current_room.completed
+                else text.completed_treasure_room_text
+            )
         elif isinstance(current_room, MonsterRoom):
-            print(text.monster_room_text if not current_room.completed else text.completed_monster_room_text)
+            print(
+                text.monster_room_text if not current_room.completed
+                else text.completed_monster_room_text
+            )
         elif isinstance(current_room, BossRoom):
             pass
 

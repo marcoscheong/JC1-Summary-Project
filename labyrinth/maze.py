@@ -93,14 +93,25 @@ class Room:
         return options
 
 
-class TreasureRoom(Room):
+class CompletableRoom(Room):
+    """Room that can be completed (e.g., treasure or monster room)."""
+
+    def __init__(self, id: int) -> None:
+        super().__init__(id)
+        self.completed: bool = False
+
+    def complete(self) -> None:
+        """Mark the room as completed."""
+        self.completed = True
+
+
+class TreasureRoom(CompletableRoom):
     """Room containing treasure drops."""
 
     def __init__(self, id: int, treasure_type: str) -> None:
         """Initialize room with treasure based on room ID (difficulty)."""
         super().__init__(id)
         self.treasure_type: str = treasure_type  # 'weapon', 'armor', or 'consumable'
-        self.completed: bool = False
 
     def get_options(self) -> list[str]:
         options = super().get_options()
@@ -113,14 +124,13 @@ class TreasureRoom(Room):
         return self.treasure_type
 
 
-class MonsterRoom(Room):
+class MonsterRoom(CompletableRoom):
     """Room containing monsters to fight."""
 
     def __init__(self, id: int, monster: entities.Monster) -> None:
         """Initialize room with monster generation settings."""
         super().__init__(id)
         self.monster = monster
-        self.completed = False
 
     def get_options(self) -> list[str]:
         options = super().get_options()
@@ -128,15 +138,10 @@ class MonsterRoom(Room):
             options.append('Fight monster')
         return options
 
-    def complete(self) -> None:
-        """Mark the monster as defeated."""
-        self.completed = True
-
 
 class BossRoom(MonsterRoom):
-    """
-    Final boss room.
-    """
+    """Final boss room."""
+
     def __init__(self, id: int) -> None:
         super().__init__(id, entities.create_boss())
 

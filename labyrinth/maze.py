@@ -3,8 +3,53 @@
 import random
 from typing import Optional, Dict, List
 
-from labyrinth import entities, text
+from labyrinth import config, entities, text
 from labyrinth.entities import Monster
+
+
+def generate_monster(
+        level: int,
+        available_monsters: List[str] = entities.MONSTERS
+) -> Monster:
+    """Generate a random monster based on room ID (difficulty).
+    Higher ID increases chance of stronger monsters.
+    """
+    if not available_monsters:
+        raise ValueError("available_monsters cannot be empty.")
+
+    # Determine max index based on player progress
+    max_index: int = min(len(available_monsters) - 1, level // 2)
+
+    # Randomly pick a monster from the range [0, max_index]
+    monster_name = available_monsters[random.randint(0, max_index)]
+    return entities.create_monster(monster_name)
+
+
+def generate_room(id: int) -> "Room":
+    """Generate a basic room."""
+    if id == 0:
+        return Room(0)
+    elif id == -1:
+        return BossRoom(config.MAZE_SIZE + 1)
+    elif id % 2 == 0:
+        level = id + 1
+        return MonsterRoom(id=level, monster=generate_monster(level))
+    else:
+        level = id + 1
+        return TreasureRoom(
+            id=level,
+            treasure_type=random.choice(["weapon", "armor"])
+        )
+
+
+def generate_maze() -> "Maze":
+    """Generate a maze with rooms and a boss room at the end."""
+    rooms: list[Room] = [
+        generate_room(i) for i in range(config.MAZE_SIZE + 1)
+    ]
+    maze = Maze(rooms)
+    maze.connect_rooms()
+    return maze
 
 
 class Room:
@@ -12,23 +57,56 @@ class Room:
 
     def __init__(self, id: int) -> None:
         self.id: int = id
-        self.connects: Dict[str, Optional[Room]] = {'up': None, 'left': None, 'right': None, 'down': None}
+        self.connections: Dict[str, Optional[Room]] = {
+            "up": None,
+            "left": None,
+            "right": None,
+            "down": None
+        }
 
-    def connection(self, room: 'Room', direction: str) -> None:
+    def connect(self, room: 'Room', direction: str) -> None:
         """Connect this room to another room in a given direction."""
-        if direction in self.connects:
-            self.connects[direction] = room
+        if direction in self.connections:
+            self.connections[direction] = room
+
+    def get_boss_direction(self) -> Optional[str]:
+        """Return the direction leading to the boss room, if connected."""
+        for direction, room in self.connections.items():
+            if isinstance(room, BossRoom):
+                return direction
+        return None
+
+    def get_room(self, direction: str) -> Optional['Room']:
+        """Return the room connected in the given direction, if any."""
+        return self.connections[direction]
+
+    def get_options(self) -> list[str]:
+        """Return list of available movement options based on room connections."""
+        options: List[str] = []
+        for direction, room in self.connections.items():
+            if room is not None:
+                # Special handling for boss room access
+                options.append(
+                    'enter boss chamber' if isinstance(room, BossRoom)
+                    else 'Go ' + direction
+                )
+        return options
 
 
 class TreasureRoom(Room):
-    """
-    Room containing treasure drops.
-    """
-    def __init__(self, _id: int, treasure_type: str) -> None:
+    """Room containing treasure drops."""
+
+    def __init__(self, id: int, treasure_type: str) -> None:
         """Initialize room with treasure based on room ID (difficulty)."""
-        super().__init__(_id)
+        super().__init__(id)
         self.treasure_type: str = treasure_type  # 'weapon', 'armor', or 'consumable'
-        self.claimed: bool = False
+        self.completed: bool = False
+
+    def get_options(self) -> list[str]:
+        options = super().get_options()
+        if not self.completed:
+            options.append('Open chest')
+        return options
 
     def get_type(self):
         """Return the type of item in the treasure room."""
@@ -36,129 +114,95 @@ class TreasureRoom(Room):
 
 
 class MonsterRoom(Room):
-    """
-    Room containing monsters to fight.
-    """
-    def __init__(self, id: int, availableMonsters: List[str]) -> None:
+    """Room containing monsters to fight."""
+
+    def __init__(self, id: int, monster: entities.Monster) -> None:
         """Initialize room with monster generation settings."""
         super().__init__(id)
-        self.monster: str = ''
-        # Convert dict_keys view to list to avoid issues
-        self.availableMonsters: List[str] = list(availableMonsters)
-        self.claimed: bool = False
+        self.monster = monster
+        self.completed = False
 
-    def generateMonster(self) -> None:
-        """Generate a random monster based on room ID (difficulty).
-        Higher ID increases chance of stronger monsters.
-        """
-        if len(self.availableMonsters) == 0:
-            return
+    def get_options(self) -> list[str]:
+        options = super().get_options()
+        if not self.completed:
+            options.append('Fight monster')
+        return options
 
-        # Determine max index based on player progress
-        max_index: int = min(len(self.availableMonsters) - 1, self.id // 2)
-
-        # Randomly pick a monster from the range [0, max_index]
-        self.monster = self.availableMonsters[random.randint(0, max_index)]
-
-    def generateDrops(self) -> None:
-        """Generate drops that the monster will drop when defeated."""
-        i: int = random.randint(0, 1)
-        if i == 0:
-            if self.id < 5:
-                drop = Drop(text.weaponweights5, text.armourweights5)
-                drop.generateArmourDrop()
-                self.drop = drop
-            elif self.id < 10:
-                drop = Drop(text.weaponweights10, text.armourweights10)
-                drop.generateArmourDrop()
-                self.drop = drop
-            elif self.id < 15:
-                drop = Drop(text.weaponweights15, text.armourweights15)
-                drop.generateArmourDrop()
-                self.drop = drop
-            elif self.id < 20: 
-                drop = Drop(text.weaponweights20, text.armourweights20)
-                drop.generateArmourDrop()
-                self.drop = drop
-            else:
-                drop = Drop(text.weaponweights25, text.armourweights25)
-                drop.generateArmourDrop()
-                self.drop = drop
-        elif i == 1:
-            if self.id < 5:
-                drop = Drop(text.weaponweights5, text.armourweights5)
-                drop.generateWeaponDrop()
-                self.drop = drop
-            elif self.id < 10:
-                drop = Drop(text.weaponweights10, text.armourweights10)
-                drop.generateWeaponDrop()
-                self.drop = drop
-            elif self.id < 15:
-                drop = Drop(text.weaponweights15, text.armourweights15)
-                drop.generateWeaponDrop()
-                self.drop = drop
-            elif self.id < 20: 
-                drop = Drop(text.weaponweights20, text.armourweights20)
-                drop.generateWeaponDrop()
-                self.drop = drop
-            else:
-                drop = Drop(text.weaponweights25, text.armourweights25)
-                drop.generateWeaponDrop()
-                self.drop = drop
+    def complete(self) -> None:
+        """Mark the monster as defeated."""
+        self.completed = True
 
 
-class BossRoom(Room):
+class BossRoom(MonsterRoom):
     """
     Final boss room.
     """
     def __init__(self, id: int) -> None:
-        super().__init__(id)
-        self.claimed: bool = False
-        self.boss_monster: Monster = entities.create_boss()
+        super().__init__(id, entities.create_boss())
+
+    def get_options(self) -> list[str]:
+        options = super().get_options()
+        if not self.completed:
+            options.append('Challenge the boss')
+        return options
 
 
 class Maze:
-    """
-    Grid-based maze with rooms connected by directions.
-    """
-    def __init__(self, rooms: List[Room], starting_room: Room) -> None:
-        """
-        Create a maze from a list of Room objects.
-        """
-        self.rooms: List[Room] = rooms
-        self.starting_room: Room = starting_room
-        self.current_room: Room = starting_room
+    """Grid-based maze with rooms connected by directions."""
 
-    def generate_maze(self) -> None:
+    def __init__(self, rooms: List[Room], cols: int = config.MAZE_COLS) -> None:
+        """Create a maze from a list of Room objects."""
+        self.rooms = rooms
+        self.starting_room = rooms[0]
+        self.current_room = self.starting_room
+        self.col_count = cols
+        # Exclude boss room from row count
+        self.row_count = divmod(len(rooms) - 1, cols)[0] + 1
+
+    def get(self, x: int, y: int) -> Optional[Room]:
+        """Get room at grid coordinates (x, y)."""
+        if not (0 <= x < self.col_count and 0 <= y < self.row_count):
+            return None
+        index = y * self.col_count + x
+        return self.rooms[index]
+    
+    def get_boss_room(self) -> BossRoom:
+        """Return the boss room."""
+        boss_room = self.rooms[-1]  # Assuming last room is always the boss room
+        assert isinstance(boss_room, BossRoom), "Last room is not a BossRoom."
+        return boss_room
+
+    def get_start_room(self) -> Room:
+        """Return the starting room."""
+        return self.starting_room
+
+    def connect_rooms(self) -> None:
         """
-        Generate a 3-column grid maze connecting all rooms.
+        Generate a col_count-column grid maze connecting all rooms.
         The last room is the boss room connected to the bottom.
         """
-        num_cols: int = 3
-        regular_rooms: List[Room] = self.rooms[:-1]
-        
+        regular_rooms = self.rooms[:-1]
+        assert regular_rooms, "Maze must have at least one regular room."
         for i, room in enumerate(regular_rooms):
-            row: int = i // num_cols
-            col: int = i % num_cols
-            
-            # Connect horizontally (left-right)
-            if col < num_cols - 1 and (i + 1) < len(regular_rooms):
-                right_room: Room = regular_rooms[i + 1]
-                room.connection(right_room, 'right')
-                right_room.connection(room, 'left')
-            
-            # Connect vertically (up-down)
-            num_rows: int = (len(regular_rooms) + num_cols - 1) // num_cols
-            if row < num_rows - 1 and (i + num_cols) < len(regular_rooms):
-                down_room: Room = regular_rooms[i + num_cols]
-                room.connection(down_room, 'down')
-                down_room.connection(room, 'up')
-        
+            row, col = divmod(i, self.col_count)
+            room = self.get(col, row)
+            left_room = self.get(col - 1, row)
+            right_room = self.get(col + 1, row)
+            up_room = self.get(col, row - 1)
+            down_room = self.get(col, row + 1)
+            if left_room is not None:
+                room.connect(left_room, 'left')
+            if right_room is not None:
+                room.connect(right_room, 'right')
+            if up_room is not None:
+                room.connect(up_room, 'up')
+            if down_room is not None:
+                room.connect(down_room, 'down')
+
         # Connect boss room to last regular room
-        boss_room: Room = self.rooms[-1]
-        last_regular_room: Room = regular_rooms[-1]
-        boss_room.connection(last_regular_room, 'up')
-        last_regular_room.connection(boss_room, 'down')
+        boss_room = self.get_boss_room()
+        room.connect(boss_room, 'down')
+        boss_room.connect(room, 'up')
 
     def get_room_key(self, room: Room) -> str:
         """
@@ -166,38 +210,27 @@ class Maze:
         N=North/up, S=South/down, E=East/right, W=West/left.
         """
         # Convert room objects to boolean values
-        up: bool = room.connects['up'] is not None
-        down: bool = room.connects['down'] is not None
-        left: bool = room.connects['left'] is not None
-        right: bool = room.connects['right'] is not None
+        up: bool = room.connections['up'] is not None
+        down: bool = room.connections['down'] is not None
+        left: bool = room.connections['left'] is not None
+        right: bool = room.connections['right'] is not None
 
         if isinstance(room, BossRoom):
             return "BOSS_CLEAN"
-
-        if up and down and left and right: return "NSEW"
-
-        if up and down and left and not right: return "NSW"
-        if up and down and not left and right: return "NSE"
-        if up and not down and left and right: return "NEW"
-        if not up and down and left and right: return "SEW"
-
-        if up and down and not left and not right: return "NS"
-        if not up and not down and left and right: return "EW"
-        if up and not down and left and not right: return "NW"
-        if up and not down and not left and right: return "NE"
-        if not up and down and left and not right: return "SW"
-        if not up and down and not left and right: return "SE"
-
-        if up and not down and not left and not right: return "N"
-        if not up and down and not left and not right: return "S"
-        if not up and not down and left and not right: return "W"
-        if not up and not down and not left and right: return "E"
-        return "BOSS"
+        
+        key = ""
+        if up:
+            key += "N"
+        if down:
+            key += "S"
+        if left:
+            key += "W"
+        if right:
+            key += "E"
+        return key
 
     def draw_rooms(self) -> None:
-        """
-        Display the maze layout as ASCII art showing all rooms in a grid.
-        """
+        """Display the maze layout as ASCII art showing all rooms in a grid."""
         row_chunks: List[List[str]] = []
         rooms_per_row: int = 3
         
@@ -260,42 +293,3 @@ class Maze:
         boss_lines: List[str] = boss_art.strip("\n").splitlines()
         for line in boss_lines:
             print(line.center(14) + '\n')
-    
-    def room_options(self) -> List[str]:
-        """
-        Return list of available movement options based on current room connections.
-        """
-        options: List[str] = []
-        for direction in text.directions:
-            connected_room: Optional[Room] = self.current_room.connects.get(direction)
-            if connected_room:
-                # Special handling for boss room access
-                if isinstance(connected_room, BossRoom):
-                    options.append('enter boss chamber')
-                else:
-                    options.append('Go ' + direction)
-        return options
-
-    def travel_to(self, direction: str) -> None:
-        """
-        Move player to an adjacent room in the given direction.
-        """
-        # Handle special boss room access
-        if direction == 'boss chamber' or direction == 'boss':
-            # Find if current room connects to boss room
-            for dir_key, connected_room in self.current_room.connects.items():
-                if isinstance(connected_room, BossRoom):
-                    self.current_room = connected_room
-                    print("You step through the ominous doorway into the Boss Chamber...")
-                    return
-            print("You cannot access the Boss Chamber from here.")
-            return
-        
-        # Regular movement
-        connected_room: Optional[Room] = self.current_room.connects.get(direction)
-        if connected_room:
-            self.current_room = connected_room
-            if isinstance(connected_room, BossRoom):
-                print("You enter the foreboding Boss Chamber...")
-            else:
-                print(text.successful_room_travel + str(connected_room.id))

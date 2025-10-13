@@ -3,7 +3,7 @@
 import random
 from typing import Optional
 
-from labyrinth import config, entities, models, text
+from labyrinth import config, entities, maze, models, text
 from labyrinth.storage import Storage
 from labyrinth.maze import Room, TreasureRoom, MonsterRoom, BossRoom, Maze
 from labyrinth.combat import CombatSequence
@@ -46,33 +46,21 @@ def generate_drop(type: str, level: int) -> models.Item:
 
 
 class Game:
-    """
-    Main game controller with state management.
-    """
+    """Main game controller with state management."""
+
     def __init__(self) -> None:
         self.game_over: bool = False
-        self.maze: Optional[Maze] = None
+        self.maze = maze.generate_maze()
         self.storage: Storage = Storage()
-        self.player: Optional[entities.Player] = None
+        self.player = entities.create_player()
+        self.current_room = self.maze.get_start_room()
 
-    def get_options(self, game_state: str, room: Optional[Room] = None) -> list[str]:
-        """
-        Get available options based on the provided game state and room type.
-        """
-        if game_state == 'travel':
-            choices: list[str] = room.room_options() if room else []
-            if isinstance(room, MonsterRoom) and not room.claimed:
-                choices.insert(0, 'Fight monster')
-            elif isinstance(room, TreasureRoom) and not room.claimed:
-                choices.insert(0, 'Open chest')
-            elif isinstance(room, BossRoom) and not room.claimed:
-                choices.insert(0, 'Challenge the boss')
-            choices.append('View inventory')
-            choices.append('Exit to menu')
-            return choices
-        elif game_state == 'boss':
-            return ['Fight boss', 'Go back']
-        return []
+    def get_options(self, room: Optional[Room] = None) -> list[str]:
+        """Get available options based on the provided game state and room type."""
+        choices: list[str] = room.get_options() if room else []
+        choices.append('View inventory')
+        choices.append('Exit to menu')
+        return choices
 
     def exit_game(self) -> None:
         """Set the game to exit state."""
@@ -81,22 +69,6 @@ class Game:
 
     def start_game(self) -> None:
         """Start a new game with a fresh maze and player."""
-        rooms: list[Room] = []
-        rooms.append(Room(0))
-        for i in range(1, text.maze_size):
-            if i % 2 == 0:
-                room = MonsterRoom((i + 1), Monsters.keys())
-                room.generateMonster()
-                room.generateDrops()
-                rooms.append(room)
-            elif i % 2 == 1:
-                rooms.append(TreasureRoom(_id=i + 1, treasure_type="weapon"))
-            else:
-                rooms.append(Room(i + 1))
-        rooms.append(BossRoom(text.maze_size + 1))
-        self.maze = Maze(rooms, rooms[0])
-        self.maze.generate_maze()
-        self.create_player()
         print(text.printing_text_large_spacing)
         text.pretty_print(text.started_text)
         input()
@@ -106,23 +78,22 @@ class Game:
         """Load a saved game from file."""
         rooms: list[Room] = []
         rooms.append(Room(0))
-        for i in range(1, text.maze_size):
+        for i in range(1, config.MAZE_SIZE):
             if i % 2 == 0:
-                room = MonsterRoom((i + 1), Monsters.keys())
+                room = MonsterRoom((i + 1), entities.MONSTERS)
                 room.generateMonster()
-                room.generateDrops()
                 rooms.append(room)
             elif i % 2 == 1:
                 rooms.append(TreasureRoom(i + 1, treasure_type="weapon"))
             else:
                 rooms.append(Room(i + 1))
-        rooms.append(BossRoom(text.maze_size + 1))
+        rooms.append(BossRoom(config.MAZE_SIZE + 1))
         for room in rooms:
             if isinstance(room, (TreasureRoom, MonsterRoom, BossRoom)):
                 if room.id in self.storage.get_data(config.PLAYER_SAVE_FILE).get("Claimed_rooms", []):
-                    room.claimed = True
+                    room.completed = True
         self.maze = Maze(rooms, rooms[0])
-        self.maze.generate_maze()
+        self.maze.connect_rooms()
         self.load_player()
         print()
         print(text.loaded_text)
@@ -161,7 +132,7 @@ class Game:
         """Save all current game variables to file."""
         claimed_rooms: list[int] = []
         for room in self.maze.rooms:
-            if isinstance(room, (TreasureRoom, MonsterRoom, BossRoom)) and room.claimed:
+            if isinstance(room, (TreasureRoom, MonsterRoom, BossRoom)) and room.completed:
                 if room.id not in self.storage.get_data(file).get("Claimed_rooms", []):
                     claimed_rooms.append(room.id)
         self.storage.save_data(file, {
@@ -174,9 +145,9 @@ class Game:
         """Display information about the current room based on its type."""
         current_room: Room = self.maze.current_room
         if isinstance(current_room, TreasureRoom):
-            print(text.treasure_room_text if not current_room.claimed else text.claimed_treasure_room_text)
+            print(text.treasure_room_text if not current_room.completed else text.completed_treasure_room_text)
         elif isinstance(current_room, MonsterRoom):
-            print(text.monster_room_text if not current_room.claimed else text.claimed_monster_room_text)
+            print(text.monster_room_text if not current_room.completed else text.completed_monster_room_text)
         elif isinstance(current_room, BossRoom):
             pass
 
@@ -192,7 +163,7 @@ class Game:
             pass
         elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
             text.clear_screen()
-            monster: entities.Monster = current_room.boss_monster
+            monster: entities.Monster = current_room.monster
             input(f"You have encountered {BOSS_NAME}.\n Atk: {monster.attack}, HP: {monster.max_health}\nPress enter to continue...")
             text.clear_screen()
             combat_seq: CombatSequence = CombatSequence(
@@ -206,7 +177,7 @@ class Game:
                 shared_fate=0.25
             )
             if isinstance(victor, entities.Player):
-                current_room.claimed = True
+                current_room.completed = True
                 self.save_all_data(config.PLAYER_SAVE_FILE)
                 print('You have defeated the boss! Congratulations on completing the game!')
                 text.prompt_continue("Press enter to exit.")
@@ -241,7 +212,7 @@ class Game:
 
     def command_enter_boss_chamber(self) -> None:
         """Handle the enter boss chamber command."""
-        self.maze.travel_to('boss chamber')
+        self.command_go_direction('boss chamber')
         self.maze.draw_rooms()
 
     def command_view_inventory(self) -> None:
@@ -269,11 +240,25 @@ class Game:
 
     def command_go_direction(self, direction: str) -> None:
         """Handle the go direction command."""
-        if direction in text.directions:
-            self.maze.travel_to(direction)
-            self.save_all_data(config.PLAYER_SAVE_FILE)
-        else:
-            print(text.input_error_prompt)
+        current_room = self.maze.current_room
+        # Handle special boss room access
+        if direction == 'boss chamber' or direction == 'boss':
+            # Find if current room connects to boss room
+            current_room = self.current_room
+            boss_direction = current_room.get_boss_direction()
+            if not boss_direction:
+                print("You cannot access the Boss Chamber from here.")
+            else:
+                self.command_go_direction(boss_direction)
+        
+        # Regular movement
+        go_room = current_room.get_room(direction)
+        if go_room is not None:
+            self.current_room = go_room
+            if isinstance(go_room, BossRoom):
+                print("You enter the foreboding Boss Chamber...")
+            else:
+                print(text.successful_room_travel + str(go_room.id))
 
     def command_open_chest(self) -> None:
         """Handle the open chest command."""
@@ -304,7 +289,7 @@ class Game:
                     self.player.equip(dropped_item)
                     text.linebreak()
                     text.prompt_continue()
-                    self.maze.current_room.claimed = True
+                    self.maze.current_room.completed = True
             elif treasure_type == 'consumable':
                 self.player.inventory.add_item(drop)
                 print('\n' + text.equip_spacing_text)
@@ -324,7 +309,7 @@ class Game:
                     else:
                         print(text.input_error_prompt)
                 self.maze.current_room.drop = None
-                self.maze.current_room.claimed = True
+                self.maze.current_room.completed = True
 
     def command_fight(self) -> None:
         """Handle the fight command."""
@@ -338,14 +323,13 @@ class Game:
             print(text.victory_text)
             current_room: Room = self.maze.current_room
             current_room.monster = None
-            current_room.claimed = True
+            current_room.completed = True
 
-            drop: str = current_room.drop
-            if drop.type == 'weapon':
-                print(f"You have obtained a {drop.drop}({text.Weapon[drop.drop]})!")
-            elif drop.type == 'armour':
-                slot: str = text.ArmourSlots[drop.drop]
-                print(f"You have obtained {drop.drop} (slot: {slot}, def: {text.Armour[drop.drop]})!")
+            dropped_item = generate_drop(
+                type=random.choice(['weapon', 'armour']),
+                level=current_room.id
+            )
+            print(f"You have obtained a {dropped_item.name}!")
             command = prompt_player_choice(
                 preamble="What would you like to do?",
                 choices=['Equip item', 'Go back']
@@ -413,6 +397,6 @@ class Game:
             # Main command processing
             command: str = prompt_player_choice(
                 preamble="What would you like to do?",
-                choices=self.maze.current_room.room_options()
+                choices=self.maze.current_room.get_options()
             )
             self.handle_command(command)

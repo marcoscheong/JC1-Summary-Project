@@ -98,7 +98,7 @@ class Player(Character):
         self.inventory: Optional[Inventory] = None
         self.base_atk: int = attack
         self.base_health: int = max_health
-        self.armor = {
+        self.armor: dict[str, Optional[models.Armor]] = {
             "Helmet": None,
             "Chestplate": None,
             "Leggings": None,
@@ -117,6 +117,7 @@ class Player(Character):
         if self.armor:
             total_defence_bonus = sum(
                 part.defence_bonus for part in self.armor.values()
+                if part is not None
             )
             return total_defence_bonus
         return 0

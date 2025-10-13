@@ -4,7 +4,8 @@
 from labyrinth.data import load_game_data
 
 
-MAZE_SIZE: int = 5
+MAZE_SIZE: int = 36
+MAZE_COLS: int = 3
 DEFAULT_HEALTH: int = 100
 DEFAULT_ATTACK: int = 10
 

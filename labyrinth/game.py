@@ -56,6 +56,11 @@ def generate_drop(type: str, level: int) -> models.Item:
         raise ValueError(f"Invalid drop type: {type}")
 
 
+def is_monster_boss(monster: entities.Monster) -> bool:
+    """Check if a monster is the boss."""
+    return monster.name == BOSS_NAME
+
+
 class Game:
     """Main game controller with state management."""
 
@@ -78,10 +83,6 @@ class Game:
         choices.append('View inventory')
         choices.append('Exit to menu')
         return choices
-
-    def exit_game(self) -> None:
-        """Set the game to exit state."""
-        self.game_over = True
 
     def start_game(self) -> None:
         """Start the game."""
@@ -112,36 +113,9 @@ class Game:
         game = cls.from_dict(data)
         return game
 
-    def load_game(self) -> None:
-        """Load a saved game from file."""
-        rooms: list[Room] = []
-        rooms.append(Room(0))
-        for i in range(1, config.MAZE_SIZE):
-            if i % 2 == 0:
-                room = MonsterRoom((i + 1), entities.MONSTERS)
-                room.generateMonster()
-                rooms.append(room)
-            elif i % 2 == 1:
-                rooms.append(TreasureRoom(i + 1, treasure_type="weapon"))
-            else:
-                rooms.append(Room(i + 1))
-        rooms.append(BossRoom(config.MAZE_SIZE + 1))
-        for room in rooms:
-            if isinstance(room, (TreasureRoom, MonsterRoom, BossRoom)):
-                if room.id in self.storage.get_data(config.PLAYER_SAVE_FILE).get("Claimed_rooms", []):
-                    room.complete()
-        self.maze = Maze(rooms, rooms[0])
-        self.maze.connect_rooms()
-        print()
-        print(text.loaded_text)
-        print(text.printing_text_large_spacing)
-        input()
-        self.maze.draw_rooms(self.current_room)
-
     def create_player(self) -> None:
         """Create a new player."""
         self.player = entities.create_player()
-        self.player.create_new_storage(self.storage, config.PLAYER_SAVE_FILE)
 
     def display_room_info(self) -> None:
         """Display information about the current room based on its type."""
@@ -153,43 +127,40 @@ class Game:
         elif isinstance(current_room, BossRoom):
             pass
 
-    def fight_boss(self, current_room: BossRoom) -> None:
-        """Handle the logic for fighting the boss."""
-        command: str = prompt_player_choice(
-            preamble=f"You have encountered the boss: {BOSS_NAME}. Do you want to fight this boss?",
-            choices=['Fight boss', 'Go back']
+    def lose_fight(self, monster: Optional[entities.Monster]) -> bool | None:
+        """Handle losing a fight."""
+        print(text.defeat_text)
+        if monster and is_monster_boss(monster):
+            reason = f"You have been defeated by the boss."
+        elif monster:
+            reason = f"You have been defeated by {monster.name}."
+        else:
+            reason = f"You lost."
+        command = prompt_player_choice(
+            preamble=(
+                f"{reason} Game over.\n"
+                "Do you want to retry?"
+            ),
+            choices=['Retry', 'Exit to Menu']
         )
-        if command in ['exit']:
-            self.exit_game()
-        elif command in ['go back', 'back']:
-            pass
-        elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
-            text.clear_screen()
-            monster: entities.Monster = current_room.monster
-            input(f"You have encountered {BOSS_NAME}.\n Atk: {monster.attack}, HP: {monster.max_health}\nPress enter to continue...")
-            text.clear_screen()
-            combat_seq: CombatSequence = CombatSequence(
-                player=self.player,
-                monster=monster,
-                base_elixir=3,
-                max_turns=20
+        return self.handle_command(command)
+
+    def win_fight(self, monster: entities.Monster) -> bool | None:
+        """Handle winning a fight."""
+        if is_monster_boss(monster):
+            print('You have defeated the boss! Congratulations on completing the game!')
+            text.prompt_continue("Press enter to exit.")
+            return self.command_exit()
+        else:
+            current_room = self.current_room
+            assert isinstance(current_room, MonsterRoom), f"{current_room} is not a monster room."
+            print(text.victory_text)
+            current_room.complete()
+            dropped_item = generate_drop(
+                type=random.choice(['weapon', 'armour']),
+                level=current_room.id
             )
-            victor = combat_seq.run_combat(
-                elixir_steal=True,
-                shared_fate=0.25
-            )
-            if isinstance(victor, entities.Player):
-                current_room.complete()
-                self.save_game()
-                print('You have defeated the boss! Congratulations on completing the game!')
-                text.prompt_continue("Press enter to exit.")
-            elif isinstance(victor, entities.Monster):
-                command = prompt_player_choice(
-                    preamble="You have been defeated by the boss. Game over.",
-                    choices=['Fight boss', 'Go back']
-                )
-                if command in ['exit', 'retry', 'start', 'play']:
-                    self.exit_game()
+            self.command_pickup(dropped_item)
 
     def use_item(self, item_name: str) -> None:
         """Handle the logic for using an item."""
@@ -206,9 +177,13 @@ class Game:
         text.linebreak()
         text.prompt_continue()
 
-    def command_exit(self) -> None:
-        """Handle the quit/exit command."""
-        self.exit_game()
+    def command_exit(self) -> bool:
+        """Handle the quit/exit command (no retry)."""
+        return False
+
+    def command_retry(self) -> bool:
+        """Handle the retry command."""
+        return True
 
     def command_enter_boss_chamber(self) -> None:
         """Handle the enter boss chamber command."""
@@ -263,113 +238,43 @@ class Game:
     def command_open_chest(self) -> None:
         """Handle the open chest command."""
         current_room = self.current_room
-        if isinstance(current_room, TreasureRoom):
-            # Open chest logic
-            treasure_type: str = current_room.get_type()
-            dropped_item = generate_drop(treasure_type, current_room.id)
-            if treasure_type in ['weapon', 'armour']:
-                print('\n' + text.equip_spacing_text)
-                if isinstance(dropped_item, models.Weapon):
-                    print(
-                        f"You have found a {dropped_item.name} (atk: {dropped_item.attack_bonus})!"
-                    )
-                elif isinstance(dropped_item, models.Armor):
-                    print(
-                        f"You have found {dropped_item.name} (slot: {type(dropped_item).__name__}, def: {dropped_item.defence_bonus})!"
-                    )
-                print(text.equip_spacing_text + '\n')
-
-                command: str = prompt_player_choice(
-                    preamble=text.equip_spacing_text,
-                    choices=['Equip item', 'Go back']
-                )
-                if command in ['go back', 'back']:
-                    pass
-                elif command in ['equip item', 'equip']:
-                    self.player.equip(dropped_item)
-                    text.linebreak()
-                    text.prompt_continue()
-                    self.current_room.complete()
-            elif treasure_type == 'consumable':
-                self.player.inventory.add_item(drop)
-                print('\n' + text.equip_spacing_text)
-                print('You have obtained a ' + drop + '!')
-                command = prompt_player_choice(
-                    preamble=text.equip_spacing_text,
-                    choices=['Consume item', 'Go back']
-                )
-                if command in ['go back', 'back']:
-                    pass
-                elif command in ['consume item', 'consume']:
-                    if drop in Consumable:
-                        if self.player.inventory.use_item(drop):
-                            self.use_item(drop)
-                        else:
-                            print(text.input_error_prompt)
-                    else:
-                        print(text.input_error_prompt)
-                self.current_room.drop = None
-                self.current_room.complete()
-
-    def command_fight(self) -> None:
-        """Handle the fight command."""
+    def command_fight(self) -> bool | None:
+        """Fight the monster in the current room."""
+        current_room = self.current_room
+        assert isinstance(current_room, MonsterRoom), f"{current_room} is not a monster room."
+        monster = current_room.monster
+        assert monster is not None, f"{current_room} has no monster to fight."
         text.clear_screen()
-        monster: entities.Monster = entities.create_monster(self.current_room.monster)
-        input(f"You have encountered a {self.current_room.monster}.\n Atk: {monster.attack}, HP: {monster.max_health}\nPress enter to continue...")
+        text.prompt_continue(
+            f"You have encountered a {monster.name}.\n Atk: {monster.attack}, HP: {monster.max_health}\n"
+            "Press enter to continue..."
+        )
         text.clear_screen()
-        combat_seq: CombatSequence = CombatSequence(self.player, monster, 3, 20)
-        victor = combat_seq.run_combat()
+        combat_seq: CombatSequence = CombatSequence(
+            player=self.player,
+            monster=monster,
+            base_elixir=3,
+            max_turns=20
+        )
+        if is_monster_boss(monster):
+            victor = combat_seq.run_combat(
+                elixir_steal=True,
+                shared_fate=0.25
+            )
+        else:
+            victor = combat_seq.run_combat()
+
         if isinstance(victor, entities.Player):
-            print(text.victory_text)
-            current_room: Room = self.current_room
-            current_room.monster = None
-            current_room.complete()
-
-            dropped_item = generate_drop(
-                type=random.choice(['weapon', 'armour']),
-                level=current_room.id
-            )
-            print(f"You have obtained a {dropped_item.name}!")
-            command = prompt_player_choice(
-                preamble="What would you like to do?",
-                choices=['Equip item', 'Go back']
-            )
-            if command in ['go back', 'back']:
-                pass
-            elif command in ['equip item', 'equip']:
-                if drop.drop in text.Weapon:
-                    self.player.inventory.equip_weapon(drop.drop)
-                    self.player.recalculate_stats()
-                    self.save_game()
-                    text.linebreak()
-                    text.prompt_continue()
-                elif drop.drop in text.Armour:
-                    slot = text.ArmourSlots[drop.drop]
-                    self.player.inventory.equip_armour(slot, drop.drop)
-                    self.player.recalculate_stats()
-                    self.save_game()
-                    text.linebreak()
-                    text.prompt_continue()
-            self.player.recalculate_stats()
-            self.save_game()
+            return self.win_fight(monster)
         elif isinstance(victor, entities.Monster):
-            print(text.defeat_text)
-            command = prompt_player_choice(
-                preamble=(
-                    "You have been defeated by the monster. Game over.\n"
-                    "Do you want to retry?"
-                ),
-                choices=['Retry', 'Exit to Menu']
-            )
-            if command in ['quit', 'exit']:
-                self.command_exit()
-            elif command in ['retry', 'start', 'play']:
-                self.game_over = True
+            return self.lose_fight(monster)
 
-    def handle_command(self, command: str) -> None:
+    def handle_command(self, command: str) -> bool | None:
         """Handle a single command based on user input."""
         if command in ['quit', 'exit']:
-            self.command_exit()
+            return self.command_exit()
+        elif command in ['retry', 'start', 'play']:
+            return self.command_retry()
         elif command == 'enter boss chamber' or command.startswith('enter boss'):
             self.command_enter_boss_chamber()
         elif command in ['view inventory', 'inventory', 'inv']:
@@ -380,7 +285,7 @@ class Game:
         elif command.startswith('open'):
             self.command_open_chest()
         elif command.startswith('fight'):
-            self.command_fight()
+            return self.command_fight()
         else:
             raise ValueError("Invalid command")
 
@@ -393,10 +298,14 @@ class Game:
             "game_over": self.game_over
         }
 
-    def run(self) -> None:
-        """Main game loop - handles user input and game state."""
+    def run(self) -> bool:
+        """Main game loop - handles user input and game state.
+        
+        Returns True if the user wants to retry, False if they want to exit to menu.
+        """
         self.start_game()
-        while not self.game_over:
+        play_game = True
+        while play_game != False:
             text.clear_screen()
             self.maze.draw_rooms(self.current_room)
 
@@ -408,4 +317,6 @@ class Game:
                 preamble="What would you like to do?",
                 choices=self.current_room.get_options()
             )
-            self.handle_command(command)
+            # A False value for play_game indicates the user wants to exit
+            play_game = self.handle_command(command)
+        return play_game

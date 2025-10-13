@@ -26,13 +26,17 @@ if __name__ == "__main__":
     choice: str | None = None
     while choice != 'quit':
         choice = splash.prompt_main_menu()
+        if choice == 'how to play':
+            print(text.how_to_play_text)
+            continue
         if choice == 'start':
             game: Game = Game()
-            game.run()
         elif choice == 'load':
             game = Game.load_from_data()
-            game.run()
-        elif choice == 'how to play':
-            print(text.how_to_play_text)
+        else:
+            assert False, "Unreachable code."
+        play_game = True
+        while play_game:
+            play_game = game.run()
     print(text.thanks_message)
     sys.exit()

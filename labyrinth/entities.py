@@ -57,6 +57,9 @@ class Character:
             name for name in MOVES
         ]
 
+    def to_string(self) -> str:
+        return f"{self.name} (ATK: {self.attack}, HP: {self.current_health}/{self.max_health})"
+
     def is_dead(self) -> bool:
         """Check if the character is dead."""
         return self.current_health <= 0

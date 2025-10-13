@@ -72,6 +72,9 @@ class Item:
     def __init__(self, name: str) -> None:
         self.name: str = name
 
+    def to_string(self) -> str:
+        return self.name
+
 
 class Potion(Item):
     """Represents a consumable potion item.
@@ -87,13 +90,22 @@ class Potion(Item):
 class HealthPotion(Potion):
     """Represents a health potion that restores health."""
 
+    def to_string(self) -> str:
+        return f"{self.name} (+{self.bonus} HP)"
+
 
 class AttackPotion(Potion):
     """Represents an attack potion that boosts attack power."""
 
+    def to_string(self) -> str:
+        return f"{self.name} (+{self.bonus} ATK)"
+
 
 class HealingPotion(Potion):
     """Represents a healing potion that heals over time."""
+
+    def to_string(self) -> str:
+        return f"{self.name} (+{self.bonus} HP over time)"
 
 
 class Armor(Item):
@@ -102,6 +114,9 @@ class Armor(Item):
     def __init__(self, name: str, defence_bonus: int) -> None:
         super().__init__(name)
         self.defence_bonus: int = defence_bonus
+
+    def to_string(self) -> str:
+        return f"{self.name} (+{self.defence_bonus} DEF)"
 
 
 class Boots(Armor):
@@ -126,3 +141,6 @@ class Weapon(Item):
     def __init__(self, name: str, attack_bonus: int) -> None:
         super().__init__(name)
         self.attack_bonus: int = attack_bonus
+
+    def to_string(self) -> str:
+        return f"{self.name} (+{self.attack_bonus} ATK)"

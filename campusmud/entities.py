@@ -12,7 +12,7 @@ game_data = load_game_data()
 BOSS_NAME = "Origin of Chaos"
 
 # Enums
-MOVES = ['attack', 'shield', 'heal', 'save']
+MOVES = list(game_data["moves"])
 CONSUMABLES = list(game_data["items"]["consumables"].keys())
 WEAPONS = list(game_data["items"]["weapons"].keys())
 ARMOR = list(game_data["items"]["armor"].keys())
@@ -53,7 +53,7 @@ class Character:
         self.attack: int = attack
         self.current_health: int = max_health
         self.abilities = [
-            models.Ability(name) for name in MOVES
+            name for name in MOVES
         ]
 
     def take_damage(self, damage: int) -> str:

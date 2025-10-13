@@ -3,6 +3,12 @@
     "max_health": 100,
     "attack": 10
   },
+  "moves": {
+    "attack": {"cost": 1},
+    "shield": {"cost": 1},
+    "heal": {"cost": 1},
+    "save": {"cost": 1}
+},
   "monsters": {
     "Slime": {"max_health": 5, "attack": 1},
     "Pig": {"max_health": 8, "attack": 2},

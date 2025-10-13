@@ -2,30 +2,119 @@
 
 import random
 
-from campusmud import text
+from campusmud import config, entities, text
+from campusmud.data import load_game_data
 from campusmud.entities import Player, Monster
 
+
+game_data = load_game_data()
 BOSS_NAME = "Origin of Chaos"
+MOVES = game_data["moves"]
 
 
-class Ability:
-    """Represents a player action during combat (attack, shield, heal, save)."""
-    def __init__(self, name: str) -> None:
-        self.name: str = name
-        self.attack: int = 0
-        self.shield: int = 0
-        self.heal: int = 0
-        self.elixir: int = 1
-        self.saved_elixir: int = 0
-        self.magnitude: int = 0
+class Action:
+    """Represents a player action during combat (attack, shield, heal, save).
 
+    Players can choose the amount of elixir to allocate to each action.
+    """
+
+    def __init__(self, name: str, cost: int, elixir: int) -> None:
+        self.name = name
+        self.cost = cost
+        self.elixir = elixir
+        # self.attack: int = 0
+        # self.shield: int = 0
+        # self.heal: int = 0
+        # self.elixir: int = 1
+        # self.saved_elixir: int = 0
+        # self.magnitude: int = 0
+
+
+class Attack(Action):
+    """Represents an attack action."""
+    def __init__(self, cost: int, elixir: int) -> None:
+        super().__init__("Attack", cost, elixir)
+
+
+class Shield(Action):
+    """Represents a shield action."""
+    def __init__(self, cost: int, elixir: int) -> None:
+        super().__init__("Shield", cost, elixir)
+
+
+class Heal(Action):
+    """Represents a heal action."""
+    def __init__(self, cost: int, elixir: int) -> None:
+        super().__init__("Heal", cost, elixir)
+
+
+class Save(Action):
+    """Represents a save action.
+
+    Saves elixir for next turn.
+    """
+    def __init__(self, cost: int, elixir: int) -> None:
+        super().__init__("Save", cost, elixir)
+
+
+def create_action(name: str, elixir: int) -> Action:
+    """Factory function to create an Action by name."""
+    if name == "attack":
+        return Attack(MOVES["attack"]["cost"], elixir)
+    if name == "shield":
+        return Shield(MOVES["shield"]["cost"], elixir)
+    if name == "heal":
+        return Heal(MOVES["heal"]["cost"], elixir)
+    if name == "save":
+        return Save(MOVES["save"]["cost"], elixir)
+    else:
+        raise ValueError(f"Action '{name}' not found.")
+
+
+def choose_actions(character: entities.Character,
+                   available_elixir: int) -> list[Action]:
+    """Generate list of actions for the character."""
+    actions: list[Action] = []
+    lowest_cost = min([
+        MOVES[name]["cost"] for name in character.abilities
+    ])
+
+    while available_elixir >= lowest_cost:
+        print('Elixir: ' + str(available_elixir) + '\n')
+        if isinstance(character, entities.Player):
+            choice = text.prompt_player_choice(
+                preamble="Your available moves: ",
+                choices=[
+                    name for name in character.abilities
+                    if MOVES[name]["cost"] <= available_elixir
+                ],
+                prompt=text.input_prompt
+            )           
+            number = text.prompt_number_input(
+                prompt=text.magnitude_prompt,
+                min_value=1,
+                max_value=available_elixir
+            )
+        elif isinstance(character, entities.Monster):
+            choice = random.choices(
+                character.abilities,
+                config.WEIGHTS["monster_ability"]
+            )[0]
+            number = random.randint(1, available_elixir)
+        else:
+            raise ValueError(f"Unknown character type: {character}")
+        ability = create_action(name=choice, elixir=number)
+        actions.append(ability)
+        available_elixir -= ability.elixir
+    
+    return actions
 
 class CombatSequence:
     """Manages turn-based combat between player and monster."""
     def __init__(
         self,
-        player: Player,
-        monster: Monster,
+        player: entities.Player,
+        monster: entities.Monster,
         base_elixir: int,
         max_turns: int
     ) -> None:
@@ -57,19 +146,20 @@ class CombatSequence:
             print(f"Player Elixir: {p_elixir} | {'Boss' if is_boss else 'Monster'} Elixir: {m_elixir}\n")
 
             # Choose abilities
-            player_seq = self.player_ability_sequence(p_elixir)
-            monster_seq = self.monster_ability_sequence(m_elixir)
+            player_actions = choose_actions(self.player, p_elixir)
+            monster_actions = choose_actions(self.monster, m_elixir)
 
             # Aggregate totals
-            p_total_attack = sum(a.attack for a in player_seq)
-            p_total_shield = sum(a.shield for a in player_seq)
-            p_total_heal = sum(a.heal for a in player_seq)
-            p_total_save = sum(a.saved_elixir for a in player_seq)
 
-            m_total_attack = sum(a.attack for a in monster_seq)
-            m_total_shield = sum(a.shield for a in monster_seq)
-            m_total_heal = sum(a.heal for a in monster_seq)
-            m_total_save = sum(a.saved_elixir for a in monster_seq)
+            p_total_attack = sum(a.elixir for a in player_actions if isinstance(a, Attack))
+            p_total_shield = sum(a.elixir for a in player_actions if isinstance(a, Shield))
+            p_total_heal = sum(a.elixir for a in player_actions if isinstance(a, Heal))
+            p_total_save = sum(a.elixir for a in player_actions if isinstance(a, Save))
+
+            m_total_attack = sum(a.elixir for a in monster_actions if isinstance(a, Attack))
+            m_total_shield = sum(a.elixir for a in monster_actions if isinstance(a, Shield))
+            m_total_heal = sum(a.elixir for a in monster_actions if isinstance(a, Heal))
+            m_total_save = sum(a.elixir for a in monster_actions if isinstance(a, Save))
 
             # Compute damage after shields
             dmg_to_monster = max(0, (p_total_attack - m_total_shield) * (self.player.calculate_atk() / 10))
@@ -163,20 +253,20 @@ class CombatSequence:
             print(f"Player Elixir: {p_elixir} | Boss Elixir: {m_elixir}\n")
 
             # Player & Boss choose abilities
-            player_seq = self.player_ability_sequence(p_elixir)
-            monster_seq = self.monster_ability_sequence(m_elixir)
+            player_actions = choose_actions(self.player, p_elixir)
+            monster_actions = choose_actions(self.monster, m_elixir)
 
             # Aggregate totals
-            p_total_attack = sum(a.attack for a in player_seq)
-            p_total_shield = sum(a.shield for a in player_seq)
-            p_total_heal = sum(a.heal for a in player_seq)
-            p_total_save = sum(a.saved_elixir for a in player_seq)
+            p_total_attack = sum(a.elixir for a in player_actions if isinstance(a, Attack))
+            p_total_shield = sum(a.elixir for a in player_actions if isinstance(a, Shield))
+            p_total_heal = sum(a.elixir for a in player_actions if isinstance(a, Heal))
+            p_total_save = sum(a.elixir for a in player_actions if isinstance(a, Save))
 
-            m_total_attack = sum(a.attack for a in monster_seq)
-            m_total_shield = sum(a.shield for a in monster_seq)
-            m_total_heal = sum(a.heal for a in monster_seq)
-            m_total_save = sum(a.saved_elixir for a in monster_seq)
-            
+            m_total_attack = sum(a.elixir for a in monster_actions if isinstance(a, Attack))
+            m_total_shield = sum(a.elixir for a in monster_actions if isinstance(a, Shield))
+            m_total_heal = sum(a.elixir for a in monster_actions if isinstance(a, Heal))
+            m_total_save = sum(a.elixir for a in monster_actions if isinstance(a, Save))
+
             # Compute damage with shared fate
             shared_fate_percent = 0.25
             dmg_to_monster = max(0, (p_total_attack - m_total_shield) * (self.player.calculate_atk() / 10))
@@ -246,84 +336,6 @@ class CombatSequence:
         else:
             print(text.defeat_text)
             return 'defeat'
-
-    def player_ability_sequence(self, elixir: int) -> list[Ability]:
-        """Get player to choose actions and their magnitudes."""
-        ability_sequence: list[Ability] = []
-        available_elixir: int = elixir
-        ability_dict = {a.name: a for a in self.player.abilities}
-        
-        cheapest_cost: int = text.cheapest_ability_cost
-
-        while available_elixir >= cheapest_cost:
-            print('Elixir: ' + str(available_elixir) + '\n')
-
-            available_abilities = []
-
-            for ability in self.player.abilities:
-                if ability.elixir <= available_elixir:
-                    available_abilities.append(ability)
-
-            choice = text.prompt_player_choice(
-                preamble="Your available moves: ",
-                choices=[a.name for a in available_abilities],
-                prompt=text.input_prompt
-            )           
-            ability = Ability(ability_dict[choice].name)
-            magnitude: int = 0
-            while True:
-                magnitude_input = input(text.magnitude_prompt)
-                if magnitude_input.isdigit():
-                    magnitude = int(magnitude_input)
-                    if magnitude <= available_elixir:
-                        break
-                print(text.input_error_prompt)
-            
-            if choice == "attack":
-                ability.attack = magnitude
-            elif choice == "shield":
-                ability.shield = magnitude
-            elif choice == "heal":
-                ability.heal = magnitude
-            elif choice == "save":
-                ability.saved_elixir = magnitude
-            
-            ability.magnitude = magnitude
-            ability_sequence.append(ability)
-            available_elixir -= magnitude
-        
-        return ability_sequence
-
-    def monster_ability_sequence(self, elixir: int) -> list[Ability]:
-        """
-        Generate random monster behavior for choosing actions and magnitudes.
-        """
-        ability_sequence = []
-        available_elixir = elixir
-
-        cheapest_cost = text.cheapest_ability_cost
-
-        while available_elixir >= cheapest_cost:
-            original = random.choices(self.monster.abilities, text.monster_ability_weights)[0]
-            a = Ability(original.name)
-            if a.elixir <= available_elixir:
-                magnitude = random.randint(1, available_elixir)
-                if a.name == "attack":
-                    a.attack = magnitude
-                    a.magnitude = magnitude
-                elif a.name == "shield":
-                    a.shield = magnitude
-                    a.magnitude = magnitude
-                elif a.name == "heal":
-                    a.heal = magnitude
-                    a.magnitude = magnitude
-                elif a.name == "save":
-                    a.saved_elixir = magnitude
-                    a.magnitude = magnitude
-                available_elixir -= magnitude
-                ability_sequence.append(a)
-        
-        return ability_sequence
 
     def end_sequence(self) -> str:
         """End the combat once either player or enemy dies."""

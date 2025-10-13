@@ -71,7 +71,6 @@ input_error_prompt = "Please input again."
 combat_sequence_prompt = "Here are your available moves: "
 ability_addition_error = "Please input a valid ability name"
 magnitude_prompt = "Please input the magnitude of ability: "
-cheapest_ability_cost = 1
 
 successful_room_travel = "You have travelled to room with ID: "
 thanks_message = "Thanks for playing!"
@@ -218,6 +217,24 @@ def prompt_player_choice(
         print("Please enter a valid choice.")
         choice = input(prompt).strip()
     return choices[int(choice) - 1]
+
+
+def prompt_number_input(
+        prompt: str,
+        min_value: int,
+        max_value: int
+) -> int:
+    """Prompt the player for a number input within a specified range.
+
+    Returns the valid number input by the player.
+    """
+    while True:
+        user_input = input(prompt).strip()
+        if user_input.isdecimal():
+            number = int(user_input)
+            if min_value <= number <= max_value:
+                return number
+        print(f"Please enter a number between {min_value} and {max_value}.")
 
 
 def prompt_continue(prompt: str = "Press Enter to continue...") -> None:

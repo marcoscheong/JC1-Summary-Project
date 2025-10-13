@@ -2,13 +2,26 @@
 
 from typing import Optional
 
-from campusmud import text
+from campusmud import config, text
+from campusmud.data import load_game_data
 from campusmud.storage import Storage
 from campusmud.models import Stats
 from campusmud.entities import Player, Monster
 from campusmud.maze import Room, TreasureRoom, MonsterRoom, BossRoom, Maze
 from campusmud.combat import CombatSequence
 from campusmud.text import prompt_player_choice
+
+BOSS_NAME = "Origin of Chaos"
+
+game_data = load_game_data()
+
+Monsters = {
+    name: [data["max_health"], data["attack"]]
+    for name, data in game_data["monsters"].items()
+}
+Consumable = game_data["items"]["consumables"]
+Armour = game_data["items"]["armor"]
+Weapon = game_data["items"]["weapons"]
 
 
 class Game:
@@ -57,7 +70,7 @@ class Game:
         rooms.append(Room(0))
         for i in range(1, text.maze_size):
             if i % 2 == 0:
-                room = MonsterRoom((i + 1), text.Monsters.keys())
+                room = MonsterRoom((i + 1), Monsters.keys())
                 room.generateMonster()
                 room.generateDrops()
                 rooms.append(room)
@@ -80,7 +93,7 @@ class Game:
         rooms.append(Room(0))
         for i in range(1, text.maze_size):
             if i % 2 == 0:
-                room = MonsterRoom((i + 1), text.Monsters.keys())
+                room = MonsterRoom((i + 1), Monsters.keys())
                 room.generateMonster()
                 room.generateDrops()
                 rooms.append(room)
@@ -91,7 +104,7 @@ class Game:
         rooms.append(BossRoom(text.maze_size + 1))
         for room in rooms:
             if isinstance(room, (TreasureRoom, MonsterRoom, BossRoom)):
-                if room.id in self.storage.get_data(text.player_save_file).get("Claimed_rooms", []):
+                if room.id in self.storage.get_data(config.PLAYER_SAVE_FILE).get("Claimed_rooms", []):
                     room.claimed = True
         self.maze = Maze(rooms, rooms[0])
         self.maze.generate_maze()
@@ -106,16 +119,16 @@ class Game:
         """Initialize a new player."""
         stats: Stats = Stats(text.default_health, text.default_attack)
         self.player = Player(stats)
-        self.player.create_new_storage(self.storage, text.player_save_file)
+        self.player.create_new_storage(self.storage, config.PLAYER_SAVE_FILE)
 
     def load_player(self) -> None:
         """Load player from saved file."""
-        atk: int = self.storage.get_data(text.player_save_file).get("Player_attack", text.default_attack)
-        current_health: int = self.storage.get_data(text.player_save_file).get("Player_current_health", text.default_health)
-        max_health: int = self.storage.get_data(text.player_save_file).get("Player_max_health", text.default_health)
+        atk: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_attack", text.default_attack)
+        current_health: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_current_health", text.default_health)
+        max_health: int = self.storage.get_data(config.PLAYER_SAVE_FILE).get("Player_max_health", text.default_health)
         stats: Stats = Stats(max_health, atk)
         self.player = Player(stats)
-        self.player.load_from_storage(self.storage, text.player_save_file)
+        self.player.load_from_storage(self.storage, config.PLAYER_SAVE_FILE)
 
     def get_player(self) -> Optional[Player]:
         """Get the player object."""
@@ -127,8 +140,8 @@ class Game:
 
     def reset_game_data(self) -> None:
         """Reset game data to default values."""
-        default_data: dict = self.storage.get_data(text.default_save_file)
-        self.storage.save_data(text.player_save_file, default_data)
+        default_data: dict = self.storage.get_data(config.DEFAULT_SAVE_FILE)
+        self.storage.save_data(config.PLAYER_SAVE_FILE, default_data)
 
     def save_all_data(self, file: str) -> None:
         """Save all current game variables to file."""
@@ -156,7 +169,7 @@ class Game:
     def fight_boss(self, current_room: BossRoom) -> None:
         """Handle the logic for fighting the boss."""
         command: str = prompt_player_choice(
-            preamble=f"You have encountered the boss: {text.boss_monster}. Do you want to fight this boss?",
+            preamble=f"You have encountered the boss: {BOSS_NAME}. Do you want to fight this boss?",
             choices=['Fight boss', 'Go back']
         )
         if command in ['exit']:
@@ -166,13 +179,13 @@ class Game:
         elif command in ['fight boss', 'fight', 'challenge the boss', 'challenge boss']:
             text.clear_screen()
             monster: Monster = current_room.boss_monster
-            input(f"You have encountered {text.boss_monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
+            input(f"You have encountered {BOSS_NAME}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
             text.clear_screen()
             combat_seq: CombatSequence = CombatSequence(self.get_player(), monster, 3, 20)
             result: str = combat_seq.start_boss_sequence()
             if result == 'victory':
                 current_room.claimed = True
-                self.save_all_data(text.player_save_file)
+                self.save_all_data(config.PLAYER_SAVE_FILE)
                 print('You have defeated the boss! Congratulations on completing the game!')
                 input('Press enter to exit.')
             elif result == 'defeat':
@@ -242,7 +255,7 @@ class Game:
         """Handle the go direction command."""
         if direction in text.directions:
             self.maze.travel_to(direction)
-            self.save_all_data(text.player_save_file)
+            self.save_all_data(config.PLAYER_SAVE_FILE)
         else:
             print(text.input_error_prompt)
 
@@ -290,7 +303,7 @@ class Game:
                 if command in ['go back', 'back']:
                     pass
                 elif command in ['consume item', 'consume']:
-                    if drop in text.Consumable:
+                    if drop in Consumable:
                         if self.get_player().inventory.use_item(drop):
                             self.use_item(drop)
                         else:
@@ -303,7 +316,7 @@ class Game:
     def command_fight(self) -> None:
         """Handle the fight command."""
         text.clear_screen()
-        monster: Monster = Monster(Stats(text.Monsters[self.maze.current_room.monster][0], text.Monsters[self.maze.current_room.monster][1]))
+        monster: Monster = Monster(Stats(Monsters[self.maze.current_room.monster][0], Monsters[self.maze.current_room.monster][1]))
         input(f"You have encountered a {self.maze.current_room.monster}.\n Atk: {monster.stats.attack}, HP: {monster.stats.max_health}\nPress enter to continue...")
         text.clear_screen()
         combat_seq: CombatSequence = CombatSequence(self.get_player(), monster, 3, 20)
@@ -329,16 +342,16 @@ class Game:
                 if drop.drop in text.Weapon:
                     self.get_player().inventory.equip_weapon(drop.drop)
                     self.get_player().recalculate_stats()
-                    self.save_all_data(text.player_save_file)
+                    self.save_all_data(config.PLAYER_SAVE_FILE)
                     input('\nPress enter to continue...')
                 elif drop.drop in text.Armour:
                     slot = text.ArmourSlots[drop.drop]
                     self.get_player().inventory.equip_armour(slot, drop.drop)
                     self.get_player().recalculate_stats()
-                    self.save_all_data(text.player_save_file)
+                    self.save_all_data(config.PLAYER_SAVE_FILE)
                     input('\nPress enter to continue...')
             self.get_player().recalculate_stats()
-            self.save_all_data(text.player_save_file)
+            self.save_all_data(config.PLAYER_SAVE_FILE)
         elif result == 'defeat':
             command = prompt_player_choice(
                 preamble=(

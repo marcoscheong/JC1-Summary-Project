@@ -6,6 +6,8 @@ from campusmud import text
 from campusmud.models import Ability
 from campusmud.entities import Player, Monster
 
+BOSS_NAME = "Origin of Chaos"
+
 
 class CombatSequence:
     """
@@ -149,8 +151,8 @@ class CombatSequence:
             p_elixir -= steal_amount
             m_elixir += steal_amount
             if steal_amount > 0:
-                print(f"{text.boss_monster} steals {steal_amount} elixir from you!")
-            
+                print(f"{BOSS_NAME} steals {steal_amount} elixir from you!")
+
             print(
                 f"Player Health: {self.health_bar(self.player.stats.current_health, self.player.stats.max_health)}\n"
                 f"Boss Health:   {self.health_bar(self.monster.stats.current_health, self.monster.stats.max_health)}"

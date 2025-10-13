@@ -1,0 +1,71 @@
+{
+  "monsters": {
+    "Slime": {"max_health": 5, "attack": 1},
+    "Pig": {"max_health": 8, "attack": 2},
+    "Goblin": {"max_health": 12, "attack": 3},
+    "Wolf": {"max_health": 20, "attack": 5},
+    "Orc": {"max_health": 35, "attack": 8},
+    "Skeleton": {"max_health": 50, "attack": 10},
+    "Zombie": {"max_health": 70, "attack": 12},
+    "Bandit": {"max_health": 90, "attack": 15},
+    "Giant Spider": {"max_health": 120, "attack": 18},
+    "Dark Knight": {"max_health": 180, "attack": 25},
+    "Stone Golem": {"max_health": 180, "attack": 35},
+    "Troll": {"max_health": 180, "attack": 40},
+    "Wyvern": {"max_health": 250, "attack": 60},
+    "Minotaur": {"max_health": 250, "attack": 70},
+    "Hydra": {"max_health": 500, "attack": 90},
+    "Ancient Treant": {"max_health": 200, "attack": 100},
+    "Fire Drake": {"max_health": 450, "attack": 160},
+    "Shadow Reaper": {"max_health": 50, "attack": 500},
+    "Frost Titan": {"max_health": 1000, "attack": 20},
+    "Chaos Serpent": {"max_health": 650, "attack": 280},
+    "Origin of Chaos": {"max_health": 2000, "attack": 150}
+  },
+  "items": {
+    "consumables": {
+      "health potion": 5,
+      "attack potion": 5,
+      "healing potion": 10
+    },
+    "armor": {
+      "Leather Boots": 8,
+      "Leather Leggings": 10,
+      "Leather Helmet": 8,
+      "Leather Chestplate": 16,
+      "Chainmail Boots": 16,
+      "Chainmail Leggings": 20,
+      "Chainmail Helmet": 16,
+      "Chainmail Chestplate": 32,
+      "Iron Boots": 32,
+      "Iron Leggings": 40,
+      "Iron Helmet": 32,
+      "Iron Chestplate": 64,
+      "Diamond Boots": 64,
+      "Diamond Leggings": 80,
+      "Diamond Helmet": 64,
+      "Diamond Chestplate": 128,
+      "Draconic Boots": 128,
+      "Draconic Leggings": 160,
+      "Draconic Helmet": 128,
+      "Draconic Chestplate": 256
+    },
+    "weapons": {
+      "Fist": 1,
+      "Wooden Sword": 7,
+      "Beginner Daggers": 7,
+      "Beginner Wand": 7,
+      "Stone Sword": 10,
+      "Intermediate Daggers": 15,
+      "Intermediate Wand": 15,
+      "Iron Sword": 20,
+      "Steel Sword": 35,
+      "Knucklebuster": 55,
+      "Silver Sword": 70,
+      "Diamond Sword": 100,
+      "Mythril Sword": 125,
+      "Draconic Blade": 150,
+      "Excalibur": 250
+    }
+  }
+}

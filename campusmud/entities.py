@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from campusmud import text
+from campusmud import config, text
 from campusmud.storage import Storage
 from campusmud.models import Stats, Ability
 
@@ -32,7 +32,7 @@ class Player(Character):
         """
         Create a new empty storage for the player.
         """
-        default_data = storage.get_data(text.default_save_file)
+        default_data = storage.get_data(config.DEFAULT_SAVE_FILE)
         storage.save_data(file, default_data)
         self.load_from_storage(storage, file)
 

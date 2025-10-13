@@ -2,7 +2,14 @@ import select
 import sys
 import os
 import time
+from campusmud.data import load_game_data
 
+game_data = load_game_data()
+
+Monsters = {name: {"max_health": data["max_health"], "attack": data["attack"]} for name, data in game_data["monsters"].items()}
+Consumable = game_data["items"]["consumables"]
+Armour = game_data["items"]["armor"]
+Weapon = game_data["items"]["weapons"]
 
 Game_name = "Labyrinth Ascension"
 Game_info = [
@@ -14,18 +21,16 @@ Game_info = [
     "Rank Points increase your Rank Tier (unlocks new abilities).",
     "Progressive Difficulty: Higher ranks unlock deeper maze layers with harder enemies and better rewards.",
     "Death & Respawn: If you die, you respawn at your base camp with your rank intact but lose temporary loot."
-  ]
+]
 
 
 Game_lore = [
     "In a world where warriors prove themselves in an endless shifting labyrinth, your journey starts at rock bottom.",
     "Climb the ranks, earn your place among legends, and uncover the secret of the maze — a truth that might change everything."
-  ]
+]
 room_types = ['treasure', 'monster']
 
 maze_size = 36
-
-player_save_file = "player_data.json"
 
 welcome_prompt = "Welcome to Labyrinth Ascension, a Single Player MUD game. Do you want to start or load your game?"
 started_text = 'In this world of labyrinths, you have arrived in the top-most level.\nBegin your descent to the lowest level to uncover the long lost secrets of this labyrinth. \n\nTo select an option, type out the number of your choice or the full command.\nE.g. "1", or "Go down".\nWhen you want to continue to the next scene, press the "Enter" key to procede.\n'
@@ -123,96 +128,6 @@ monster_ability_weights = [20, 4, 3, 6]
 default_health = 10
 default_attack = 10
 
-Monsters = {
-    "Slime": [5, 1],
-    "Pig": [8, 2],
-    "Goblin": [12, 3],
-    "Wolf": [20, 5],
-    "Orc": [35, 8],
-    "Skeleton": [50, 10],
-    "Zombie": [70, 12],
-    "Bandit": [90, 15],
-    "Giant Spider": [120, 18],
-    "Dark Knight": [180, 25],
-    "Stone Golem": [180, 35],
-    "Troll": [180, 40],
-    "Wyvern": [250, 60],
-    "Minotaur": [250, 70],
-    "Hydra": [500, 90],
-    "Ancient Treant": [200, 100],
-    "Fire Drake": [450, 160],
-    "Shadow Reaper": [50, 500],
-    "Frost Titan": [1000, 20],
-    "Chaos Serpent": [650, 280]
-}
-
-
-Weapon = {
-    "Fist": 1,
-    "Wooden Sword": 7,
-    "Beginner Daggers": 7,
-    "Beginner Wand": 7,
-    "Stone Sword": 10,
-    "Intermediate Daggers": 15,
-    "Intermediate Wand": 15,
-    "Iron Sword": 20,
-    "Steel Sword": 35,
-    "Knucklebuster": 55,
-    "Silver Sword": 70,
-    "Diamond Sword": 100,
-    "Mythril Sword": 125,
-    "Draconic Blade": 150,
-    "Excalibur": 250
-}
-
-Consumable = {
-  "health potion": 5,
-  "attack potion": 5,
-  "healing potion": 10
-}
-Armour = {
-    "Leather Boots": 8, "Leather Leggings": 10, "Leather Helmet": 8, "Leather Chestplate": 16,
-    "Chainmail Boots": 16, "Chainmail Leggings": 20, "Chainmail Helmet": 16, "Chainmail Chestplate": 32,
-    "Iron Boots": 32, "Iron Leggings": 40, "Iron Helmet": 32, "Iron Chestplate": 64,
-    "Diamond Boots": 64, "Diamond Leggings": 80, "Diamond Helmet": 64, "Diamond Chestplate": 128,
-    "Draconic Boots": 128, "Draconic Leggings": 160, "Draconic Helmet": 128, "Draconic Chestplate": 256
-}
-
-
-
-ArmourSlots = {
-    # Leather
-    "Leather Helmet": "Helmet",
-    "Leather Chestplate": "Chestplate",
-    "Leather Leggings": "Leggings",
-    "Leather Boots": "Boots",
-
-    # Chainmail
-    "Chainmail Helmet": "Helmet",
-    "Chainmail Chestplate": "Chestplate",
-    "Chainmail Leggings": "Leggings",
-    "Chainmail Boots": "Boots",
-
-    # Iron
-    "Iron Helmet": "Helmet",
-    "Iron Chestplate": "Chestplate",
-    "Iron Leggings": "Leggings",
-    "Iron Boots": "Boots",
-
-    # Diamond
-    "Diamond Helmet": "Helmet",
-    "Diamond Chestplate": "Chestplate",
-    "Diamond Leggings": "Leggings",
-    "Diamond Boots": "Boots",
-
-    # Draconic
-    "Draconic Helmet": "Helmet",
-    "Draconic Chestplate": "Chestplate",
-    "Draconic Leggings": "Leggings",
-    "Draconic Boots": "Boots",
-}
-
-
 weaponweights5  = [50, 40, 35, 30, 25, 20, 15, 10, 8, 5, 3, 2, 1, 1, 1]
 weaponweights10 = [40, 35, 30, 28, 25, 20, 15, 12, 10, 8, 5, 3, 2, 1, 1]
 weaponweights15 = [30, 28, 25, 22, 20, 18, 15, 12, 10, 8, 5, 3, 2, 2, 1]
@@ -226,10 +141,6 @@ armourweights20 = [30, 30, 30, 30, 28, 28, 28, 28, 25, 25, 25, 25, 23, 23, 23, 2
 armourweights25 = [20, 20, 20, 20, 22, 22, 22, 22, 25, 25, 25, 25, 28, 28, 28, 28, 30, 30, 30, 30]
 
 boss_monster = "Origin of Chaos"
-boss_monster_stats = [2500, 250]
-
-player_save_file = "player_data.json"
-default_save_file = "data.json"
 
 victory_text = "You have defeated the monster!"
 defeat_text = "You have been defeated by the monster..."
